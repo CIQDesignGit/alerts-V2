@@ -51,12 +51,6 @@ export function AlertDetailPanel({
           <p className="mt-2 text-sm leading-relaxed text-neutral-800">
             {issue.aiSignal}
           </p>
-          <button
-            type="button"
-            className="mt-2 text-sm font-medium text-primary hover:underline"
-          >
-            Show reasoning →
-          </button>
         </section>
       )}
 

@@ -34,7 +34,7 @@ export function HomePage() {
         </div>
       )}
       {tab === "alerts" && <AlertsTab filter={skuFilter} />}
-      {tab === "insights" && <InsightsTab />}
+      {tab === "insights" && <InsightsTab filter={skuFilter} />}
     </div>
   );
 }

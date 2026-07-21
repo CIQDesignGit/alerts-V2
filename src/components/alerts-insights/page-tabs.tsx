@@ -10,7 +10,7 @@ type PageTabsProps = {
   active: PageTab;
   alertsCount: number;
   onChange: (tab: PageTab) => void;
-  /** SKU filter — shown on the right when Alerts tab is active */
+  /** SKU filter — shown on Alerts and Insights tabs */
   skuFilter?: string;
   onSkuFilterChange?: (value: string) => void;
 };
@@ -66,7 +66,7 @@ export function PageTabs({
         })}
       </nav>
 
-      {active === "alerts" && onSkuFilterChange && (
+      {(active === "alerts" || active === "insights") && onSkuFilterChange && (
         <label className="relative w-72 shrink-0">
           <span className="sr-only">Filter SKUs by name, ASIN, or $ gap</span>
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />

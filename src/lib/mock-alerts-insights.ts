@@ -34,13 +34,64 @@ export type IssueAlert = {
   skus: IssueSku[];
 };
 
+export type HierarchyIssueChip = {
+  chip: string;
+  count: number;
+};
+
+export type HierarchyLiveMetrics = {
+  attainmentPct: number;
+  unitsDelta: number;
+  /** Average selling price change ($) */
+  aspDelta: number;
+  issueChips?: HierarchyIssueChip[];
+};
+
 export type HierarchyNode = {
   id: string;
   name: string;
   level: "business" | "brand" | "category" | "subcategory" | "sku";
   gapDollars: number;
+  /** AllyAI live narrative for this node */
+  insight?: string;
+  /** Placeholder live KPIs shown on Live Insights */
+  metrics?: HierarchyLiveMetrics;
   children?: HierarchyNode[];
 };
+
+/** Fill missing metrics so every parent level still shows KPI cards. */
+export function getLiveMetrics(node: HierarchyNode): HierarchyLiveMetrics {
+  if (node.metrics) return node.metrics;
+
+  const attainmentPct =
+    node.gapDollars >= 0
+      ? Math.min(120, 100 + Math.round(node.gapDollars / 50_000))
+      : Math.max(35, 100 + Math.round(node.gapDollars / 80_000));
+
+  return {
+    attainmentPct,
+    unitsDelta: Math.round(node.gapDollars / 80),
+    aspDelta: node.gapDollars < 0 ? -2.4 : 1.1,
+    issueChips:
+      node.gapDollars < 0
+        ? [
+            { chip: "Buy Box", count: 3 },
+            { chip: "Stock", count: 1 },
+          ]
+        : undefined,
+  };
+}
+
+export function childLevelLabel(
+  parentLevel: HierarchyNode["level"],
+): string {
+  if (parentLevel === "business") return "Brand";
+  if (parentLevel === "brand") return "Category";
+  if (parentLevel === "category") return "Sub-category / SKU";
+  if (parentLevel === "subcategory") return "SKU";
+  return "Child";
+}
+
 
 export function formatGapDollars(value: number): string {
   const abs = Math.abs(value);
@@ -94,6 +145,52 @@ export const brandCards: BrandCard[] = [
     subtitle: "Kitchen",
     gapDollars: 400_000,
     attainmentPct: 104,
+  },
+];
+
+/** Above-plan wins for Overview — separate from gap / miss heroes. */
+export type OverviewWin = {
+  id: string;
+  name: string;
+  /** Brand · Category path style label */
+  path: string;
+  gapDollars: number;
+  attainmentPct: number;
+  note: string;
+};
+
+export const overviewWins: OverviewWin[] = [
+  {
+    id: "ninja",
+    name: "Ninja",
+    path: "Brand",
+    gapDollars: 400_000,
+    attainmentPct: 104,
+    note: "Kitchen Appliances leading the win",
+  },
+  {
+    id: "nj-kitchen",
+    name: "Kitchen Appliances",
+    path: "Ninja · Category",
+    gapDollars: 280_000,
+    attainmentPct: 108,
+    note: "Strong promo conversion + Buy Box hold",
+  },
+  {
+    id: "shark-hair",
+    name: "Hair Care",
+    path: "Shark · Category",
+    gapDollars: 260_000,
+    attainmentPct: 112,
+    note: "New launches carrying conversion",
+  },
+  {
+    id: "nj-blenders",
+    name: "Blenders & Smoothies",
+    path: "Ninja · Category",
+    gapDollars: 95_000,
+    attainmentPct: 106,
+    note: "Seasonal lift continuing WTD",
   },
 ];
 
@@ -342,36 +439,314 @@ export const hierarchyTree: HierarchyNode = {
   name: "Entire Business",
   level: "business",
   gapDollars: -4_200_000,
+  insight:
+    "Portfolio is −$4.2M vs plan this week (79% attainment). PowerA (−$2.8M) and Shark (−$1.8M) drive the miss; Ninja is a bright spot at +$400K and partially offsets.",
+  metrics: {
+    attainmentPct: 79,
+    unitsDelta: -48_000,
+    aspDelta: -1.8,
+    issueChips: [
+      { chip: "Buy Box", count: 12 },
+      { chip: "Stock", count: 5 },
+      { chip: "SOV", count: 4 },
+    ],
+  },
   children: [
     {
       id: "shark",
       name: "Shark",
       level: "brand",
       gapDollars: -1_800_000,
+      insight:
+        "Shark is down $1.8M vs plan this week. Floor care robotics is the primary driver at −$940K, largely from Lost Buy Box on 12 SKUs. Hair care is above plan at +$260K and partially offsets the miss.",
+      metrics: {
+        attainmentPct: 82,
+        unitsDelta: -22_400,
+        aspDelta: -3.2,
+        issueChips: [
+          { chip: "Buy Box", count: 12 },
+          { chip: "Deal Page", count: 8 },
+        ],
+      },
       children: [
         {
           id: "fcr",
           name: "Floor Care Robotics",
           level: "category",
           gapDollars: -940_000,
+          insight:
+            "Floor Care Robotics is −$940K vs plan. Lost Buy Box on robot vacuums is the main driver; conversion and deal visibility are secondary.",
+          metrics: {
+            attainmentPct: 61,
+            unitsDelta: -9_800,
+            aspDelta: -4.5,
+            issueChips: [
+              { chip: "Buy Box", count: 9 },
+              { chip: "Conversion", count: 2 },
+            ],
+          },
+          children: [
+            {
+              id: "fcr-robot",
+              name: "Robot Vacuums",
+              level: "subcategory",
+              gapDollars: -720_000,
+              insight:
+                "Robot Vacuums account for most of the category miss (−$720K). Top SKUs lost Buy Box to VacuumKing_US mid-week.",
+              metrics: {
+                attainmentPct: 54,
+                unitsDelta: -7_200,
+                aspDelta: -5.1,
+                issueChips: [{ chip: "Buy Box", count: 7 }],
+              },
+              children: [
+                {
+                  id: "sku-av970",
+                  name: "Shark IQ AV970",
+                  level: "sku",
+                  gapDollars: -62_000,
+                  metrics: {
+                    attainmentPct: 48,
+                    unitsDelta: -410,
+                    aspDelta: -30,
+                    issueChips: [{ chip: "Buy Box", count: 1 }],
+                  },
+                },
+                {
+                  id: "sku-rv2310",
+                  name: "Shark AI Robot RV2310",
+                  level: "sku",
+                  gapDollars: -48_000,
+                  metrics: {
+                    attainmentPct: 52,
+                    unitsDelta: -320,
+                    aspDelta: -31,
+                    issueChips: [{ chip: "Buy Box", count: 1 }],
+                  },
+                },
+                {
+                  id: "sku-rx-v2",
+                  name: "Shark Rx V2 Plus",
+                  level: "sku",
+                  gapDollars: -41_000,
+                  metrics: {
+                    attainmentPct: 55,
+                    unitsDelta: -280,
+                    aspDelta: -20,
+                    issueChips: [{ chip: "Buy Box", count: 1 }],
+                  },
+                },
+                {
+                  id: "sku-ultrarv",
+                  name: "Shark AI Ultra Robot RV2502",
+                  level: "sku",
+                  gapDollars: -38_000,
+                  metrics: {
+                    attainmentPct: 58,
+                    unitsDelta: -250,
+                    aspDelta: -18,
+                    issueChips: [{ chip: "Buy Box", count: 1 }],
+                  },
+                },
+                {
+                  id: "sku-detect",
+                  name: "Shark Detect Pro Auto-Empty",
+                  level: "sku",
+                  gapDollars: -35_000,
+                  metrics: {
+                    attainmentPct: 60,
+                    unitsDelta: -210,
+                    aspDelta: -12,
+                    issueChips: [{ chip: "Deal Page", count: 1 }],
+                  },
+                },
+              ],
+            },
+            {
+              id: "fcr-stick",
+              name: "Stick & Handheld",
+              level: "subcategory",
+              gapDollars: -220_000,
+              insight:
+                "Stick & Handheld is −$220K. Stock Availability on two ASINs is limiting recovery after price resets.",
+              metrics: {
+                attainmentPct: 74,
+                unitsDelta: -2_600,
+                aspDelta: -1.2,
+                issueChips: [{ chip: "Stock", count: 2 }],
+              },
+              children: [
+                {
+                  id: "sku-stratos",
+                  name: "Shark Stratos Cordless",
+                  level: "sku",
+                  gapDollars: -42_000,
+                  metrics: {
+                    attainmentPct: 70,
+                    unitsDelta: -380,
+                    aspDelta: -2.0,
+                    issueChips: [{ chip: "Stock", count: 1 }],
+                  },
+                },
+                {
+                  id: "sku-wandvac",
+                  name: "Shark Wandvac System",
+                  level: "sku",
+                  gapDollars: -28_000,
+                  metrics: {
+                    attainmentPct: 76,
+                    unitsDelta: -220,
+                    aspDelta: -0.8,
+                    issueChips: [{ chip: "Stock", count: 1 }],
+                  },
+                },
+                {
+                  id: "sku-vertex",
+                  name: "Shark Vertex DuoClean",
+                  level: "sku",
+                  gapDollars: -22_000,
+                  metrics: {
+                    attainmentPct: 80,
+                    unitsDelta: -160,
+                    aspDelta: -0.5,
+                  },
+                },
+              ],
+            },
+          ],
         },
         {
           id: "fcc",
           name: "Floor Care Corded",
           level: "category",
           gapDollars: -380_000,
+          insight:
+            "Floor Care Corded is −$380K vs plan. Softness is broad across uprights; no single SKU dominates the gap.",
+          metrics: {
+            attainmentPct: 78,
+            unitsDelta: -4_100,
+            aspDelta: -0.8,
+            issueChips: [{ chip: "Conversion", count: 3 }],
+          },
+          children: [
+            {
+              id: "fcc-uprights",
+              name: "Uprights",
+              level: "subcategory",
+              gapDollars: -260_000,
+              insight:
+                "Uprights drive most of the corded miss (−$260K). SKU detail list is stubbed for now.",
+              metrics: {
+                attainmentPct: 75,
+                unitsDelta: -2_800,
+                aspDelta: -0.9,
+                issueChips: [{ chip: "Conversion", count: 2 }],
+              },
+              children: [],
+            },
+            {
+              id: "fcc-canisters",
+              name: "Canisters",
+              level: "subcategory",
+              gapDollars: -120_000,
+              insight:
+                "Canisters are −$120K. Light traffic week; SKU list empty in this prototype.",
+              metrics: {
+                attainmentPct: 82,
+                unitsDelta: -1_300,
+                aspDelta: -0.4,
+              },
+              children: [],
+            },
+          ],
         },
         {
           id: "hair",
           name: "Hair Care",
           level: "category",
           gapDollars: 260_000,
+          insight:
+            "Hair Care is above plan at +$260K. Strong conversion on new launches is carrying the category.",
+          metrics: {
+            attainmentPct: 112,
+            unitsDelta: 3_200,
+            aspDelta: 1.4,
+          },
+          children: [
+            {
+              id: "hair-dryers",
+              name: "Dryers",
+              level: "subcategory",
+              gapDollars: 180_000,
+              insight:
+                "Dryers are the growth engine (+$180K). SKU list stubbed empty for now.",
+              metrics: {
+                attainmentPct: 118,
+                unitsDelta: 2_100,
+                aspDelta: 1.6,
+              },
+              children: [],
+            },
+            {
+              id: "hair-styling",
+              name: "Styling Tools",
+              level: "subcategory",
+              gapDollars: 80_000,
+              insight:
+                "Styling Tools are +$80K. SKU list empty in this prototype.",
+              metrics: {
+                attainmentPct: 105,
+                unitsDelta: 1_100,
+                aspDelta: 0.8,
+              },
+              children: [],
+            },
+          ],
         },
         {
           id: "air",
           name: "Air Treatment",
           level: "category",
           gapDollars: -120_000,
+          insight:
+            "Air Treatment is slightly under plan (−$120K). Seasonal demand soft; media efficiency is holding.",
+          metrics: {
+            attainmentPct: 91,
+            unitsDelta: -900,
+            aspDelta: -0.3,
+            issueChips: [{ chip: "SOV", count: 1 }],
+          },
+          children: [
+            {
+              id: "air-purifiers",
+              name: "Air Purifiers",
+              level: "subcategory",
+              gapDollars: -85_000,
+              insight:
+                "Air Purifiers are −$85K. SKU list stubbed empty for now.",
+              metrics: {
+                attainmentPct: 88,
+                unitsDelta: -620,
+                aspDelta: -0.4,
+                issueChips: [{ chip: "SOV", count: 1 }],
+              },
+              children: [],
+            },
+            {
+              id: "air-fans",
+              name: "Fans & Coolers",
+              level: "subcategory",
+              gapDollars: -35_000,
+              insight:
+                "Fans & Coolers are −$35K. SKU list empty in this prototype.",
+              metrics: {
+                attainmentPct: 94,
+                unitsDelta: -280,
+                aspDelta: -0.1,
+              },
+              children: [],
+            },
+          ],
         },
       ],
     },
@@ -380,12 +755,130 @@ export const hierarchyTree: HierarchyNode = {
       name: "PowerA",
       level: "brand",
       gapDollars: -2_800_000,
+      insight:
+        "PowerA is the largest portfolio miss at −$2.8M. Controllers (−$1.45M) and Headsets (−$780K) dominate; gaming accessories demand is soft vs plan.",
+      metrics: {
+        attainmentPct: 76,
+        unitsDelta: -31_000,
+        aspDelta: -1.1,
+        issueChips: [
+          { chip: "Conversion", count: 6 },
+          { chip: "Keyword Rank", count: 4 },
+        ],
+      },
+      children: [
+        {
+          id: "pa-controllers",
+          name: "Controllers",
+          level: "category",
+          gapDollars: -1_450_000,
+          insight:
+            "Controllers are −$1.45M vs plan — the heaviest PowerA category miss. Competitive pricing and keyword rank losses are the top drivers.",
+          metrics: {
+            attainmentPct: 68,
+            unitsDelta: -18_200,
+            aspDelta: -2.0,
+            issueChips: [
+              { chip: "Keyword Rank", count: 4 },
+              { chip: "Conversion", count: 3 },
+            ],
+          },
+        },
+        {
+          id: "pa-headsets",
+          name: "Headsets",
+          level: "category",
+          gapDollars: -780_000,
+          insight:
+            "Headsets are −$780K. Share of voice dropped on top keywords after media cuts last week.",
+          metrics: {
+            attainmentPct: 72,
+            unitsDelta: -8_400,
+            aspDelta: -0.6,
+            issueChips: [{ chip: "SOV", count: 3 }],
+          },
+        },
+        {
+          id: "pa-charging",
+          name: "Charging & Cables",
+          level: "category",
+          gapDollars: -420_000,
+          insight:
+            "Charging & Cables is −$420K. Bundle attach rates are down; ASP pressure from 3P sellers.",
+          metrics: {
+            attainmentPct: 81,
+            unitsDelta: -3_100,
+            aspDelta: -1.5,
+          },
+        },
+        {
+          id: "pa-cases",
+          name: "Cases & Protection",
+          level: "category",
+          gapDollars: -150_000,
+          insight:
+            "Cases & Protection is a smaller miss (−$150K). Inventory is healthy; traffic soft.",
+          metrics: {
+            attainmentPct: 88,
+            unitsDelta: -1_300,
+            aspDelta: 0.2,
+          },
+        },
+      ],
     },
     {
       id: "ninja",
       name: "Ninja",
       level: "brand",
       gapDollars: 400_000,
+      insight:
+        "Ninja is above plan at +$400K. Kitchen Appliances lead the win; cookware is flat-positive. Use Ninja strength to offset Shark/PowerA misses in portfolio rollups.",
+      metrics: {
+        attainmentPct: 104,
+        unitsDelta: 5_600,
+        aspDelta: 0.9,
+      },
+      children: [
+        {
+          id: "nj-kitchen",
+          name: "Kitchen Appliances",
+          level: "category",
+          gapDollars: 280_000,
+          insight:
+            "Kitchen Appliances are +$280K vs plan. Strong promo conversion and Buy Box hold rates.",
+          metrics: {
+            attainmentPct: 108,
+            unitsDelta: 3_800,
+            aspDelta: 1.2,
+          },
+        },
+        {
+          id: "nj-blenders",
+          name: "Blenders & Smoothies",
+          level: "category",
+          gapDollars: 95_000,
+          insight:
+            "Blenders & Smoothies are +$95K. Seasonal lift continuing into WTD.",
+          metrics: {
+            attainmentPct: 106,
+            unitsDelta: 1_400,
+            aspDelta: 0.5,
+          },
+        },
+        {
+          id: "nj-cookware",
+          name: "Cookware",
+          level: "category",
+          gapDollars: 25_000,
+          insight:
+            "Cookware is slightly above plan (+$25K). Low volatility week.",
+          metrics: {
+            attainmentPct: 101,
+            unitsDelta: 400,
+            aspDelta: 0.1,
+          },
+        },
+      ],
     },
   ],
 };
