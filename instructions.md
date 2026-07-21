@@ -35,7 +35,7 @@ Always follow them unless the user explicitly says otherwise.
 - All pages share the AppShell layout: CommerceIQ dark left sidebar + light top header + main content.
 - **Alerts and insights** (`/`) has three in-page tabs: Overview · Alerts · Insights (see `product_context.md`).
 - Alerts tab: left issue→SKU panel. Insights tab: left hierarchy panel. Overview: no left product panel.
-- SKU is the shared leaf from Alerts or Insights; SKU detail format is TBD — do not invent it yet.
+- SKU is the shared leaf from Alerts or Insights; use `SkuRca` (`src/components/sku-rca/`) for the fixed detail layout (collapsing header + RCA body + chat footer).
 - Keep pages under 300 lines. Extract reusable pieces into `src/components/`.
 
 ## Typography

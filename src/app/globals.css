@@ -100,7 +100,8 @@
   --color-success-600: #16a34a;
   --color-success-700: #15803d;
 
-  /* Error — Red */
+  /* Error — Red (25 = lightest wash for badges; maps to design “red-25”) */
+  --color-error-25: #fff5f5;
   --color-error-50: #fef2f2;
   --color-error-100: #fee2e2;
   --color-error-500: #ef4444;

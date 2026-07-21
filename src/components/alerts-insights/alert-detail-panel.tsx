@@ -1,9 +1,8 @@
 "use client";
 
-import { Info, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
-import { Button } from "@/components/ui/button";
 import {
   formatAtRisk,
   formatGapDollars,
@@ -33,22 +32,14 @@ export function AlertDetailPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">
-            {issueLabel(issue.issueKey)}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {issue.skuCount} SKUs · {formatAtRisk(issue.atRiskDollars)} · by $
-            gap ↓
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled>
-            Bulk action…
-          </Button>
-          <Info className="size-4 text-muted-foreground" aria-hidden />
-        </div>
+      <div>
+        <h2 className="text-xl font-semibold text-foreground">
+          {issueLabel(issue.issueKey)}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {issue.skuCount} SKUs · {formatAtRisk(issue.atRiskDollars)} · by $ gap
+          ↓
+        </p>
       </div>
 
       {issue.aiSignal && (

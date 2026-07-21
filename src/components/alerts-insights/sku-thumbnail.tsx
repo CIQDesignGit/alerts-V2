@@ -31,8 +31,10 @@ function pastelClassForName(name: string) {
 }
 
 function sizeClass(size: number) {
+  if (size >= 64) return "size-16"; // 64px — expanded RCA header
   if (size >= 56) return "size-14"; // 56px
   if (size >= 40) return "size-10"; // 40px
+  if (size >= 32) return "size-8"; // 32px — collapsed RCA header
   return "size-9"; // 36px
 }
 

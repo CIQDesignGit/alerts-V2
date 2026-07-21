@@ -120,13 +120,14 @@ These values were extracted directly from the Figma variable library:
 | `--color-success-700` | `bg-success-700`      | `#15803d` |
 
 ### Error — Red
-| Token               | Tailwind Class      | Hex       |
-| ------------------- | ------------------- | --------- |
-| `--color-error-50`  | `bg-error-50`       | `#fef2f2` |
-| `--color-error-100` | `bg-error-100`      | `#fee2e2` |
-| `--color-error-500` | `bg-error-500`      | `#ef4444` |
-| `--color-error-600` | `bg-error-600`      | `#dc2626` |
-| `--color-error-700` | `bg-error-700`      | `#b91c1c` |
+| Token               | Tailwind Class      | Hex       | Usage |
+| ------------------- | ------------------- | --------- | ----- |
+| `--color-error-25`  | `bg-error-25`       | `#fff5f5` | Softest wash (design “red-25” — GapBadge) |
+| `--color-error-50`  | `bg-error-50`       | `#fef2f2` | — |
+| `--color-error-100` | `bg-error-100`      | `#fee2e2` | — |
+| `--color-error-500` | `bg-error-500`      | `#ef4444` | — |
+| `--color-error-600` | `bg-error-600`      | `#dc2626` | — |
+| `--color-error-700` | `bg-error-700`      | `#b91c1c` | — |
 
 ### Info — Blue
 | Token              | Tailwind Class     | Hex       |
