@@ -137,20 +137,23 @@ These values were extracted directly from the Figma variable library:
 | `--color-info-600` | `bg-info-600`      | `#2563eb` |
 | `--color-info-700` | `bg-info-700`      | `#1d4ed8` |
 
-### Neutral — Gray
-| Token                  | Tailwind Class         | Hex       | Usage                         |
-| ---------------------- | ---------------------- | --------- | ----------------------------- |
-| `--color-neutral-50`   | `bg-neutral-50`        | `#f9fafb` | Page background, table rows   |
-| `--color-neutral-100`  | `bg-neutral-100`       | `#f3f4f6` | Secondary surface             |
-| `--color-neutral-200`  | `bg-neutral-200`       | `#e5e7eb` | Borders, dividers             |
-| `--color-neutral-300`  | `bg-neutral-300`       | `#d1d5db` | Disabled borders              |
-| `--color-neutral-400`  | `bg-neutral-400`       | `#9ca3af` | Placeholder text, icons       |
-| `--color-neutral-500`  | `bg-neutral-500`       | `#6b7280` | Secondary text                |
-| `--color-neutral-600`  | `bg-neutral-600`       | `#4b5563` | Body text (medium contrast)   |
-| `--color-neutral-700`  | `bg-neutral-700`       | `#374151` | Body text (high contrast)     |
-| `--color-neutral-800`  | `bg-neutral-800`       | `#1f2937` | Headings                      |
-| `--color-neutral-900`  | `bg-neutral-900`       | `#111827` | Primary text                  |
-| `--color-neutral-950`  | `bg-neutral-950`       | `#030712` | Max contrast text             |
+### Neutral — Slate
+> Our `neutral-*` tokens use **Tailwind’s slate palette** (not gray / zinc / stone).
+> Keep writing `bg-neutral-50`, `text-neutral-700`, etc. in components — the values underneath are slate.
+
+| Token                  | Tailwind Class         | Hex (slate) | Usage                         |
+| ---------------------- | ---------------------- | ----------- | ----------------------------- |
+| `--color-neutral-50`   | `bg-neutral-50`        | `#f8fafc`   | Page background, table rows   |
+| `--color-neutral-100`  | `bg-neutral-100`       | `#f1f5f9`   | Secondary surface             |
+| `--color-neutral-200`  | `bg-neutral-200`       | `#e2e8f0`   | Borders, dividers             |
+| `--color-neutral-300`  | `bg-neutral-300`       | `#cbd5e1`   | Disabled borders              |
+| `--color-neutral-400`  | `bg-neutral-400`       | `#94a3b8`   | Placeholder text, icons       |
+| `--color-neutral-500`  | `bg-neutral-500`       | `#64748b`   | Secondary text                |
+| `--color-neutral-600`  | `bg-neutral-600`       | `#475569`   | Body text (medium contrast)   |
+| `--color-neutral-700`  | `bg-neutral-700`       | `#334155`   | Body text (high contrast)     |
+| `--color-neutral-800`  | `bg-neutral-800`       | `#1e293b`   | Headings                      |
+| `--color-neutral-900`  | `bg-neutral-900`       | `#0f172a`   | Primary text                  |
+| `--color-neutral-950`  | `bg-neutral-950`       | `#020617`   | Max contrast text             |
 
 ### Semantic Color Roles (CSS Variables)
 These are the shadcn tokens wired to the Tailwind utility system.
@@ -160,14 +163,14 @@ Use `bg-primary`, `text-foreground`, etc. in components.
 | ------------------------ | ----------------- | ----------------- | --------------------------- |
 | `--primary`              | `#875bf7`         | `#a78bfa`         | `bg-primary`                |
 | `--primary-foreground`   | `#ffffff`         | `#2e1065`         | `text-primary-foreground`   |
-| `--secondary`            | neutral-100       | neutral-700       | `bg-secondary`              |
+| `--secondary`            | slate-100 `#f1f5f9` | slate-700 `#334155` | `bg-secondary`              |
 | `--accent`               | `#ddd6fe`         | brand-900         | `bg-accent`                 |
 | `--accent-foreground`    | `#4c1d95`         | brand-200         | `text-accent-foreground`    |
-| `--background`           | `#ffffff`         | neutral-900       | `bg-background`             |
-| `--foreground`           | neutral-900       | neutral-50        | `text-foreground`           |
-| `--muted`                | neutral-100       | neutral-700       | `bg-muted`                  |
-| `--muted-foreground`     | neutral-500       | neutral-400       | `text-muted-foreground`     |
-| `--border`               | neutral-200       | white/10%         | `border-border`             |
+| `--background`           | `#ffffff`         | slate-900 `#0f172a` | `bg-background`             |
+| `--foreground`           | slate-900 `#0f172a` | slate-50 `#f8fafc` | `text-foreground`           |
+| `--muted`                | slate-100 `#f1f5f9` | slate-700 `#334155` | `bg-muted`                  |
+| `--muted-foreground`     | slate-500 `#64748b` | slate-400 `#94a3b8` | `text-muted-foreground`     |
+| `--border`               | slate-200 `#e2e8f0` | white/10%         | `border-border`             |
 | `--ring`                 | `#875bf7`         | `#a78bfa`         | `outline-ring`              |
 | `--destructive`          | error-500         | error-400         | `bg-destructive`            |
 

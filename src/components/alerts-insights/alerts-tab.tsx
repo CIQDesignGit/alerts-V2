@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 
 import { AlertDetailPanel } from "@/components/alerts-insights/alert-detail-panel";
 import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
+import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { IssueKey } from "@/components/alerts/issue-names";
 import {
   alertsSummary,
@@ -44,10 +45,11 @@ export function AlertsTab({ filter }: { filter: string }) {
     [selectedIssue, selectedSkuId],
   );
 
-  function selectIssue(issueKey: IssueKey) {
+  // Whole card header: show alert details + toggle SKU accordion
+  function onIssueCardClick(issueKey: IssueKey) {
     setSelectedIssueKey(issueKey);
     setSelectedSkuId(null);
-    setExpandedKey(issueKey);
+    setExpandedKey((current) => (current === issueKey ? null : issueKey));
   }
 
   function selectSku(issueKey: IssueKey, skuId: string) {
@@ -85,20 +87,30 @@ export function AlertsTab({ filter }: { filter: string }) {
               <li
                 key={issue.issueKey}
                 className={cn(
-                  "rounded-lg border bg-background shadow-xs",
+                  // shrink-0: don't let the flex list crush these cards (overflow-hidden
+                  // would otherwise allow min-height: 0 and clip the subtitle)
+                  // overflow-hidden: keep the SKU panel inside rounded corners
+                  "shrink-0 overflow-hidden rounded-lg border bg-background shadow-xs",
                   issueSelected ? "border-primary" : "border-border",
                   issue.severity === "low" && "opacity-70",
                 )}
               >
                 <button
                   type="button"
-                  className="flex w-full items-start gap-2 px-3 py-3 text-left"
-                  onClick={() => selectIssue(issue.issueKey)}
+                  aria-expanded={open}
+                  className="flex w-full items-start gap-2 px-3 py-3 text-left hover:bg-neutral-50"
+                  onClick={() => onIssueCardClick(issue.issueKey)}
                 >
                   {open ? (
-                    <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <ChevronDown
+                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
                   ) : (
-                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <ChevronRight
+                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-foreground">
@@ -120,7 +132,7 @@ export function AlertsTab({ filter }: { filter: string }) {
 
                 {open && issue.skus.length > 0 && (
                   <div className="border-t border-border bg-neutral-50/80">
-                    <ul>
+                    <ul className="flex flex-col gap-1 p-1">
                       {filteredSkus.map((sku) => {
                         const active = selectedSkuId === sku.id;
                         return (
@@ -129,19 +141,22 @@ export function AlertsTab({ filter }: { filter: string }) {
                               type="button"
                               onClick={() => selectSku(issue.issueKey, sku.id)}
                               className={cn(
-                                "flex w-full items-start justify-between gap-2 px-3 py-2 text-left",
+                                "flex w-full items-start justify-between gap-2 rounded-md px-3 py-2 text-left",
                                 active
                                   ? "bg-brand-100/70"
                                   : "hover:bg-neutral-100",
                               )}
                             >
-                              <div className="min-w-0 flex-1 pr-2">
-                                <p className="truncate text-sm font-medium text-foreground">
-                                  {sku.name}
-                                </p>
-                                <p className="truncate font-mono text-2xs text-muted-foreground">
-                                  {sku.asin} · {sku.seller}
-                                </p>
+                              <div className="flex min-w-0 flex-1 items-start gap-2 pr-2">
+                                <SkuThumbnail name={sku.name} size={36} />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-foreground">
+                                    {sku.name}
+                                  </p>
+                                  <p className="truncate font-mono text-2xs text-muted-foreground">
+                                    {sku.asin} · {sku.seller}
+                                  </p>
+                                </div>
                               </div>
                               <span className="shrink-0 font-mono text-xs font-semibold text-error-600">
                                 {formatGapDollars(sku.gapDollars)}

@@ -14,8 +14,9 @@ Always follow them unless the user explicitly says otherwise.
 - Use **Tailwind classes / semantic tokens only** — no raw hex in components.
 - Prefer project tokens: `brand-*`, `neutral-*`, `warning-*`, `success-*`, `error-*`, `info-*`.
 - Semantic shadcn roles are preferred in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `border-border`.
-- Be consistent with neutrals — prefer `neutral-*` from `design-specs.md`. Do not mix random gray scales (`zinc-*`, etc.).
-- If you need a slate-like surface for layout chrome, use `neutral-*` equivalents first.
+- **Neutrals = Tailwind slate.** Always use `neutral-*` classes (e.g. `bg-neutral-50`, `text-neutral-700`). Their hex values are slate (`#f8fafc` … `#020617`) — see `design-specs.md`.
+- Do **not** use `gray-*`, `zinc-*`, `stone-*`, or raw `slate-*` in components. Stick to `neutral-*` so one scale stays consistent.
+- Shell chrome uses `shell-*` only (AppShell sidebar) — do not mix those into product content surfaces.
 
 ## Images & Avatars
 - Use placeholder images via `https://placehold.co/{width}x{height}` for any product/user images.

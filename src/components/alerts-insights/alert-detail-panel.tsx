@@ -2,6 +2,7 @@
 
 import { Info, Zap } from "lucide-react";
 
+import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import { Button } from "@/components/ui/button";
 import {
   formatAtRisk,
@@ -125,7 +126,12 @@ function SkuRow({
         selected ? "bg-brand-100/70" : "hover:bg-neutral-50",
       )}
     >
-      <td className="px-3 py-2.5 font-medium text-foreground">{sku.name}</td>
+      <td className="px-3 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <SkuThumbnail name={sku.name} size={36} />
+          <span className="font-medium text-foreground">{sku.name}</span>
+        </div>
+      </td>
       <td className="px-3 py-2.5 font-mono font-semibold text-error-600">
         {formatGapDollars(sku.gapDollars)}
       </td>

@@ -1,5 +1,6 @@
 "use client";
 
+import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import {
   formatGapDollars,
   issueLabel,
@@ -34,12 +35,15 @@ export function SkuDetailPanel({
         <p className="mt-2 text-xs text-muted-foreground">
           Alerts &gt; {issueLabel(issue.issueKey)} &gt; {sku.name}
         </p>
-        <h2 className="mt-1 text-xl font-semibold text-foreground">
-          {sku.name}
-        </h2>
-        <p className="mt-1 font-mono text-xs text-muted-foreground">
-          {sku.asin} · {sku.seller}
-        </p>
+        <div className="mt-2 flex items-start gap-3">
+          <SkuThumbnail name={sku.name} size={56} />
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold text-foreground">{sku.name}</h2>
+            <p className="mt-1 font-mono text-xs text-muted-foreground">
+              {sku.asin} · {sku.seller}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

@@ -114,18 +114,18 @@
   --color-info-600: #2563eb;
   --color-info-700: #1d4ed8;
 
-  /* Neutral — Gray */
-  --color-neutral-50: #f9fafb;
-  --color-neutral-100: #f3f4f6;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-500: #6b7280;
-  --color-neutral-600: #4b5563;
-  --color-neutral-700: #374151;
-  --color-neutral-800: #1f2937;
-  --color-neutral-900: #111827;
-  --color-neutral-950: #030712;
+  /* Neutral — Tailwind slate (class name stays neutral-*; values are slate) */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-neutral-950: #020617;
 
   /* Platform shell (CommerceIQ chrome — matches product screenshot) */
   --color-shell: #121926;
@@ -144,22 +144,22 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #0f172a; /* slate-900 */
   --card: #ffffff;
-  --card-foreground: #111827;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #111827;
+  --popover-foreground: #0f172a;
   --primary: #875bf7;
   --primary-foreground: #ffffff;
-  --secondary: #f3f4f6;
-  --secondary-foreground: #111827;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
+  --secondary: #f1f5f9; /* slate-100 */
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b; /* slate-500 */
   --accent: #ddd6fe;
   --accent-foreground: #4c1d95;
   --destructive: #ef4444;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
+  --border: #e2e8f0; /* slate-200 */
+  --input: #e2e8f0;
   --ring: #875bf7;
   --radius: 0.5rem;
   --chart-1: #875bf7;
@@ -167,29 +167,29 @@
   --chart-3: #22c55e;
   --chart-4: #dc6803;
   --chart-5: #ef4444;
-  --sidebar: #f9fafb;
-  --sidebar-foreground: #111827;
+  --sidebar: #f8fafc; /* slate-50 */
+  --sidebar-foreground: #0f172a;
   --sidebar-primary: #875bf7;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #ddd6fe;
   --sidebar-accent-foreground: #4c1d95;
-  --sidebar-border: #e5e7eb;
+  --sidebar-border: #e2e8f0;
   --sidebar-ring: #875bf7;
 }
 
 .dark {
-  --background: #111827;
-  --foreground: #f9fafb;
-  --card: #1f2937;
-  --card-foreground: #f9fafb;
-  --popover: #1f2937;
-  --popover-foreground: #f9fafb;
+  --background: #0f172a; /* slate-900 */
+  --foreground: #f8fafc; /* slate-50 */
+  --card: #1e293b; /* slate-800 */
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
   --primary: #a78bfa;
   --primary-foreground: #2e1065;
-  --secondary: #374151;
-  --secondary-foreground: #f9fafb;
-  --muted: #374151;
-  --muted-foreground: #9ca3af;
+  --secondary: #334155; /* slate-700 */
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8; /* slate-400 */
   --accent: #4c1d95;
   --accent-foreground: #ddd6fe;
   --destructive: #f87171;
@@ -201,8 +201,8 @@
   --chart-3: #4ade80;
   --chart-4: #fcb519;
   --chart-5: #f87171;
-  --sidebar: #1f2937;
-  --sidebar-foreground: #f9fafb;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f8fafc;
   --sidebar-primary: #a78bfa;
   --sidebar-primary-foreground: #2e1065;
   --sidebar-accent: #4c1d95;
