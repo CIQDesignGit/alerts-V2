@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 const BREADCRUMB_BY_PATH: Record<string, string[]> = {
   "/": ["Agents", "Alerts and insights"],
@@ -55,29 +54,23 @@ export function TopBar() {
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1 text-sm font-normal text-neutral-500"
+      >
         <Link
           href="/"
           aria-label="Home"
-          className="rounded p-1 text-muted-foreground hover:bg-neutral-100 hover:text-foreground"
+          className="rounded p-1 text-neutral-500 hover:bg-neutral-100 hover:text-foreground"
         >
           <Home className="size-4" />
         </Link>
-        {crumbs.map((crumb, index) => {
-          const isLast = index === crumbs.length - 1;
-          return (
-            <span key={crumb} className="flex items-center gap-1">
-              <ChevronRight className="size-3.5 text-neutral-300" />
-              <span
-                className={cn(
-                  isLast ? "font-medium text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {crumb}
-              </span>
-            </span>
-          );
-        })}
+        {crumbs.map((crumb) => (
+          <span key={crumb} className="flex items-center gap-1">
+            <ChevronRight className="size-3.5 text-neutral-300" />
+            <span className="text-sm font-normal text-neutral-500">{crumb}</span>
+          </span>
+        ))}
       </nav>
 
       <div className="flex items-center gap-1">

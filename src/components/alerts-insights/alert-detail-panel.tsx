@@ -6,55 +6,60 @@ import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import {
   formatAtRisk,
   formatGapDollars,
-  issueLabel,
-  type IssueAlert,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
 
+/** Shared right-pane aggregate for issue- or category-grouped alerts */
+export type AlertGroupDetail = {
+  title: string;
+  skuCount: number;
+  atRiskDollars: number;
+  aiSignal?: string;
+  skus: IssueSku[];
+};
+
 type AlertDetailPanelProps = {
-  issue: IssueAlert;
+  group: AlertGroupDetail;
   selectedSkuId: string | null;
   onSelectSku: (skuId: string) => void;
 };
 
 export function AlertDetailPanel({
-  issue,
+  group,
   selectedSkuId,
   onSelectSku,
 }: AlertDetailPanelProps) {
-  const remaining = Math.max(issue.skuCount - issue.skus.length, 0);
+  const remaining = Math.max(group.skuCount - group.skus.length, 0);
   const remainingGap = Math.max(
-    issue.atRiskDollars -
-      issue.skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0),
+    group.atRiskDollars -
+      group.skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0),
     0,
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">
-          {issueLabel(issue.issueKey)}
-        </h2>
+        <h2 className="text-xl font-semibold text-foreground">{group.title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          {issue.skuCount} SKUs · {formatAtRisk(issue.atRiskDollars)} · by $ gap
+          {group.skuCount} SKUs · {formatAtRisk(group.atRiskDollars)} · by $ gap
           ↓
         </p>
       </div>
 
-      {issue.aiSignal && (
+      {group.aiSignal && (
         <section className="rounded-lg border border-warning-200 bg-warning-50 p-4">
           <p className="flex items-center gap-1.5 text-2xs font-semibold tracking-wider text-warning-700 uppercase">
             <Zap className="size-3.5 fill-warning-500 text-warning-500" />
             AI Signal — Systemic Pattern
           </p>
           <p className="mt-2 text-sm leading-relaxed text-neutral-800">
-            {issue.aiSignal}
+            {group.aiSignal}
           </p>
         </section>
       )}
 
-      {issue.skus.length > 0 ? (
+      {group.skus.length > 0 ? (
         <div className="overflow-hidden rounded-lg border border-border">
           <table className="w-full text-left text-sm">
             <thead className="bg-neutral-50 text-2xs tracking-wide text-muted-foreground uppercase">
@@ -68,7 +73,7 @@ export function AlertDetailPanel({
               </tr>
             </thead>
             <tbody>
-              {issue.skus.map((sku) => (
+              {group.skus.map((sku) => (
                 <SkuRow
                   key={sku.id}
                   sku={sku}
@@ -86,7 +91,7 @@ export function AlertDetailPanel({
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          No SKU rows loaded for this alert yet. Expand the issue in the left
+          No SKU rows loaded for this alert yet. Expand the group in the left
           panel when SKUs are available.
         </p>
       )}

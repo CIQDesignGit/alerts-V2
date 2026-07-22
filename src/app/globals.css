@@ -161,7 +161,8 @@
   --destructive: #ef4444;
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
-  --ring: #875bf7;
+  /* Neutral focus ring — brand purple is for CTAs/chips, not every focus outline */
+  --ring: #94a3b8;
   --radius: 0.5rem;
   --chart-1: #875bf7;
   --chart-2: #3b82f6;
@@ -196,7 +197,7 @@
   --destructive: #f87171;
   --border: rgb(255 255 255 / 10%);
   --input: rgb(255 255 255 / 15%);
-  --ring: #a78bfa;
+  --ring: #64748b;
   --chart-1: #a78bfa;
   --chart-2: #60a5fa;
   --chart-3: #4ade80;

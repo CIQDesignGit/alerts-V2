@@ -172,7 +172,7 @@ Use `bg-primary`, `text-foreground`, etc. in components.
 | `--muted`                | slate-100 `#f1f5f9` | slate-700 `#334155` | `bg-muted`                  |
 | `--muted-foreground`     | slate-500 `#64748b` | slate-400 `#94a3b8` | `text-muted-foreground`     |
 | `--border`               | slate-200 `#e2e8f0` | white/10%         | `border-border`             |
-| `--ring`                 | `#875bf7`         | `#a78bfa`         | `outline-ring`              |
+| `--ring`                 | slate-400 `#94a3b8` | slate-500 `#64748b` | `outline-ring` / focus rings (neutral — not brand) |
 | `--destructive`          | error-500         | error-400         | `bg-destructive`            |
 
 ---

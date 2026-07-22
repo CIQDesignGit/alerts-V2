@@ -1,197 +1,201 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AlertDetailPanel } from "@/components/alerts-insights/alert-detail-panel";
-import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
-import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
-import type { IssueKey } from "@/components/alerts/issue-names";
 import {
-  alertsSummary,
+  CategoryGroupCard,
+  IssueGroupCard,
+} from "@/components/alerts-insights/alert-group-cards";
+import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
+import {
+  categoryAlerts,
+  filterCategoryAlerts,
+  filterIssueAlerts,
+  findIssueForSku,
   formatAtRisk,
-  formatGapDollars,
   issueAlerts,
-  issueGroup,
   issueLabel,
-  type IssueAlert,
+  type AlertsFilters,
+  type AlertsGroupBy,
 } from "@/lib/mock-alerts-insights";
-import { cn } from "@/lib/utils";
 
-function severityText(severity: IssueAlert["severity"]) {
-  if (severity === "high") return "text-error-600";
-  if (severity === "mid") return "text-warning-700";
-  return "text-neutral-500";
-}
-
-export function AlertsTab({ filter }: { filter: string }) {
-  const [expandedKey, setExpandedKey] = useState<IssueKey | null>(
-    issueAlerts[0]?.issueKey ?? null,
+export function AlertsTab({
+  filters,
+  groupBy = "issue",
+}: {
+  filters: AlertsFilters;
+  groupBy?: AlertsGroupBy;
+}) {
+  // Apply Brand / Category / SKU filters, then show issue or category buckets
+  const visibleIssues = useMemo(
+    () => filterIssueAlerts(issueAlerts, filters),
+    [filters],
   );
-  // null SKU = alert aggregate view; set SKU = leaf detail
-  const [selectedIssueKey, setSelectedIssueKey] = useState<IssueKey>(
-    issueAlerts[0]?.issueKey ?? "lostBuyBox",
+  const visibleCategories = useMemo(
+    () => filterCategoryAlerts(categoryAlerts, filters),
+    [filters],
+  );
+
+  const [expandedId, setExpandedId] = useState<string | null>(
+    visibleIssues[0]?.issueKey ?? null,
+  );
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(
+    visibleIssues[0]?.issueKey ?? "lostBuyBox",
   );
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
 
-  const selectedIssue = useMemo(
-    () =>
-      issueAlerts.find((i) => i.issueKey === selectedIssueKey) ?? issueAlerts[0],
-    [selectedIssueKey],
-  );
-
-  const selectedSku = useMemo(
-    () => selectedIssue?.skus.find((s) => s.id === selectedSkuId) ?? null,
-    [selectedIssue, selectedSkuId],
-  );
-
-  // Whole card header: show alert details + toggle SKU accordion
-  function onIssueCardClick(issueKey: IssueKey) {
-    setSelectedIssueKey(issueKey);
+  // Reset selection when group-by or filters change the list
+  useEffect(() => {
+    if (groupBy === "issue") {
+      const first = visibleIssues[0]?.issueKey ?? null;
+      setExpandedId(first);
+      setSelectedGroupId(first ?? "");
+    } else {
+      const first = visibleCategories[0]?.id ?? null;
+      setExpandedId(first);
+      setSelectedGroupId(first ?? "");
+    }
     setSelectedSkuId(null);
-    setExpandedKey((current) => (current === issueKey ? null : issueKey));
+  }, [groupBy, filters, visibleIssues, visibleCategories]);
+
+  const selectedIssue = useMemo(() => {
+    if (groupBy !== "issue") return undefined;
+    return (
+      visibleIssues.find((i) => i.issueKey === selectedGroupId) ??
+      visibleIssues[0]
+    );
+  }, [groupBy, selectedGroupId, visibleIssues]);
+
+  const selectedCategory = useMemo(() => {
+    if (groupBy !== "category") return undefined;
+    return (
+      visibleCategories.find((c) => c.id === selectedGroupId) ??
+      visibleCategories[0]
+    );
+  }, [groupBy, selectedGroupId, visibleCategories]);
+
+  const selectedSkuIssue = useMemo(() => {
+    if (!selectedSkuId) return undefined;
+    if (groupBy === "issue") return selectedIssue;
+    return findIssueForSku(selectedSkuId);
+  }, [groupBy, selectedIssue, selectedSkuId]);
+
+  const selectedSku = useMemo(() => {
+    if (!selectedSkuId || !selectedSkuIssue) return null;
+    return selectedSkuIssue.skus.find((s) => s.id === selectedSkuId) ?? null;
+  }, [selectedSkuId, selectedSkuIssue]);
+
+  function onGroupCardClick(id: string) {
+    setSelectedGroupId(id);
+    setSelectedSkuId(null);
+    setExpandedId((current) => (current === id ? null : id));
   }
 
-  function selectSku(issueKey: IssueKey, skuId: string) {
-    setSelectedIssueKey(issueKey);
+  function selectSku(groupId: string, skuId: string) {
+    setSelectedGroupId(groupId);
     setSelectedSkuId(skuId);
-    setExpandedKey(issueKey);
+    setExpandedId(groupId);
   }
+
+  const totalAtRisk =
+    groupBy === "issue"
+      ? visibleIssues.reduce((sum, i) => sum + i.atRiskDollars, 0)
+      : visibleCategories.reduce((sum, c) => sum + c.atRiskDollars, 0);
+
+  const listHeader =
+    groupBy === "issue"
+      ? `${visibleIssues.length} Alerts · ${formatAtRisk(totalAtRisk)} at risk`
+      : `${visibleCategories.length} Categories · ${formatAtRisk(totalAtRisk)} at risk`;
 
   return (
     <div className="flex min-h-0 flex-1">
       <aside className="flex w-80 shrink-0 flex-col border-r border-border bg-neutral-50">
         <div className="border-b border-border px-4 py-3">
           <p className="text-2xs font-semibold tracking-wider text-muted-foreground uppercase">
-            {alertsSummary.count} Alerts · {formatAtRisk(alertsSummary.atRiskDollars)}{" "}
-            at risk
+            {listHeader}
           </p>
         </div>
 
         <ul className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
-          {issueAlerts.map((issue) => {
-            const open = expandedKey === issue.issueKey;
-            const issueSelected =
-              selectedIssueKey === issue.issueKey && !selectedSkuId;
-            const filteredSkus = issue.skus.filter((sku) => {
-              if (!filter.trim()) return true;
-              const q = filter.toLowerCase();
-              return (
-                sku.name.toLowerCase().includes(q) ||
-                sku.asin.toLowerCase().includes(q) ||
-                String(sku.gapDollars).includes(q)
-              );
-            });
+          {groupBy === "issue" && visibleIssues.length === 0 && (
+            <li className="px-2 py-6 text-center text-xs text-muted-foreground">
+              No alerts match these filters. Try Clear.
+            </li>
+          )}
+          {groupBy === "category" && visibleCategories.length === 0 && (
+            <li className="px-2 py-6 text-center text-xs text-muted-foreground">
+              No categories match these filters. Try Clear.
+            </li>
+          )}
 
-            return (
-              <li
-                key={issue.issueKey}
-                className={cn(
-                  // shrink-0: don't let the flex list crush these cards (overflow-hidden
-                  // would otherwise allow min-height: 0 and clip the subtitle)
-                  // overflow-hidden: keep the SKU panel inside rounded corners
-                  "shrink-0 overflow-hidden rounded-lg border bg-background shadow-xs",
-                  issueSelected ? "border-primary" : "border-border",
-                  issue.severity === "low" && "opacity-70",
-                )}
-              >
-                <button
-                  type="button"
-                  aria-expanded={open}
-                  className="flex w-full items-start gap-2 px-3 py-3 text-left hover:bg-neutral-50"
-                  onClick={() => onIssueCardClick(issue.issueKey)}
-                >
-                  {open ? (
-                    <ChevronDown
-                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                      aria-hidden
-                    />
-                  ) : (
-                    <ChevronRight
-                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                      aria-hidden
-                    />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      {issueLabel(issue.issueKey)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {issue.skuCount} SKUs · {issueGroup(issue.issueKey)}
-                    </p>
-                  </div>
-                  <p
-                    className={cn(
-                      "shrink-0 font-mono text-sm font-bold",
-                      severityText(issue.severity),
-                    )}
-                  >
-                    {formatAtRisk(issue.atRiskDollars)}
-                  </p>
-                </button>
-
-                {open && issue.skus.length > 0 && (
-                  <div className="border-t border-border bg-neutral-50/80">
-                    <ul className="flex flex-col gap-1 p-1">
-                      {filteredSkus.map((sku) => {
-                        const active = selectedSkuId === sku.id;
-                        return (
-                          <li key={sku.id}>
-                            <button
-                              type="button"
-                              onClick={() => selectSku(issue.issueKey, sku.id)}
-                              className={cn(
-                                "flex w-full items-start justify-between gap-2 rounded-md px-3 py-2 text-left",
-                                active
-                                  ? "bg-brand-100/70"
-                                  : "hover:bg-neutral-100",
-                              )}
-                            >
-                              <div className="flex min-w-0 flex-1 items-start gap-2 pr-2">
-                                <SkuThumbnail name={sku.name} size={36} />
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium text-foreground">
-                                    {sku.name}
-                                  </p>
-                                  <p className="truncate font-mono text-2xs text-muted-foreground">
-                                    {sku.asin} · {sku.seller}
-                                  </p>
-                                </div>
-                              </div>
-                              <span className="shrink-0 font-mono text-xs font-semibold text-error-600">
-                                {formatGapDollars(sku.gapDollars)}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    {issue.skuCount > issue.skus.length && (
-                      <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground italic">
-                        + {issue.skuCount - issue.skus.length} more SKUs · $66K
-                      </p>
-                    )}
-                  </div>
-                )}
-              </li>
-            );
-          })}
+          {groupBy === "issue"
+            ? visibleIssues.map((issue) => (
+                <IssueGroupCard
+                  key={issue.issueKey}
+                  issue={issue}
+                  open={expandedId === issue.issueKey}
+                  groupSelected={
+                    selectedGroupId === issue.issueKey && !selectedSkuId
+                  }
+                  selectedSkuId={selectedSkuId}
+                  filter=""
+                  onCardClick={() => onGroupCardClick(issue.issueKey)}
+                  onSelectSku={(skuId) => selectSku(issue.issueKey, skuId)}
+                />
+              ))
+            : visibleCategories.map((category) => (
+                <CategoryGroupCard
+                  key={category.id}
+                  category={category}
+                  open={expandedId === category.id}
+                  groupSelected={
+                    selectedGroupId === category.id && !selectedSkuId
+                  }
+                  selectedSkuId={selectedSkuId}
+                  filter=""
+                  onCardClick={() => onGroupCardClick(category.id)}
+                  onSelectSku={(skuId) => selectSku(category.id, skuId)}
+                />
+              ))}
         </ul>
       </aside>
 
-      {selectedSku && selectedIssue ? (
+      {selectedSku && selectedSkuIssue ? (
         <SkuDetailPanel
-          issue={selectedIssue}
+          issue={selectedSkuIssue}
           sku={selectedSku}
           onBackToAlert={() => setSelectedSkuId(null)}
         />
-      ) : selectedIssue ? (
+      ) : groupBy === "issue" && selectedIssue ? (
         <AlertDetailPanel
-          issue={selectedIssue}
+          group={{
+            title: issueLabel(selectedIssue.issueKey),
+            skuCount: selectedIssue.skuCount,
+            atRiskDollars: selectedIssue.atRiskDollars,
+            aiSignal: selectedIssue.aiSignal,
+            skus: selectedIssue.skus,
+          }}
           selectedSkuId={selectedSkuId}
           onSelectSku={(skuId) => selectSku(selectedIssue.issueKey, skuId)}
         />
-      ) : null}
+      ) : groupBy === "category" && selectedCategory ? (
+        <AlertDetailPanel
+          group={{
+            title: selectedCategory.name,
+            skuCount: selectedCategory.skuCount,
+            atRiskDollars: selectedCategory.atRiskDollars,
+            aiSignal: selectedCategory.aiSignal,
+            skus: selectedCategory.skus,
+          }}
+          selectedSkuId={selectedSkuId}
+          onSelectSku={(skuId) => selectSku(selectedCategory.id, skuId)}
+        />
+      ) : (
+        <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
+          No alert selected. Adjust filters or Clear to see all alerts.
+        </div>
+      )}
     </div>
   );
 }

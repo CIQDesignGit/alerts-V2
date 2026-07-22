@@ -17,12 +17,50 @@ export type IssueSku = {
   asin: string;
   seller: string;
   gapDollars: number;
+  /** Brand for Alerts filter chips / popovers */
+  brand: string;
+  /** Product category — used when Alerts are grouped by category */
+  category: string;
   /** Buy Box / competitive fields when relevant to the issue */
   bbOwner?: string;
   theirPrice?: number;
   ourPrice?: number;
   lostAt?: string;
 };
+
+/** Active Alerts tab filters (Brand · Category · SKU text) */
+export type AlertsFilters = {
+  brand: string | null;
+  category: string | null;
+  skuQuery: string;
+};
+
+/** One row inside Brand / Category filter popovers */
+export type FilterDimensionOption = {
+  id: string;
+  name: string;
+  gapDollars: number;
+  unitsDelta: number;
+  issueCount: number;
+  achievedDollars: number;
+  targetDollars: number;
+};
+
+/** SKU row inside a category-aggregated alert (keeps issue link for detail/RCA) */
+export type CategorySku = IssueSku & { issueKey: IssueKey };
+
+/** Category-level rollup of alerts (same shape as IssueAlert for the left list) */
+export type CategoryAlert = {
+  id: string;
+  name: string;
+  skuCount: number;
+  atRiskDollars: number;
+  severity: "high" | "mid" | "low";
+  aiSignal?: string;
+  skus: CategorySku[];
+};
+
+export type AlertsGroupBy = "issue" | "category";
 
 export type IssueAlert = {
   issueKey: IssueKey;
@@ -148,49 +186,63 @@ export const brandCards: BrandCard[] = [
   },
 ];
 
-/** Above-plan wins for Overview — separate from gap / miss heroes. */
+/** CIQ action win — quantifies what the platform did, not just “above plan” entities */
 export type OverviewWin = {
   id: string;
-  name: string;
-  /** Brand · Category path style label */
-  path: string;
-  gapDollars: number;
-  attainmentPct: number;
-  note: string;
+  /** Short action title — what CIQ / AllyAI did */
+  action: string;
+  /** Narrative of the intervention + outcome */
+  narrative: string;
+  /** Dollar impact attributed to the action */
+  impactDollars: number;
+  /** Supporting metric label under the $ (e.g. “revenue protected”) */
+  impactLabel: string;
+  /** Where it happened — Brand · Category or SKU scope */
+  scope: string;
+  /** Optional count of SKUs / campaigns touched */
+  skusTouched?: number;
 };
 
 export const overviewWins: OverviewWin[] = [
   {
-    id: "ninja",
-    name: "Ninja",
-    path: "Brand",
-    gapDollars: 400_000,
-    attainmentPct: 104,
-    note: "Kitchen Appliances leading the win",
+    id: "bb-reprice",
+    action: "Reclaimed Buy Box on 9 robot SKUs",
+    narrative:
+      "AllyAI flagged VacuumKing undercutting mid-week. CIQ ran the competitive reprice playbook within 4 hours — Buy Box recovered on 7 of 9 ASINs.",
+    impactDollars: 180_000,
+    impactLabel: "revenue protected WTD",
+    scope: "Shark · Floor Care Robotics",
+    skusTouched: 9,
   },
   {
-    id: "nj-kitchen",
-    name: "Kitchen Appliances",
-    path: "Ninja · Category",
-    gapDollars: 280_000,
-    attainmentPct: 108,
-    note: "Strong promo conversion + Buy Box hold",
+    id: "deal-restore",
+    action: "Restored Deal Page Visibility",
+    narrative:
+      "Content Agent + Sales Agent synced missing deal badges on 6 floor-care ASINs after a syndication drop. Traffic recovered same day.",
+    impactDollars: 95_000,
+    impactLabel: "sales recovered",
+    scope: "Shark · Floor Care",
+    skusTouched: 6,
   },
   {
-    id: "shark-hair",
-    name: "Hair Care",
-    path: "Shark · Category",
-    gapDollars: 260_000,
-    attainmentPct: 112,
-    note: "New launches carrying conversion",
+    id: "promo-budget",
+    action: "Reallocated promo budget to Ninja kitchen",
+    narrative:
+      "AllyAI recommended shifting $42K from underperforming SOV into Ninja cookware deals. Conversion held Buy Box while units lifted.",
+    impactDollars: 120_000,
+    impactLabel: "incremental sales",
+    scope: "Ninja · Kitchen Appliances",
+    skusTouched: 4,
   },
   {
-    id: "nj-blenders",
-    name: "Blenders & Smoothies",
-    path: "Ninja · Category",
-    gapDollars: 95_000,
-    attainmentPct: 106,
-    note: "Seasonal lift continuing WTD",
+    id: "oos-expedite",
+    action: "Expedited replenishment on Hair Care",
+    narrative:
+      "Stock Availability alert triggered PO acceleration for 3 launch ASINs. Avoided projected OOS gap before weekend demand.",
+    impactDollars: 68_000,
+    impactLabel: "stockout avoided",
+    scope: "Shark · Hair Care",
+    skusTouched: 3,
   },
 ];
 
@@ -212,6 +264,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark IQ AV970",
         asin: "B08XYZ1234",
         seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care Robotics",
         gapDollars: -62_000,
         bbOwner: "VacuumKing_US",
         theirPrice: 289,
@@ -223,6 +277,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark AI Robot RV2310",
         asin: "B09ABC5678",
         seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care Robotics",
         gapDollars: -48_000,
         bbOwner: "VacuumKing_US",
         theirPrice: 248,
@@ -234,6 +290,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Rx V2 Plus",
         asin: "B07DEF9012",
         seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care Robotics",
         gapDollars: -41_000,
         bbOwner: "VacuumKing_US",
         theirPrice: 199,
@@ -245,6 +303,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Lift-Away Pro",
         asin: "B06GHI3456",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -35_000,
         bbOwner: "DealHunterPro",
         theirPrice: 149,
@@ -256,6 +316,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark HydroVac WD200",
         asin: "B05JKL7890",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -27_000,
         bbOwner: "VacuumKing_US",
         theirPrice: 179,
@@ -277,6 +339,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Stratos Cordless",
         asin: "B0DPV001",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -42_000,
         lostAt: "Jan 16 08:12",
       },
@@ -285,6 +349,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Detect Pro Auto-Empty",
         asin: "B0DPV002",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care Robotics",
         gapDollars: -35_000,
         lostAt: "Jan 16 08:12",
       },
@@ -293,6 +359,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark PowerDetect Upright",
         asin: "B0DPV003",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -28_000,
         lostAt: "Jan 15 19:44",
       },
@@ -301,6 +369,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Vertex DuoClean",
         asin: "B0DPV004",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -22_000,
         lostAt: "Jan 15 11:05",
       },
@@ -309,6 +379,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Wandvac System",
         asin: "B0DPV005",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -18_000,
         lostAt: "Jan 14 16:30",
       },
@@ -317,6 +389,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark CarpetXpert Stain Striker",
         asin: "B0DPV006",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -15_000,
         lostAt: "Jan 14 09:18",
       },
@@ -325,6 +399,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Ninja NeverStick Cookware Set",
         asin: "B0DPV007",
         seller: "CIQ_Retail",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
         gapDollars: -12_000,
         lostAt: "Jan 13 21:50",
       },
@@ -333,6 +409,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Ninja Foodi PossibleCooker",
         asin: "B0DPV008",
         seller: "CIQ_Retail",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
         gapDollars: -8_000,
         lostAt: "Jan 13 14:02",
       },
@@ -351,6 +429,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark AI Ultra Robot RV2502",
         asin: "B0STK001",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care Robotics",
         gapDollars: -32_000,
         lostAt: "Jan 16 06:40",
       },
@@ -359,6 +439,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark Navigator Lift-Away",
         asin: "B0STK002",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
         gapDollars: -24_000,
         lostAt: "Jan 15 22:15",
       },
@@ -367,6 +449,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "Shark FlexBreeze Fan",
         asin: "B0STK003",
         seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Home Comfort",
         gapDollars: -18_000,
         lostAt: "Jan 15 13:28",
       },
@@ -375,6 +459,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "PowerA Enhanced Wired Controller",
         asin: "B0STK004",
         seller: "CIQ_Retail",
+        brand: "PowerA",
+        category: "Controllers",
         gapDollars: -10_000,
         lostAt: "Jan 14 17:55",
       },
@@ -383,6 +469,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         name: "PowerA Nano Enhanced Wireless",
         asin: "B0STK005",
         seller: "CIQ_Retail",
+        brand: "PowerA",
+        category: "Controllers",
         gapDollars: -6_000,
         lostAt: "Jan 14 10:03",
       },
@@ -432,6 +520,225 @@ export const issueAlerts: IssueAlert[] = [...issueAlertsUnsorted].sort(
 export const alertsSummary = {
   count: issueAlerts.length,
   atRiskDollars: issueAlerts.reduce((sum, a) => sum + a.atRiskDollars, 0),
+};
+
+const SEVERITY_RANK: Record<IssueAlert["severity"], number> = {
+  high: 3,
+  mid: 2,
+  low: 1,
+};
+
+/** Roll issue SKUs up into category groups, sorted by $ at risk (highest first). */
+export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
+  const byCategory = new Map<
+    string,
+    {
+      skus: CategorySku[];
+      atRiskDollars: number;
+      severity: IssueAlert["severity"];
+      issueKeys: Set<IssueKey>;
+    }
+  >();
+
+  for (const issue of alerts) {
+    for (const sku of issue.skus) {
+      const existing = byCategory.get(sku.category) ?? {
+        skus: [],
+        atRiskDollars: 0,
+        severity: "low" as IssueAlert["severity"],
+        issueKeys: new Set<IssueKey>(),
+      };
+      existing.skus.push({ ...sku, issueKey: issue.issueKey });
+      existing.atRiskDollars += Math.abs(sku.gapDollars);
+      existing.issueKeys.add(issue.issueKey);
+      if (SEVERITY_RANK[issue.severity] > SEVERITY_RANK[existing.severity]) {
+        existing.severity = issue.severity;
+      }
+      byCategory.set(sku.category, existing);
+    }
+  }
+
+  const groups: CategoryAlert[] = [...byCategory.entries()].map(
+    ([name, data]) => {
+      const skus = [...data.skus].sort((a, b) => a.gapDollars - b.gapDollars);
+      const issueList = [...data.issueKeys].map((key) => issueLabel(key));
+      return {
+        id: name.toLowerCase().replace(/\s+/g, "-"),
+        name,
+        skuCount: skus.length,
+        atRiskDollars: data.atRiskDollars,
+        severity: data.severity,
+        aiSignal: `${name} has ${skus.length} SKUs at risk across ${issueList.join(", ")}. Focus on the highest Gap SKUs first.`,
+        skus,
+      };
+    },
+  );
+
+  return groups.sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+}
+
+export const categoryAlerts: CategoryAlert[] = buildCategoryAlerts(issueAlerts);
+
+/** Find the issue alert that owns a SKU id (for shared SKU leaf). */
+export function findIssueForSku(skuId: string): IssueAlert | undefined {
+  return issueAlerts.find((issue) => issue.skus.some((s) => s.id === skuId));
+}
+
+/** Flat list of every alerted SKU (with owning issue) — filter option source */
+function allAlertSkus(): CategorySku[] {
+  return issueAlerts.flatMap((issue) =>
+    issue.skus.map((sku) => ({ ...sku, issueKey: issue.issueKey })),
+  );
+}
+
+function matchesSkuText(sku: IssueSku, query: string) {
+  if (!query.trim()) return true;
+  const q = query.toLowerCase();
+  return (
+    sku.name.toLowerCase().includes(q) ||
+    sku.asin.toLowerCase().includes(q) ||
+    String(sku.gapDollars).includes(q)
+  );
+}
+
+function skuPassesFilters(
+  sku: IssueSku,
+  filters: AlertsFilters,
+  /** When building category options, ignore category so the list stays complete for the brand */
+  ignoreCategory = false,
+) {
+  if (filters.brand && sku.brand !== filters.brand) return false;
+  if (!ignoreCategory && filters.category && sku.category !== filters.category)
+    return false;
+  if (!matchesSkuText(sku, filters.skuQuery)) return false;
+  return true;
+}
+
+function rollupDimension(
+  skus: CategorySku[],
+  key: "brand" | "category",
+): FilterDimensionOption[] {
+  const map = new Map<
+    string,
+    { gapDollars: number; unitsDelta: number; issueKeys: Set<IssueKey> }
+  >();
+
+  for (const sku of skus) {
+    const name = sku[key];
+    const existing = map.get(name) ?? {
+      gapDollars: 0,
+      unitsDelta: 0,
+      issueKeys: new Set<IssueKey>(),
+    };
+    existing.gapDollars += sku.gapDollars;
+    // Mock units from $ gap (prototype only)
+    existing.unitsDelta += Math.round(sku.gapDollars / 400);
+    existing.issueKeys.add(sku.issueKey);
+    map.set(name, existing);
+  }
+
+  return [...map.entries()]
+    .map(([name, data]) => {
+      const gapAbs = Math.abs(data.gapDollars);
+      const achievedDollars = Math.max(40_000, Math.round(gapAbs * 0.55));
+      const targetDollars = achievedDollars + gapAbs;
+      return {
+        id: name.toLowerCase().replace(/\s+/g, "-"),
+        name,
+        gapDollars: data.gapDollars,
+        unitsDelta: data.unitsDelta,
+        issueCount: data.issueKeys.size,
+        achievedDollars,
+        targetDollars,
+      };
+    })
+    .sort((a, b) => a.gapDollars - b.gapDollars);
+}
+
+/** Brand rows for the filter popover (optionally scoped by current text query) */
+export function getBrandFilterOptions(
+  skuQuery = "",
+): FilterDimensionOption[] {
+  const skus = allAlertSkus().filter((s) => matchesSkuText(s, skuQuery));
+  return rollupDimension(skus, "brand");
+}
+
+/** Category rows — narrowed when a brand is already selected */
+export function getCategoryFilterOptions(
+  brand: string | null = null,
+  skuQuery = "",
+): FilterDimensionOption[] {
+  const skus = allAlertSkus().filter((s) => {
+    if (brand && s.brand !== brand) return false;
+    return matchesSkuText(s, skuQuery);
+  });
+  return rollupDimension(skus, "category");
+}
+
+/** Totals for the open popover header */
+export function summarizeFilterOptions(options: FilterDimensionOption[]) {
+  const gapDollars = options.reduce((sum, o) => sum + o.gapDollars, 0);
+  const unitsDelta = options.reduce((sum, o) => sum + o.unitsDelta, 0);
+  const achievedDollars = options.reduce((sum, o) => sum + o.achievedDollars, 0);
+  const targetDollars = options.reduce((sum, o) => sum + o.targetDollars, 0);
+  return { gapDollars, unitsDelta, achievedDollars, targetDollars };
+}
+
+/** Apply Brand / Category / SKU text filters to issue-grouped alerts */
+export function filterIssueAlerts(
+  alerts: IssueAlert[],
+  filters: AlertsFilters,
+): IssueAlert[] {
+  return alerts
+    .map((issue) => {
+      const skus = issue.skus.filter((sku) => skuPassesFilters(sku, filters));
+      if (skus.length === 0 && issue.skus.length > 0) return null;
+      // Keep empty-SKU placeholder issues only when no dimension filters are on
+      if (
+        issue.skus.length === 0 &&
+        (filters.brand || filters.category || filters.skuQuery.trim())
+      ) {
+        return null;
+      }
+      const atRiskDollars =
+        skus.length > 0
+          ? skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0)
+          : issue.atRiskDollars;
+      return {
+        ...issue,
+        skus,
+        skuCount: skus.length > 0 ? skus.length : issue.skuCount,
+        atRiskDollars,
+      };
+    })
+    .filter((issue): issue is IssueAlert => issue != null)
+    .sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+}
+
+/** Apply the same filters when the left list is grouped by category */
+export function filterCategoryAlerts(
+  alerts: CategoryAlert[],
+  filters: AlertsFilters,
+): CategoryAlert[] {
+  return alerts
+    .map((cat) => {
+      const skus = cat.skus.filter((sku) => skuPassesFilters(sku, filters));
+      if (skus.length === 0) return null;
+      return {
+        ...cat,
+        skus,
+        skuCount: skus.length,
+        atRiskDollars: skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0),
+      };
+    })
+    .filter((cat): cat is CategoryAlert => cat != null)
+    .sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+}
+
+export const emptyAlertsFilters: AlertsFilters = {
+  brand: null,
+  category: null,
+  skuQuery: "",
 };
 
 export const hierarchyTree: HierarchyNode = {

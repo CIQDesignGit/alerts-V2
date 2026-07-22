@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,22 +21,10 @@ type OverviewGapHeroProps = {
 export function OverviewGapHero({ onGoToInsights }: OverviewGapHeroProps) {
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-background shadow-xs">
-      {/* Header: hierarchy path + Insights CTA */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Business Overview
-          </h2>
-          <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-            <span>Entire Business</span>
-            <ChevronRight className="size-3" aria-hidden />
-            <span>Brand</span>
-            <ChevronRight className="size-3" aria-hidden />
-            <span>Category</span>
-            <ChevronRight className="size-3" aria-hidden />
-            <span>SKU</span>
-          </p>
-        </div>
+        <h2 className="text-sm font-semibold text-foreground">
+          Business Overview
+        </h2>
         <Button variant="outline" size="sm" onClick={onGoToInsights}>
           Go to Insights
           <ArrowRight className="size-3.5" />
