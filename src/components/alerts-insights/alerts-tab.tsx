@@ -7,9 +7,11 @@ import {
   CategoryGroupCard,
   IssueGroupCard,
 } from "@/components/alerts-insights/alert-group-cards";
+import { AlertsTimeWindowLabel } from "@/components/alerts-insights/alerts-time-window";
 import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
 import {
   categoryAlerts,
+  DEFAULT_ALERTS_TIME_WINDOW,
   filterCategoryAlerts,
   filterIssueAlerts,
   findIssueForSku,
@@ -27,13 +29,19 @@ export function AlertsTab({
   filters: AlertsFilters;
   groupBy?: AlertsGroupBy;
 }) {
-  // Apply Brand / Category / SKU filters, then show issue or category buckets
+  // Apply Brand / Category / SKU + fixed 7-day lookback
   const visibleIssues = useMemo(
-    () => filterIssueAlerts(issueAlerts, filters),
+    () =>
+      filterIssueAlerts(issueAlerts, filters, DEFAULT_ALERTS_TIME_WINDOW),
     [filters],
   );
   const visibleCategories = useMemo(
-    () => filterCategoryAlerts(categoryAlerts, filters),
+    () =>
+      filterCategoryAlerts(
+        categoryAlerts,
+        filters,
+        DEFAULT_ALERTS_TIME_WINDOW,
+      ),
     [filters],
   );
 
@@ -115,6 +123,7 @@ export function AlertsTab({
           <p className="text-2xs font-semibold tracking-wider text-muted-foreground uppercase">
             {listHeader}
           </p>
+          <AlertsTimeWindowLabel />
         </div>
 
         <ul className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
@@ -171,6 +180,7 @@ export function AlertsTab({
         <AlertDetailPanel
           group={{
             title: issueLabel(selectedIssue.issueKey),
+            feedbackKey: selectedIssue.issueKey,
             skuCount: selectedIssue.skuCount,
             atRiskDollars: selectedIssue.atRiskDollars,
             aiSignal: selectedIssue.aiSignal,
@@ -183,6 +193,7 @@ export function AlertsTab({
         <AlertDetailPanel
           group={{
             title: selectedCategory.name,
+            feedbackKey: `category:${selectedCategory.id}`,
             skuCount: selectedCategory.skuCount,
             atRiskDollars: selectedCategory.atRiskDollars,
             aiSignal: selectedCategory.aiSignal,

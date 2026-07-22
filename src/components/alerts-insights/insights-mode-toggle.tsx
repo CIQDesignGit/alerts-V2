@@ -6,12 +6,15 @@ import type { InsightsMode } from "@/lib/insights-widgets";
 type InsightsModeToggleProps = {
   mode: InsightsMode;
   onChange: (mode: InsightsMode) => void;
+  /** Accessible name for the control (defaults to View mode) */
+  ariaLabel?: string;
 };
 
-/** Live / Historical switch — shadcn Tabs (list only; panels stay in InsightsTab). */
+/** Live / Historical switch — same control on Insights levels and SKU RCA. */
 export function InsightsModeToggle({
   mode,
   onChange,
+  ariaLabel = "View mode",
 }: InsightsModeToggleProps) {
   return (
     <Tabs
@@ -21,10 +24,7 @@ export function InsightsModeToggle({
       }}
       className="gap-0"
     >
-      <TabsList
-        aria-label="Insights mode"
-        className="h-8 bg-neutral-100"
-      >
+      <TabsList aria-label={ariaLabel} className="h-8 bg-neutral-100">
         <TabsTrigger value="live" className="px-3 text-xs">
           Live
         </TabsTrigger>

@@ -4,17 +4,17 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { formatCompactDollars } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
-/** Amazon “a” + smile — light-friendly SVG in /public */
+/** Amazon “a” + smile mark — PNG asset in /public */
 function AmazonMark({ className }: { className?: string }) {
   return (
-    // Brand SVG asset (transparent bg works on light pills)
+    // Brand mark from product assets (scaled for the PDP chip)
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/amazon-logo.svg"
+      src="/amazon-icon.png"
       alt=""
       width={14}
       height={14}
-      className={cn("shrink-0", className)}
+      className={cn("shrink-0 object-contain", className)}
       aria-hidden
     />
   );

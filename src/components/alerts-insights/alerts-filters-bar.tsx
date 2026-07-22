@@ -8,6 +8,7 @@ import {
   formatGapDollars,
   getBrandFilterOptions,
   getCategoryFilterOptions,
+  getSkuFilterOptions,
   summarizeFilterOptions,
   type AlertsFilters,
   type AlertsGroupBy,
@@ -22,7 +23,7 @@ type AlertsFiltersBarProps = {
   onGroupByChange: (value: AlertsGroupBy) => void;
 };
 
-type OpenMenu = "brand" | "category" | "search" | "groupBy" | null;
+type OpenMenu = "brand" | "category" | "sku" | "search" | "groupBy" | null;
 
 const GROUP_BY_OPTIONS = [
   { id: "issue" as const, label: "Issue type" },
@@ -39,7 +40,6 @@ export function AlertsFiltersBar({
   const rootRef = useRef<HTMLDivElement>(null);
   const groupByPanelId = useId();
 
-  // Close popovers when clicking outside the filter cluster
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(null);
@@ -53,19 +53,26 @@ export function AlertsFiltersBar({
     filters.brand,
     filters.skuQuery,
   );
+  const skuOptions = getSkuFilterOptions(
+    filters.brand,
+    filters.category,
+    filters.skuQuery,
+  );
   const selectedBrand = brandOptions.find((o) => o.name === filters.brand);
   const selectedCategory = categoryOptions.find(
     (o) => o.name === filters.category,
   );
+  const selectedSku = skuOptions.find((o) => o.id === filters.skuId);
   const groupByLabel =
     GROUP_BY_OPTIONS.find((o) => o.id === groupBy)?.label ?? "Issue type";
   const hasActive =
     Boolean(filters.brand) ||
     Boolean(filters.category) ||
+    Boolean(filters.skuId) ||
     Boolean(filters.skuQuery.trim());
 
   function clearAll() {
-    onChange({ brand: null, category: null, skuQuery: "" });
+    onChange({ brand: null, category: null, skuId: null, skuQuery: "" });
     setOpen(null);
   }
 
@@ -74,10 +81,6 @@ export function AlertsFiltersBar({
       ref={rootRef}
       className="flex min-w-0 flex-1 items-center justify-end gap-4"
     >
-      {/*
-        Gestalt: Group by is a VIEW MODE (how the list is stacked).
-        Own cluster + divider keeps it separate from filters.
-      */}
       <div
         role="group"
         aria-label="Group alerts by"
@@ -144,22 +147,16 @@ export function AlertsFiltersBar({
         )}
       </div>
 
-      {/* Divider = visual break between “arrange” and “narrow” */}
       <div className="h-5 w-px shrink-0 bg-border" aria-hidden />
 
-      {/*
-        Gestalt: Filters share one tight cluster (Similarity + Proximity).
-        They answer “which SKUs?” — search, brand, category, clear.
-      */}
       <div
         role="group"
         aria-label="Filter alerts"
         className="flex min-w-0 items-center gap-1.5"
       >
-        {/* SKU search — icon only until opened */}
         <div className="relative">
           {open === "search" || filters.skuQuery ? (
-            <label className="relative block w-48">
+            <label className="relative block w-40">
               <span className="sr-only">Filter by SKU name, ASIN, or $ gap</span>
               <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -170,7 +167,7 @@ export function AlertsFiltersBar({
                   onChange({ ...filters, skuQuery: e.target.value })
                 }
                 onFocus={() => setOpen("search")}
-                placeholder="SKU, ASIN, $ gap..."
+                placeholder="Search..."
                 className={cn(
                   "w-full rounded-md border border-border bg-background py-1.5 pr-7 pl-7 text-xs",
                   fieldFocusClass,
@@ -179,7 +176,7 @@ export function AlertsFiltersBar({
               {filters.skuQuery && (
                 <button
                   type="button"
-                  aria-label="Clear SKU filter"
+                  aria-label="Clear search"
                   className={cn(
                     "absolute top-1/2 right-1.5 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground",
                     controlFocusClass,
@@ -214,22 +211,23 @@ export function AlertsFiltersBar({
           open={open === "brand"}
           onOpenChange={(next) => setOpen(next ? "brand" : null)}
           listHeading="Brands by $ gap"
-          onSelect={(name) => {
+          onSelect={(option) => {
+            const cats = getCategoryFilterOptions(
+              option.name,
+              filters.skuQuery,
+            );
+            const categoryStillValid =
+              filters.category &&
+              cats.some((c) => c.name === filters.category);
             onChange({
               ...filters,
-              brand: name,
-              category:
-                name && filters.category
-                  ? getCategoryFilterOptions(name, filters.skuQuery).some(
-                      (c) => c.name === filters.category,
-                    )
-                    ? filters.category
-                    : null
-                  : filters.category,
+              brand: option.name,
+              category: categoryStillValid ? filters.category : null,
+              skuId: null,
             });
             setOpen(null);
           }}
-          onClear={() => onChange({ ...filters, brand: null })}
+          onClear={() => onChange({ ...filters, brand: null, skuId: null })}
         />
 
         <FilterDimensionControl
@@ -240,11 +238,33 @@ export function AlertsFiltersBar({
           open={open === "category"}
           onOpenChange={(next) => setOpen(next ? "category" : null)}
           listHeading="Categories by $ gap"
-          onSelect={(name) => {
-            onChange({ ...filters, category: name });
+          onSelect={(option) => {
+            onChange({
+              ...filters,
+              category: option.name,
+              skuId: null,
+            });
             setOpen(null);
           }}
-          onClear={() => onChange({ ...filters, category: null })}
+          onClear={() =>
+            onChange({ ...filters, category: null, skuId: null })
+          }
+        />
+
+        <FilterDimensionControl
+          label="All SKUs"
+          dimension="sku"
+          selected={selectedSku}
+          options={skuOptions}
+          open={open === "sku"}
+          onOpenChange={(next) => setOpen(next ? "sku" : null)}
+          listHeading="SKUs by $ gap"
+          badgeLabel="SKU"
+          onSelect={(option) => {
+            onChange({ ...filters, skuId: option.id });
+            setOpen(null);
+          }}
+          onClear={() => onChange({ ...filters, skuId: null })}
         />
 
         {hasActive && (
@@ -274,16 +294,18 @@ function FilterDimensionControl({
   listHeading,
   onSelect,
   onClear,
+  badgeLabel = "Issue",
 }: {
   label: string;
-  dimension: "brand" | "category";
+  dimension: "brand" | "category" | "sku";
   selected?: FilterDimensionOption;
   options: FilterDimensionOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   listHeading: string;
-  onSelect: (name: string) => void;
+  onSelect: (option: FilterDimensionOption) => void;
   onClear: () => void;
+  badgeLabel?: string;
 }) {
   const panelId = useId();
   const summary = summarizeFilterOptions(options);
@@ -302,7 +324,7 @@ function FilterDimensionControl({
             aria-controls={panelId}
             onClick={() => onOpenChange(!open)}
             className={cn(
-              "flex min-w-0 flex-1 items-center gap-1.5 py-0.5 text-left rounded-sm",
+              "flex min-w-0 flex-1 items-center gap-1.5 rounded-sm py-0.5 text-left",
               controlFocusClass,
             )}
           >
@@ -311,9 +333,6 @@ function FilterDimensionControl({
             </span>
             <span className="shrink-0 font-mono text-2xs font-semibold text-error-600">
               {formatGapDollars(selected.gapDollars)}
-            </span>
-            <span className="hidden shrink-0 font-mono text-2xs text-muted-foreground sm:inline">
-              {formatUnits(selected.unitsDelta)}
             </span>
           </button>
           <button
@@ -402,29 +421,31 @@ function FilterDimensionControl({
               </li>
             ) : (
               options.map((option) => {
-                const isSelected = selected?.name === option.name;
+                const isSelected = selected?.id === option.id;
                 return (
                   <li key={option.id}>
                     <button
                       type="button"
                       role="option"
                       aria-selected={isSelected}
-                      onClick={() => onSelect(option.name)}
+                      onClick={() => onSelect(option)}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-md px-2 py-2 text-left",
-                        isSelected
-                          ? "bg-brand-50"
-                          : "hover:bg-neutral-50",
+                        isSelected ? "bg-brand-50" : "hover:bg-neutral-50",
                       )}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-foreground">
                           {option.name}
                         </p>
-                        <span className="mt-0.5 inline-flex rounded-full bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600">
-                          {option.issueCount}{" "}
-                          {option.issueCount === 1 ? "Issue" : "Issues"}
-                        </span>
+                        {dimension !== "sku" && (
+                          <span className="mt-0.5 inline-flex rounded-full bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600">
+                            {option.issueCount}{" "}
+                            {option.issueCount === 1
+                              ? badgeLabel
+                              : `${badgeLabel}s`}
+                          </span>
+                        )}
                       </div>
                       <ProgressTrack
                         className="w-16 shrink-0"

@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo, useState, type UIEvent } from "react";
+import { useEffect, useMemo, useState, type UIEvent } from "react";
 
-import { SkuRcaAnalysis } from "@/components/sku-rca/sku-rca-analysis";
+import { InsightsHistoricalPanel } from "@/components/alerts-insights/insights-historical-panel";
 import { SkuRcaChatFooter } from "@/components/sku-rca/sku-rca-chat-footer";
-import { SkuRcaFeedback } from "@/components/sku-rca/sku-rca-feedback";
-import { SkuRcaHeader } from "@/components/sku-rca/sku-rca-header";
-import { SkuRcaIssues } from "@/components/sku-rca/sku-rca-issues";
-import { SkuRcaRecommendations } from "@/components/sku-rca/sku-rca-recommendations";
-import { SkuRcaSummary } from "@/components/sku-rca/sku-rca-summary";
-import { SkuRcaTrend } from "@/components/sku-rca/sku-rca-trend";
+import {
+  SkuRcaHeader,
+  SKU_RCA_CONTENT_WIDTH,
+} from "@/components/sku-rca/sku-rca-header";
+import { SkuRcaLivePanel } from "@/components/sku-rca/sku-rca-live-panel";
+import type { InsightsMode } from "@/lib/insights-widgets";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { getSkuRcaData } from "@/lib/mock-sku-rca";
+import { usePersistedWidgets } from "@/lib/use-persisted-widgets";
 import { cn } from "@/lib/utils";
 
 type SkuRcaProps = {
@@ -22,13 +23,24 @@ type SkuRcaProps = {
 const COLLAPSE_AT = 24;
 
 /**
- * Shared SKU leaf — fixed header (collapses on scroll) + body + floating chat.
- * Issue card interiors are stubs for now (12 typed variants later).
+ * Shared SKU leaf — fixed header (collapses on scroll) + Live / Historical body
+ * + floating chat. Live = current diagnosis; Historical = trend widgets (same
+ * pattern as Insights levels).
  */
 export function SkuRca({ sku, onClose }: SkuRcaProps) {
   const data = useMemo(() => getSkuRcaData(sku), [sku]);
   const [collapsed, setCollapsed] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
+  // Live = what’s happening now; Historical = trends over time
+  const [mode, setMode] = useState<InsightsMode>("live");
+  // Widgets save per ASIN so each SKU keeps its own dashboard
+  const widgetsApi = usePersistedWidgets(`sku-${data.asin}`);
+
+  // Opening a different SKU starts on Live (current state first)
+  useEffect(() => {
+    setMode("live");
+    setCollapsed(false);
+  }, [data.asin]);
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
@@ -36,7 +48,13 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
-      <SkuRcaHeader data={data} collapsed={collapsed} onClose={onClose} />
+      <SkuRcaHeader
+        data={data}
+        collapsed={collapsed}
+        mode={mode}
+        onModeChange={setMode}
+        onClose={onClose}
+      />
 
       <div
         onScroll={onBodyScroll}
@@ -45,26 +63,28 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
           chatExpanded ? "pb-36" : "pb-16",
         )}
       >
-        <div className="mx-auto flex max-w-3xl flex-col gap-8">
-          <SkuRcaSummary
-            headline={data.summaryHeadline}
-            kpis={data.kpis}
-            alertBanner={data.alertBanner}
-          />
-          <SkuRcaIssues
-            groups={data.issueGroups}
-            lastUpdated={data.issuesLastUpdated}
-          />
-          <SkuRcaTrend data={data.trend} caption={data.trendCaption} />
-          <SkuRcaAnalysis blocks={data.analysis} />
-          <SkuRcaRecommendations items={data.recommendations} />
-          <SkuRcaFeedback />
+        <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-8")}>
+          {mode === "live" ? (
+            <SkuRcaLivePanel data={data} />
+          ) : (
+            <InsightsHistoricalPanel
+              entityName={data.name}
+              widgets={widgetsApi.widgets}
+              onAdd={widgetsApi.addWidget}
+              onAddSuggestion={widgetsApi.addSuggestion}
+              onUpdate={widgetsApi.updateWidget}
+              onRemove={widgetsApi.removeWidget}
+              onReset={widgetsApi.resetToDefaults}
+            />
+          )}
         </div>
       </div>
 
       <SkuRcaChatFooter
         expanded={chatExpanded}
         onExpandedChange={setChatExpanded}
+        mode={mode}
+        skuName={data.name}
       />
     </div>
   );

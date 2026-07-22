@@ -20,6 +20,29 @@ function severityText(severity: IssueAlert["severity"]) {
   return "text-neutral-500";
 }
 
+/**
+ * Selected card look for the Alerts master list.
+ * Light brand tint — no left rail, no heavy purple outline.
+ */
+function groupCardShellClass(selected: boolean, deEmphasized: boolean) {
+  return cn(
+    "shrink-0 overflow-hidden rounded-lg border transition-[background-color,box-shadow,border-color]",
+    selected
+      ? "border-brand-200 bg-brand-50 shadow-sm"
+      : "border-border bg-background shadow-xs",
+    deEmphasized && !selected && "opacity-70",
+  );
+}
+
+function groupCardButtonClass(selected: boolean) {
+  return cn(
+    "flex w-full items-start gap-2 px-3 py-3 text-left outline-none",
+    "hover:bg-neutral-50/80",
+    "focus-visible:bg-brand-50/80 focus-visible:ring-2 focus-visible:ring-brand-200/60 focus-visible:ring-inset",
+    selected && "bg-transparent hover:bg-brand-100/40",
+  );
+}
+
 export function matchesSkuFilter(
   sku: { name: string; asin: string; gapDollars: number },
   filter: string,
@@ -54,21 +77,26 @@ export function IssueGroupCard({
 
   return (
     <li
-      className={cn(
-        "shrink-0 overflow-hidden rounded-lg border bg-background shadow-xs",
-        groupSelected ? "border-primary" : "border-border",
-        issue.severity === "low" && "opacity-70",
+      className={groupCardShellClass(
+        groupSelected,
+        issue.severity === "low",
       )}
     >
       <button
         type="button"
         aria-expanded={open}
-        className="flex w-full items-start gap-2 px-3 py-3 text-left hover:bg-neutral-50"
+        aria-current={groupSelected ? "true" : undefined}
+        className={groupCardButtonClass(groupSelected)}
         onClick={onCardClick}
       >
-        <ExpandIcon open={open} />
+        <ExpandIcon open={open} selected={groupSelected} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">
+          <p
+            className={cn(
+              "text-sm text-foreground",
+              groupSelected ? "font-bold" : "font-semibold",
+            )}
+          >
             {issueLabel(issue.issueKey)}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -117,28 +145,32 @@ export function CategoryGroupCard({
   const filteredSkus = category.skus.filter((sku) =>
     matchesSkuFilter(sku, filter),
   );
-  // Show which issue types sit under this category
   const issueChips = [
     ...new Set(category.skus.map((s) => issueLabel(s.issueKey))),
   ];
 
   return (
     <li
-      className={cn(
-        "shrink-0 overflow-hidden rounded-lg border bg-background shadow-xs",
-        groupSelected ? "border-primary" : "border-border",
-        category.severity === "low" && "opacity-70",
+      className={groupCardShellClass(
+        groupSelected,
+        category.severity === "low",
       )}
     >
       <button
         type="button"
         aria-expanded={open}
-        className="flex w-full items-start gap-2 px-3 py-3 text-left hover:bg-neutral-50"
+        aria-current={groupSelected ? "true" : undefined}
+        className={groupCardButtonClass(groupSelected)}
         onClick={onCardClick}
       >
-        <ExpandIcon open={open} />
+        <ExpandIcon open={open} selected={groupSelected} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">
+          <p
+            className={cn(
+              "text-sm text-foreground",
+              groupSelected ? "font-bold" : "font-semibold",
+            )}
+          >
             {category.name}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -168,11 +200,20 @@ export function CategoryGroupCard({
   );
 }
 
-function ExpandIcon({ open }: { open: boolean }) {
+function ExpandIcon({
+  open,
+  selected,
+}: {
+  open: boolean;
+  selected: boolean;
+}) {
   const Icon = open ? ChevronDown : ChevronRight;
   return (
     <Icon
-      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+      className={cn(
+        "mt-0.5 size-4 shrink-0",
+        selected ? "text-brand-700" : "text-muted-foreground",
+      )}
       aria-hidden
     />
   );
@@ -189,7 +230,7 @@ function SkuList({
     id: string;
     name: string;
     asin: string;
-    seller: string;
+    category: string;
     gapDollars: number;
     issueKey?: IssueKey;
   }[];
@@ -209,8 +250,11 @@ function SkuList({
                 type="button"
                 onClick={() => onSelectSku(sku.id)}
                 className={cn(
-                  "flex w-full items-start justify-between gap-2 rounded-md px-3 py-2 text-left",
-                  active ? "bg-brand-100/70" : "hover:bg-neutral-100",
+                  "flex w-full items-start justify-between gap-2 rounded-md px-3 py-2 text-left outline-none",
+                  "focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-inset",
+                  active
+                    ? "bg-brand-100/70 ring-1 ring-brand-200"
+                    : "hover:bg-neutral-100",
                 )}
               >
                 <div className="flex min-w-0 flex-1 items-start gap-2 pr-2">
@@ -220,7 +264,7 @@ function SkuList({
                       {sku.name}
                     </p>
                     <p className="truncate font-mono text-2xs text-muted-foreground">
-                      {sku.asin} · {sku.seller}
+                      {sku.asin} · {sku.category}
                       {showIssueChip && sku.issueKey
                         ? ` · ${issueLabel(sku.issueKey)}`
                         : ""}
