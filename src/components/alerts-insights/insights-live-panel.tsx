@@ -5,6 +5,8 @@ import {
   formatSignedInt,
   LiveMetricCard,
 } from "@/components/alerts-insights/live-metric-card";
+import { formatInsightsDateRange } from "@/lib/insights-date-range";
+import type { InsightsDateRange } from "@/lib/insights-date-range";
 import {
   childLevelLabel,
   formatGapDollars,
@@ -17,20 +19,23 @@ type InsightsLivePanelProps = {
   selected: HierarchyNode;
   /** Child nodes that make up this parent (brands, categories, SKUs…) */
   constituents: HierarchyNode[];
+  dateRange: InsightsDateRange;
   onDrill: (childId: string) => void;
 };
 
 /**
- * Live Insights for a hierarchy parent:
- * 1) Level KPIs + AI narrative
+ * Snapshot Insights for a hierarchy parent:
+ * 1) Level KPIs for the selected period + AI narrative
  * 2) Breakdown table of constituents (click to drill)
  */
 export function InsightsLivePanel({
   selected,
   constituents,
+  dateRange,
   onDrill,
 }: InsightsLivePanelProps) {
   const metrics = getLiveMetrics(selected);
+  const period = formatInsightsDateRange(dateRange);
   const insight =
     selected.insight ??
     `${selected.name} Gap is ${formatGapDollars(selected.gapDollars)} (${metrics.attainmentPct}% attainment). Drill into ${childLevelLabel(selected.level).toLowerCase()}s to see drivers.`;
@@ -39,17 +44,7 @@ export function InsightsLivePanel({
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="grid gap-3 sm:grid-cols-4">
-        <LiveMetricCard
-          label="$ Gap vs plan"
-          value={formatGapDollars(selected.gapDollars)}
-          tone={selected.gapDollars < 0 ? "neg" : "pos"}
-        />
-        <LiveMetricCard
-          label="Attainment"
-          value={`${metrics.attainmentPct}%`}
-          tone={metrics.attainmentPct < 100 ? "neg" : "pos"}
-        />
+      <section className="grid gap-3 sm:grid-cols-2">
         <LiveMetricCard
           label="Units Δ"
           value={formatSignedInt(metrics.unitsDelta)}
@@ -64,7 +59,10 @@ export function InsightsLivePanel({
 
       <section className="rounded-lg border border-border border-l-4 border-l-primary bg-brand-50/40 p-4">
         <p className="text-2xs font-semibold tracking-wider text-primary uppercase">
-          AI {selected.level} Insights · Live
+          AI {selected.level} Insights · Snapshot
+        </p>
+        <p className="mt-1 text-2xs text-muted-foreground">
+          {period.label} · {period.rangeText}
         </p>
         <p className="mt-2 text-sm leading-relaxed text-neutral-700">{insight}</p>
         {metrics.issueChips && metrics.issueChips.length > 0 && (
@@ -87,7 +85,8 @@ export function InsightsLivePanel({
             Breakdown by {childLabel.toLowerCase()}
           </h3>
           <p className="text-xs text-muted-foreground">
-            Constituents of {selected.name} · click a row to drill down
+            Constituents of {selected.name} for {period.label.toLowerCase()} ·
+            click a row to drill down
           </p>
           <div className="mt-2 overflow-x-auto rounded-lg border border-border">
             <table className="w-full min-w-[36rem] text-left text-sm">
@@ -167,8 +166,8 @@ export function InsightsLivePanel({
 
       {isLeaf && (
         <p className="rounded-lg border border-dashed border-border bg-neutral-50 px-4 py-3 text-sm text-muted-foreground">
-          SKU leaf — open this ASIN from Alerts for the full SkuRca detail, or
-          ask AllyAI below about {selected.name}.
+          No child breakdown at this level. Pick a SKU from the left rail to open
+          the full detail page.
         </p>
       )}
     </div>

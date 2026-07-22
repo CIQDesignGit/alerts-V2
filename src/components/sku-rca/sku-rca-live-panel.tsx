@@ -31,7 +31,7 @@ export function SkuRcaLivePanel({ data }: SkuRcaLivePanelProps) {
       <SkuRcaTrend data={data.trend} caption={data.trendCaption} />
       <SkuRcaAnalysis blocks={data.analysis} />
       <SkuRcaRecommendations items={data.recommendations} />
-      <SkuRcaFeedback />
+      <SkuRcaFeedback feedbackKey={data.asin} />
     </div>
   );
 }

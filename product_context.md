@@ -151,9 +151,9 @@ Additional signal types (Sales Drop / Increase, Predictive OOS, Content Change, 
 **Right panel — Level view (e.g. Brand):**
 - Level label + entity name
 - Gap vs plan + attainment
-- Live / Historical toggle (if enabled)
+- Snapshot / Trends toggle (if enabled) with a shared date-range picker
 - **AI {Level} Insights** narrative + “Show reasoning”
-- Trend chart (e.g. 8-week revenue; promo annotations)
+- Trend chart (e.g. issue trends + Gap by issue; promo annotations)
 - **Child breakdown table** (click row to drill) — columns such as $ Gap, Units Δ, ASP Δ, Attainment; may show issue badges using **chip** names (e.g. Buy Box ×4)
 - At **SKU leaf** → same shared SKU detail format as Alerts (TBD)
 

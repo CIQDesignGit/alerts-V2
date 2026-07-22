@@ -44,7 +44,7 @@ export type AlertsFilters = {
  */
 export type AlertsTimeWindow = "24h" | "7d" | "30d";
 
-export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "7d";
+export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "24h";
 
 /** Fixed "now" for the prototype so Lost At dates stay stable across machines */
 export const ALERTS_MOCK_NOW = new Date("2026-01-16T18:00:00");
@@ -528,7 +528,12 @@ export function getIssueAlertInsights(alert: IssueAlert): IssueAlertInsights {
 export const portfolioGap = {
   gapDollars: -4_200_000,
   attainmentPct: 79,
-  label: "Portfolio gap · WTD",
+  /** Metric name only — period shown separately so the window is obvious */
+  label: "Portfolio gap",
+  /** Plain-language window (avoid cryptic “WTD” alone in the UI) */
+  periodLabel: "Week to date",
+  /** Inclusive dates for the current week-to-date window */
+  periodRange: "Mon Jul 20 – Wed Jul 22",
 };
 
 export const brandCards: BrandCard[] = [
@@ -1168,6 +1173,35 @@ export const categoryAlerts: CategoryAlert[] = buildCategoryAlerts(issueAlerts);
 /** Find the issue alert that owns a SKU id (for shared SKU leaf). */
 export function findIssueForSku(skuId: string): IssueAlert | undefined {
   return issueAlerts.find((issue) => issue.skus.some((s) => s.id === skuId));
+}
+
+/**
+ * Map an Insights hierarchy SKU node → IssueSku for the shared SkuRca page.
+ * Prefer a matching Alerts SKU (same product name); otherwise synthesize fields.
+ */
+export function issueSkuFromHierarchyNode(node: HierarchyNode): IssueSku {
+  // Same product may already exist on an alert — reuse that richer row
+  for (const issue of issueAlerts) {
+    const match = issue.skus.find(
+      (s) => s.name.toLowerCase() === node.name.toLowerCase(),
+    );
+    if (match) {
+      return { ...match, gapDollars: node.gapDollars };
+    }
+  }
+
+  // Hierarchy-only SKU — still enough for SkuRca (ASIN derived from id)
+  const asinSeed = node.id.replace(/^sku-/, "").toUpperCase().replace(/-/g, "");
+  return {
+    id: node.id,
+    name: node.name,
+    asin: asinSeed.length >= 8 ? `B0${asinSeed.slice(0, 8)}` : `B0${asinSeed}XXXX`,
+    seller: "Amazon.com",
+    brand: "Shark",
+    category: "Floor Care",
+    gapDollars: node.gapDollars,
+    lostAt: "Jan 16 09:20",
+  };
 }
 
 /** Flat list of every alerted SKU (with owning issue) — filter option source */

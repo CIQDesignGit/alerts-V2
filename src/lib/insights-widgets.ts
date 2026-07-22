@@ -1,3 +1,4 @@
+/** Snapshot = period metrics; Trends = over-time issue/performance widgets. */
 export type InsightsMode = "live" | "historical";
 
 export type InsightWidgetKind =
@@ -6,7 +7,7 @@ export type InsightWidgetKind =
   | "summary"
   | "custom";
 
-/** A saved chat-driven dashboard tile (Historical mode). */
+/** A saved chat-driven dashboard tile (Trends mode). */
 export type InsightWidget = {
   id: string;
   title: string;
@@ -24,18 +25,20 @@ export type ChartSuggestion = {
   kind: InsightWidgetKind;
 };
 
+/** Defaults bias to issue + gap movement at this hierarchy level. */
 export const DEFAULT_HISTORICAL_WIDGETS: InsightWidget[] = [
   {
-    id: "rev-trend",
-    title: "8-week revenue vs plan",
-    prompt: "Show 8-week revenue vs plan with promo annotations for this entity.",
+    id: "issue-trends",
+    title: "Issue trends over time",
+    prompt:
+      "How many SKUs at this level were hit by each issue week-over-week?",
     kind: "trend",
-    chartKey: "rev-trend",
+    chartKey: "issue-trends",
   },
   {
     id: "gap-drivers",
-    title: "Gap drivers over time",
-    prompt: "Which issues drove Gap week-over-week for the last 8 weeks?",
+    title: "Gap $ by issue",
+    prompt: "Which issues drove Gap $ week-over-week for this level?",
     kind: "comparison",
     chartKey: "gap-drivers",
   },
@@ -48,36 +51,42 @@ export const DEFAULT_HISTORICAL_WIDGETS: InsightWidget[] = [
   },
 ];
 
-/** Suggested charts users can one-click add to the dashboard. */
+/** Suggested charts — issue / performance signals for this level. */
 export const CHART_SUGGESTIONS: ChartSuggestion[] = [
   {
     chartKey: "buy-box-win",
     title: "Buy Box win rate",
-    prompt: "Track Buy Box win rate % over the last 8 weeks.",
+    prompt: "Track Buy Box win rate % for SKUs at this level over time.",
     kind: "trend",
   },
   {
-    chartKey: "media-vs-sales",
-    title: "Media spend vs ad sales",
-    prompt: "Compare weekly media spend to attributed ad sales.",
-    kind: "comparison",
+    chartKey: "rev-trend",
+    title: "Revenue vs plan",
+    prompt: "Show revenue vs plan with promo annotations for this level.",
+    kind: "trend",
   },
   {
     chartKey: "conversion",
-    title: "Conversion rate trend",
-    prompt: "Show conversion rate (CVR) trend with miss weeks highlighted.",
+    title: "Conversion drop weeks",
+    prompt: "Show conversion rate (CVR) trend and highlight miss weeks.",
     kind: "trend",
   },
   {
     chartKey: "oos-days",
-    title: "Out-of-stock days",
-    prompt: "How many OOS days did this entity see each week?",
+    title: "Stock / OOS days",
+    prompt: "How many out-of-stock days did this level see each week?",
     kind: "summary",
+  },
+  {
+    chartKey: "media-vs-sales",
+    title: "Media spend vs ad sales",
+    prompt: "Compare weekly media spend to attributed ad sales at this level.",
+    kind: "comparison",
   },
 ];
 
 const storageKey = (entityId: string) =>
-  `alerts-v2:insights-widgets:${entityId}`;
+  `alerts-v2:insights-widgets:v2:${entityId}`;
 
 export function loadWidgets(entityId: string): InsightWidget[] {
   if (typeof window === "undefined") return DEFAULT_HISTORICAL_WIDGETS;
@@ -107,7 +116,7 @@ export function createCustomWidget(
   return {
     id: `custom-${Date.now()}`,
     title: title.trim() || "Custom insight",
-    prompt: prompt.trim() || "Describe what you want to track historically.",
+    prompt: prompt.trim() || "Describe what issue or performance trend to track.",
     kind: extras?.kind ?? "custom",
     chartKey: extras?.chartKey,
   };

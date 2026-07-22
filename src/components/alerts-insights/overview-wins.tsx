@@ -8,6 +8,7 @@ import {
 /**
  * Wins panel — CIQ / AllyAI actions with quantified $ impact.
  * Not a list of above-plan categories; each card is an intervention story.
+ * Temporarily hidden from OverviewTab — keep this file for when we re-enable it.
  */
 export function OverviewWins() {
   return (

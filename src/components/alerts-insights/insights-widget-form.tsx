@@ -39,7 +39,7 @@ export function InsightsWidgetForm({
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="What should AllyAI show historically?"
+        placeholder="What issue or performance trend should AllyAI show?"
         rows={2}
         className="resize-none rounded-md border border-border bg-background px-2.5 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       />

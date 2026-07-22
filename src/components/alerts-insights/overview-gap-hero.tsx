@@ -22,10 +22,23 @@ export function OverviewGapHero({ onGoToInsights }: OverviewGapHeroProps) {
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-background shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-foreground">
-          Business Overview
-        </h2>
-        <Button variant="outline" size="sm" onClick={onGoToInsights}>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-foreground">
+            Business Overview
+          </h2>
+          {/* Spell out the window — “WTD” alone is easy to miss */}
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {portfolioGap.periodLabel}
+            <span className="text-neutral-400"> · </span>
+            {portfolioGap.periodRange}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onGoToInsights}
+          className="border-brand-500 text-brand-700 hover:bg-brand-50 hover:text-brand-800"
+        >
           Go to Insights
           <ArrowRight className="size-3.5" />
         </Button>
@@ -50,7 +63,8 @@ export function OverviewGapHero({ onGoToInsights }: OverviewGapHeroProps) {
             {formatGapDollars(portfolioGap.gapDollars)}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            vs plan · {portfolioGap.attainmentPct}% attainment
+            {portfolioGap.periodLabel} · vs plan ·{" "}
+            {portfolioGap.attainmentPct}% attainment
           </p>
           <div className="mt-4">
             <AttainmentBar pct={portfolioGap.attainmentPct} />

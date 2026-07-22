@@ -7,7 +7,7 @@ import {
   CategoryGroupCard,
   IssueGroupCard,
 } from "@/components/alerts-insights/alert-group-cards";
-import { AlertsTimeWindowLabel } from "@/components/alerts-insights/alerts-time-window";
+import { AlertsGroupBySelect } from "@/components/alerts-insights/alerts-group-by-select";
 import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
 import {
   categoryAlerts,
@@ -15,7 +15,6 @@ import {
   filterCategoryAlerts,
   filterIssueAlerts,
   findIssueForSku,
-  formatAtRisk,
   issueAlerts,
   issueLabel,
   type AlertsFilters,
@@ -25,11 +24,13 @@ import {
 export function AlertsTab({
   filters,
   groupBy = "issue",
+  onGroupByChange,
 }: {
   filters: AlertsFilters;
   groupBy?: AlertsGroupBy;
+  onGroupByChange?: (value: AlertsGroupBy) => void;
 }) {
-  // Apply Brand / Category / SKU + fixed 7-day lookback
+  // Apply Brand / Category / SKU + fixed 24-hour lookback
   const visibleIssues = useMemo(
     () =>
       filterIssueAlerts(issueAlerts, filters, DEFAULT_ALERTS_TIME_WINDOW),
@@ -106,24 +107,18 @@ export function AlertsTab({
     setExpandedId(groupId);
   }
 
-  const totalAtRisk =
-    groupBy === "issue"
-      ? visibleIssues.reduce((sum, i) => sum + i.atRiskDollars, 0)
-      : visibleCategories.reduce((sum, c) => sum + c.atRiskDollars, 0);
-
-  const listHeader =
-    groupBy === "issue"
-      ? `${visibleIssues.length} Alerts · ${formatAtRisk(totalAtRisk)} at risk`
-      : `${visibleCategories.length} Categories · ${formatAtRisk(totalAtRisk)} at risk`;
-
   return (
     <div className="flex min-h-0 flex-1">
       <aside className="flex w-80 shrink-0 flex-col border-r border-border bg-neutral-50">
-        <div className="border-b border-border px-4 py-3">
-          <p className="text-2xs font-semibold tracking-wider text-muted-foreground uppercase">
-            {listHeader}
-          </p>
-          <AlertsTimeWindowLabel />
+        {/* Title + list grouping control only */}
+        <div className="flex items-center justify-between gap-3 border-b border-border bg-background px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
+          {onGroupByChange && (
+            <AlertsGroupBySelect
+              value={groupBy}
+              onChange={onGroupByChange}
+            />
+          )}
         </div>
 
         <ul className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
@@ -172,7 +167,6 @@ export function AlertsTab({
 
       {selectedSku && selectedSkuIssue ? (
         <SkuDetailPanel
-          issue={selectedSkuIssue}
           sku={selectedSku}
           onBackToAlert={() => setSelectedSkuId(null)}
         />

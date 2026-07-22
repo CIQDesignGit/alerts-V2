@@ -18,10 +18,9 @@ import {
 
 export function HomePage() {
   const [tab, setTab] = useState<PageTab>("overview");
-  const [skuFilter, setSkuFilter] = useState("");
   const [alertsGroupBy, setAlertsGroupBy] = useState<AlertsGroupBy>("issue");
-  const [alertsFilters, setAlertsFilters] =
-    useState<AlertsFilters>(emptyAlertsFilters);
+  // Shared across Alerts + Insights so Brand/Category/SKU context carries over
+  const [filters, setFilters] = useState<AlertsFilters>(emptyAlertsFilters);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -29,12 +28,8 @@ export function HomePage() {
         active={tab}
         alertsCount={alertsSummary.count}
         onChange={setTab}
-        skuFilter={skuFilter}
-        onSkuFilterChange={setSkuFilter}
-        alertsFilters={alertsFilters}
-        onAlertsFiltersChange={setAlertsFilters}
-        alertsGroupBy={alertsGroupBy}
-        onAlertsGroupByChange={setAlertsGroupBy}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       {tab === "overview" && (
@@ -46,9 +41,13 @@ export function HomePage() {
         </div>
       )}
       {tab === "alerts" && (
-        <AlertsTab filters={alertsFilters} groupBy={alertsGroupBy} />
+        <AlertsTab
+          filters={filters}
+          groupBy={alertsGroupBy}
+          onGroupByChange={setAlertsGroupBy}
+        />
       )}
-      {tab === "insights" && <InsightsTab filter={skuFilter} />}
+      {tab === "insights" && <InsightsTab filters={filters} />}
     </div>
   );
 }

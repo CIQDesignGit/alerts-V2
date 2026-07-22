@@ -7,10 +7,13 @@ import { InsightsChartSuggestions } from "@/components/alerts-insights/insights-
 import { InsightsWidgetChart } from "@/components/alerts-insights/insights-widget-chart";
 import { InsightsWidgetForm } from "@/components/alerts-insights/insights-widget-form";
 import { Button } from "@/components/ui/button";
+import { formatInsightsDateRange } from "@/lib/insights-date-range";
+import type { InsightsDateRange } from "@/lib/insights-date-range";
 import type { ChartSuggestion, InsightWidget } from "@/lib/insights-widgets";
 
 type InsightsHistoricalPanelProps = {
   entityName: string;
+  dateRange: InsightsDateRange;
   widgets: InsightWidget[];
   onAdd: (title: string, prompt: string) => void;
   onAddSuggestion: (suggestion: ChartSuggestion) => void;
@@ -19,9 +22,10 @@ type InsightsHistoricalPanelProps = {
   onReset: () => void;
 };
 
-/** Customizable historical dashboard — widgets persist per entity. */
+/** Trends dashboard — issue & performance movement; widgets persist per entity. */
 export function InsightsHistoricalPanel({
   entityName,
+  dateRange,
   widgets,
   onAdd,
   onAddSuggestion,
@@ -31,17 +35,18 @@ export function InsightsHistoricalPanel({
 }: InsightsHistoricalPanelProps) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const period = formatInsightsDateRange(dateRange);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold text-foreground">
-            Historical dashboard
+            Trends for {entityName}
           </h3>
           <p className="text-xs text-muted-foreground">
-            Default AllyAI widgets for {entityName}. Add, edit, or remove — changes
-            save on this device.
+            Issue and performance movement · {period.label} · {period.rangeText}.
+            Add, edit, or remove widgets — changes save on this device.
           </p>
         </div>
         <div className="flex items-center gap-1.5">

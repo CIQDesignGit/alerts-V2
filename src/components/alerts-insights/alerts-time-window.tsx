@@ -1,13 +1,23 @@
 "use client";
 
+import {
+  alertsTimeWindowPhrase,
+  DEFAULT_ALERTS_TIME_WINDOW,
+} from "@/lib/mock-alerts-insights";
+import { cn } from "@/lib/utils";
+
+type AlertsTimeWindowLabelProps = {
+  className?: string;
+};
+
 /**
- * Static label so NAMs know the Alerts list lookback
- * (no selector — always the last 7 days).
+ * Quiet caption under the Alerts list summary
+ * (no selector — always the default window, currently last 24 hours).
  */
-export function AlertsTimeWindowLabel() {
+export function AlertsTimeWindowLabel({ className }: AlertsTimeWindowLabelProps) {
   return (
-    <p className="mt-2 text-2xs leading-snug text-muted-foreground">
-      Showing issues active in the last 7 days
-    </p>
+    <span className={cn("text-xs leading-snug text-muted-foreground", className)}>
+      Active in the {alertsTimeWindowPhrase(DEFAULT_ALERTS_TIME_WINDOW)}
+    </span>
   );
 }

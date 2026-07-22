@@ -17,7 +17,7 @@ type OverviewActiveAlertsProps = {
   onGoToAlerts: () => void;
 };
 
-/** Ranked issue list — dollar-first teaser into the Alerts tab. */
+/** Ranked issue list — dollar-first teaser into the Alerts tab (full-width). */
 export function OverviewActiveAlerts({
   onGoToAlerts,
 }: OverviewActiveAlertsProps) {
@@ -34,15 +34,30 @@ export function OverviewActiveAlerts({
             {formatAtRisk(alertsSummary.atRiskDollars)} at risk
           </p>
         </div>
-        <Button size="sm" onClick={onGoToAlerts}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onGoToAlerts}
+          className="border-brand-500 text-brand-700 hover:bg-brand-50 hover:text-brand-800"
+        >
           Go to Alerts
           <ArrowRight className="size-3.5" />
         </Button>
       </div>
 
-      <ul className="divide-y divide-border">
-        {top.map((alert) => (
-          <li key={alert.issueKey}>
+      {/* Full-width: 2 columns on large screens so rows don’t stretch empty */}
+      <ul className="grid divide-y divide-border sm:grid-cols-2 sm:divide-y-0">
+        {top.map((alert, i) => (
+          <li
+            key={alert.issueKey}
+            className={cn(
+              "border-border",
+              // Vertical divider between columns; horizontal between rows
+              i % 2 === 0 && "sm:border-r",
+              i < 2 && "sm:border-b",
+              i >= 2 && "border-t sm:border-t-0",
+            )}
+          >
             <AlertTeaserRow alert={alert} onClick={onGoToAlerts} />
           </li>
         ))}
@@ -74,7 +89,7 @@ function AlertTeaserRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full gap-3 px-5 py-3.5 text-left transition-colors hover:bg-neutral-50"
+      className="flex h-full w-full gap-3 px-5 py-3.5 text-left transition-colors hover:bg-neutral-50"
     >
       <SeverityDot severity={alert.severity} />
 

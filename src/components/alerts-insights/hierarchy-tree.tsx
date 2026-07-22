@@ -168,3 +168,59 @@ export function findHierarchyNode(
   }
   return null;
 }
+
+/** Parent of a node in the hierarchy (for SKU back navigation). */
+export function findHierarchyParent(
+  root: HierarchyNode,
+  id: string,
+): HierarchyNode | null {
+  for (const child of root.children ?? []) {
+    if (child.id === id) return root;
+    const found = findHierarchyParent(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Brand node by display name (Alerts filter uses names). */
+export function findBrandByName(
+  root: HierarchyNode,
+  brandName: string,
+): HierarchyNode | null {
+  return (
+    (root.children ?? []).find(
+      (c) => c.level === "brand" && c.name === brandName,
+    ) ?? null
+  );
+}
+
+/** Category (or nested) under a brand by display name. */
+export function findCategoryByName(
+  brandNode: HierarchyNode,
+  categoryName: string,
+): HierarchyNode | null {
+  for (const child of brandNode.children ?? []) {
+    if (child.level === "category" && child.name === categoryName) return child;
+    for (const grand of child.children ?? []) {
+      if (grand.level === "category" && grand.name === categoryName) return grand;
+    }
+  }
+  return null;
+}
+
+/** Collect ancestor ids from root → node (inclusive) for expand path. */
+export function hierarchyPathIds(
+  root: HierarchyNode,
+  targetId: string,
+): string[] {
+  function walk(node: HierarchyNode, trail: string[]): string[] | null {
+    const next = [...trail, node.id];
+    if (node.id === targetId) return next;
+    for (const child of node.children ?? []) {
+      const found = walk(child, next);
+      if (found) return found;
+    }
+    return null;
+  }
+  return walk(root, []) ?? [root.id];
+}

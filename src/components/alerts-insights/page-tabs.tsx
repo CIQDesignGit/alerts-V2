@@ -1,11 +1,8 @@
 "use client";
 
 import { AlertsFiltersBar } from "@/components/alerts-insights/alerts-filters-bar";
-import type {
-  AlertsFilters,
-  AlertsGroupBy,
-} from "@/lib/mock-alerts-insights";
-import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
+import type { AlertsFilters } from "@/lib/mock-alerts-insights";
+import { cn, controlFocusClass } from "@/lib/utils";
 
 export type PageTab = "overview" | "alerts" | "insights";
 
@@ -13,14 +10,9 @@ type PageTabsProps = {
   active: PageTab;
   alertsCount: number;
   onChange: (tab: PageTab) => void;
-  /** Insights still uses a simple SKU text filter */
-  skuFilter?: string;
-  onSkuFilterChange?: (value: string) => void;
-  /** Alerts tab: Brand · Category · SKU filters + group-by */
-  alertsFilters?: AlertsFilters;
-  onAlertsFiltersChange?: (next: AlertsFilters) => void;
-  alertsGroupBy?: AlertsGroupBy;
-  onAlertsGroupByChange?: (value: AlertsGroupBy) => void;
+  /** Shared Brand · Category · SKU filters for Alerts and Insights */
+  filters?: AlertsFilters;
+  onFiltersChange?: (next: AlertsFilters) => void;
 };
 
 const TABS: { id: PageTab; label: string }[] = [
@@ -33,13 +25,14 @@ export function PageTabs({
   active,
   alertsCount,
   onChange,
-  skuFilter = "",
-  onSkuFilterChange,
-  alertsFilters,
-  onAlertsFiltersChange,
-  alertsGroupBy = "issue",
-  onAlertsGroupByChange,
+  filters,
+  onFiltersChange,
 }: PageTabsProps) {
+  const showFilters =
+    (active === "alerts" || active === "insights") &&
+    filters &&
+    onFiltersChange;
+
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border px-6">
       {/*
@@ -76,32 +69,8 @@ export function PageTabs({
         })}
       </nav>
 
-      {active === "alerts" &&
-        alertsFilters &&
-        onAlertsFiltersChange &&
-        onAlertsGroupByChange && (
-          <AlertsFiltersBar
-            filters={alertsFilters}
-            onChange={onAlertsFiltersChange}
-            groupBy={alertsGroupBy}
-            onGroupByChange={onAlertsGroupByChange}
-          />
-        )}
-
-      {active === "insights" && onSkuFilterChange && (
-        <label className="relative w-72 shrink-0">
-          <span className="sr-only">Filter SKUs by name, ASIN, or $ gap</span>
-          <input
-            type="search"
-            value={skuFilter}
-            onChange={(e) => onSkuFilterChange(e.target.value)}
-            placeholder="Filter SKUs by name, ASIN, or $ gap..."
-            className={cn(
-              "w-full rounded-md border border-border bg-background py-1.5 pr-3 pl-3 text-xs",
-              fieldFocusClass,
-            )}
-          />
-        </label>
+      {showFilters && (
+        <AlertsFiltersBar filters={filters} onChange={onFiltersChange} />
       )}
     </div>
   );

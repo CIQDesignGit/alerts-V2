@@ -3,7 +3,7 @@
 import { OverviewActiveAlerts } from "@/components/alerts-insights/overview-active-alerts";
 import { OverviewAiBrief } from "@/components/alerts-insights/overview-ai-brief";
 import { OverviewGapHero } from "@/components/alerts-insights/overview-gap-hero";
-import { OverviewWins } from "@/components/alerts-insights/overview-wins";
+// OverviewWins kept in codebase but hidden from Overview for now.
 
 type OverviewTabProps = {
   onGoToAlerts: () => void;
@@ -11,8 +11,8 @@ type OverviewTabProps = {
 };
 
 /**
- * Landing Overview — Insights hero (gap), AllyAI brief,
- * then Alerts (misses) + Wins side by side.
+ * Landing Overview — Insights hero (gap), AllyAI brief, then Active Alerts.
+ * Wins panel is temporarily hidden (component still exists).
  */
 export function OverviewTab({ onGoToAlerts, onGoToInsights }: OverviewTabProps) {
   return (
@@ -38,11 +38,7 @@ export function OverviewTab({ onGoToAlerts, onGoToInsights }: OverviewTabProps) 
       <div className="relative mx-auto flex max-w-6xl flex-col gap-5 p-6">
         <OverviewGapHero onGoToInsights={onGoToInsights} />
         <OverviewAiBrief />
-
-        <div className="grid gap-5 lg:grid-cols-2">
-          <OverviewActiveAlerts onGoToAlerts={onGoToAlerts} />
-          <OverviewWins />
-        </div>
+        <OverviewActiveAlerts onGoToAlerts={onGoToAlerts} />
       </div>
     </div>
   );

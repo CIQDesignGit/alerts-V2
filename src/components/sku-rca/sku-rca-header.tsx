@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 
-import { InsightsModeToggle } from "@/components/alerts-insights/insights-mode-toggle";
+import { InsightsDateRangePicker } from "@/components/alerts-insights/insights-date-range";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import {
   GapBadge,
@@ -10,7 +10,7 @@ import {
   PdpSnapshotsButton,
 } from "@/components/sku-rca/sku-rca-header-actions";
 import { Button } from "@/components/ui/button";
-import type { InsightsMode } from "@/lib/insights-widgets";
+import type { InsightsDateRange } from "@/lib/insights-date-range";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
@@ -20,54 +20,60 @@ export const SKU_RCA_CONTENT_WIDTH = "mx-auto w-full max-w-3xl";
 type SkuRcaHeaderProps = {
   data: SkuRcaData;
   collapsed: boolean;
-  mode: InsightsMode;
-  onModeChange: (mode: InsightsMode) => void;
+  dateRange: InsightsDateRange;
+  onDateRangeChange: (next: InsightsDateRange) => void;
   onClose: () => void;
 };
 
 export function SkuRcaHeader({
   data,
   collapsed,
-  mode,
-  onModeChange,
+  dateRange,
+  onDateRangeChange,
   onClose,
 }: SkuRcaHeaderProps) {
   const pdpUrl = `https://www.amazon.com/dp/${data.asin}`;
 
   return (
     <header className="relative shrink-0 border-b border-border bg-background">
-      {/* Expanded header — same max width as the scroll body */}
+      {/* Expanded header */}
       <div
         className={cn(
-          "px-6 transition-all duration-200",
+          "relative px-6 transition-all duration-200",
           collapsed
             ? "pointer-events-none absolute inset-x-0 opacity-0"
             : "opacity-100",
         )}
         aria-hidden={collapsed}
       >
-        <div className={cn(SKU_RCA_CONTENT_WIDTH, "relative py-3 pr-10")}>
-          <CloseButton onClose={onClose} className="absolute top-2.5 right-0" />
-          <p className="text-xs text-muted-foreground">
-            {data.category} ·{" "}
-            <span className="font-mono">{data.modelId}</span> ·{" "}
-            <span className="font-mono">{data.asin}</span>
-          </p>
-          <div className="mt-2 flex items-start gap-3">
-            <SkuThumbnail name={data.name} size={64} />
+        {/* Close sits in the page margin — top right of the header */}
+        <CloseButton onClose={onClose} className="absolute top-2.5 right-4 z-10" />
+
+        <div className={cn(SKU_RCA_CONTENT_WIDTH, "py-3")}>
+          <div className="flex w-full items-start gap-3">
+            <SkuThumbnail name={data.name} size={80} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold leading-snug text-foreground">
+              <p className="text-xs text-muted-foreground">
+                {data.category} ·{" "}
+                <span className="font-mono">{data.modelId}</span> ·{" "}
+                <span className="font-mono">{data.asin}</span>
+              </p>
+              <h2 className="mt-0.5 text-lg font-bold leading-snug text-foreground">
                 {data.name}
               </h2>
-              {/* Actions + Live/Historical sit together as one control row */}
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <PdpPageLink href={pdpUrl} />
-                <PdpSnapshotsButton />
-                <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
-                <InsightsModeToggle
-                  mode={mode}
-                  onChange={onModeChange}
-                  ariaLabel="SKU view mode"
+              {/* Actions left · period selector right (bottom-aligned) */}
+              <div className="mt-2 flex w-full min-w-0 items-end justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <PdpPageLink href={pdpUrl} />
+                  <PdpSnapshotsButton />
+                  <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
+                </div>
+                <InsightsDateRangePicker
+                  value={dateRange}
+                  onChange={onDateRangeChange}
+                  variant="toolbar"
+                  menuAlign="right"
+                  showRangeInTrigger
                 />
               </div>
             </div>
@@ -75,35 +81,30 @@ export function SkuRcaHeader({
         </div>
       </div>
 
-      {/* Collapsed sticky strip — same column width */}
+      {/* Collapsed sticky strip */}
       <div
         className={cn(
-          "px-6 transition-all duration-200",
+          "relative px-6 transition-all duration-200",
           collapsed
             ? "opacity-100"
             : "pointer-events-none absolute inset-x-0 opacity-0",
         )}
         aria-hidden={!collapsed}
       >
+        <CloseButton onClose={onClose} className="absolute top-2 right-4 z-10" />
         <div
           className={cn(
             SKU_RCA_CONTENT_WIDTH,
-            "relative flex items-center gap-3 py-2.5 pr-10",
+            "flex items-center gap-3 py-2.5",
           )}
         >
-          <CloseButton onClose={onClose} className="absolute top-2 right-0" />
           <SkuThumbnail name={data.name} size={32} />
           <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
             {data.name}
           </p>
           <div className="flex shrink-0 items-center gap-2">
-            <InsightsModeToggle
-              mode={mode}
-              onChange={onModeChange}
-              ariaLabel="SKU view mode"
-            />
-            <PdpPageLink href={pdpUrl} compact />
-            <PdpSnapshotsButton compact />
+            <PdpPageLink href={pdpUrl} />
+            <PdpSnapshotsButton />
           </div>
         </div>
       </div>

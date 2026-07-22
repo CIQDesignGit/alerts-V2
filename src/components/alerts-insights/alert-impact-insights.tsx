@@ -98,7 +98,7 @@ function InsightCard({
   children: ReactNode;
 }) {
   return (
-    <article className="flex h-full flex-col rounded-xl border border-border bg-background shadow-xs">
+    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background shadow-xs">
       <header className="border-b border-border bg-neutral-50/80 px-5 py-3">
         <h3 className="text-2xs font-semibold tracking-wider text-muted-foreground uppercase">
           {title}

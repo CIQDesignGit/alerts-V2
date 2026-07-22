@@ -11,7 +11,6 @@ import {
   getSkuFilterOptions,
   summarizeFilterOptions,
   type AlertsFilters,
-  type AlertsGroupBy,
   type FilterDimensionOption,
 } from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
@@ -19,26 +18,16 @@ import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
 type AlertsFiltersBarProps = {
   filters: AlertsFilters;
   onChange: (next: AlertsFilters) => void;
-  groupBy: AlertsGroupBy;
-  onGroupByChange: (value: AlertsGroupBy) => void;
 };
 
-type OpenMenu = "brand" | "category" | "sku" | "search" | "groupBy" | null;
-
-const GROUP_BY_OPTIONS = [
-  { id: "issue" as const, label: "Issue type" },
-  { id: "category" as const, label: "Categories" },
-];
+type OpenMenu = "brand" | "category" | "sku" | "search" | null;
 
 export function AlertsFiltersBar({
   filters,
   onChange,
-  groupBy,
-  onGroupByChange,
 }: AlertsFiltersBarProps) {
   const [open, setOpen] = useState<OpenMenu>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const groupByPanelId = useId();
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -63,8 +52,6 @@ export function AlertsFiltersBar({
     (o) => o.name === filters.category,
   );
   const selectedSku = skuOptions.find((o) => o.id === filters.skuId);
-  const groupByLabel =
-    GROUP_BY_OPTIONS.find((o) => o.id === groupBy)?.label ?? "Issue type";
   const hasActive =
     Boolean(filters.brand) ||
     Boolean(filters.category) ||
@@ -81,74 +68,6 @@ export function AlertsFiltersBar({
       ref={rootRef}
       className="flex min-w-0 flex-1 items-center justify-end gap-4"
     >
-      <div
-        role="group"
-        aria-label="Group alerts by"
-        className="relative flex shrink-0 items-center gap-2"
-      >
-        <span className="text-xs font-medium text-muted-foreground">
-          Group by
-        </span>
-        <button
-          type="button"
-          aria-expanded={open === "groupBy"}
-          aria-controls={groupByPanelId}
-          aria-haspopup="listbox"
-          onClick={() =>
-            setOpen((current) => (current === "groupBy" ? null : "groupBy"))
-          }
-          className={cn(
-            "inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-neutral-50",
-            controlFocusClass,
-          )}
-        >
-          {groupByLabel}
-          <ChevronDown
-            className={cn(
-              "size-3.5 text-muted-foreground transition-transform",
-              open === "groupBy" && "rotate-180",
-            )}
-            aria-hidden
-          />
-        </button>
-
-        {open === "groupBy" && (
-          <ul
-            id={groupByPanelId}
-            role="listbox"
-            aria-label="Group by options"
-            className="absolute top-9 right-0 z-30 min-w-40 overflow-hidden rounded-lg border border-border bg-background py-1 shadow-lg"
-          >
-            {GROUP_BY_OPTIONS.map((option) => {
-              const selected = groupBy === option.id;
-              return (
-                <li key={option.id} role="presentation">
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    onClick={() => {
-                      onGroupByChange(option.id);
-                      setOpen(null);
-                    }}
-                    className={cn(
-                      "flex w-full px-3 py-2 text-left text-xs font-medium",
-                      selected
-                        ? "bg-neutral-50 text-foreground"
-                        : "text-foreground hover:bg-neutral-50",
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      <div className="h-5 w-px shrink-0 bg-border" aria-hidden />
-
       <div
         role="group"
         aria-label="Filter alerts"

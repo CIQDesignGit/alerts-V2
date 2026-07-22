@@ -10,7 +10,11 @@ type InsightsModeToggleProps = {
   ariaLabel?: string;
 };
 
-/** Live / Historical switch — same control on Insights levels and SKU RCA. */
+/**
+ * Snapshot = level metrics for a chosen period.
+ * Trends = issue & performance movement over time (customizable widgets).
+ * Internal values stay live | historical for existing state.
+ */
 export function InsightsModeToggle({
   mode,
   onChange,
@@ -24,12 +28,12 @@ export function InsightsModeToggle({
       }}
       className="gap-0"
     >
-      <TabsList aria-label={ariaLabel} className="h-8 bg-neutral-100">
-        <TabsTrigger value="live" className="px-3 text-xs">
-          Live
+      <TabsList aria-label={ariaLabel} className="h-7 bg-neutral-100">
+        <TabsTrigger value="live" className="px-2.5 text-xs">
+          Snapshot
         </TabsTrigger>
-        <TabsTrigger value="historical" className="px-3 text-xs">
-          Historical
+        <TabsTrigger value="historical" className="px-2.5 text-xs">
+          Trends
         </TabsTrigger>
       </TabsList>
     </Tabs>

@@ -1,4 +1,16 @@
-/** Mock series used by Historical dashboard charts (prototype). */
+/** Mock series used by Trends dashboard charts (prototype). */
+
+/** SKUs affected per issue type each week — level issue heat over time. */
+export const ISSUE_TRENDS = [
+  { week: "W1", buyBox: 1, dealPage: 0, stock: 0, conversion: 0 },
+  { week: "W2", buyBox: 2, dealPage: 1, stock: 0, conversion: 1 },
+  { week: "W3", buyBox: 3, dealPage: 2, stock: 1, conversion: 1 },
+  { week: "W4", buyBox: 4, dealPage: 2, stock: 1, conversion: 2 },
+  { week: "W5", buyBox: 5, dealPage: 4, stock: 2, conversion: 2 },
+  { week: "W6", buyBox: 8, dealPage: 6, stock: 3, conversion: 4 },
+  { week: "W7", buyBox: 6, dealPage: 3, stock: 2, conversion: 2 },
+  { week: "W8", buyBox: 4, dealPage: 2, stock: 1, conversion: 1 },
+];
 
 export const REVENUE_VS_PLAN = [
   { week: "W1", plan: 220, actual: 215 },

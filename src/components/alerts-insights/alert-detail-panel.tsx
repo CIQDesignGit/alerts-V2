@@ -3,7 +3,6 @@
 import { Package, Zap } from "lucide-react";
 import { useMemo } from "react";
 
-import { AlertCardFeedback } from "@/components/alerts-insights/alert-card-feedback";
 import { AlertImpactInsights } from "@/components/alerts-insights/alert-impact-insights";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import {
@@ -78,36 +77,31 @@ export function AlertDetailPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="flex flex-col gap-5 p-6">
-        {/* Title + compact $ / SKU strip on one row; thumbs stay on the right */}
+        {/* Title + compact $ / SKU strip */}
         <div className="shrink-0">
-          <AlertCardFeedback
-            key={group.feedbackKey}
-            feedbackKey={group.feedbackKey}
-          >
-            <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-              <h2 className="text-xl font-semibold text-foreground">
-                {group.title}
-              </h2>
-              {/* One tight tray: just the numbers next to the title */}
-              <div
-                className="inline-flex items-center gap-2 rounded-md border border-border bg-neutral-50 px-2 py-1"
-                aria-label="Alert summary"
-              >
-                <span className="font-mono text-sm font-bold tabular-nums text-error-600">
-                  {formatAtRisk(group.atRiskDollars)}
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+            <h2 className="text-xl font-semibold text-foreground">
+              {group.title}
+            </h2>
+            <div
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-neutral-50 px-2 py-1"
+              aria-label="Alert summary"
+            >
+              <span className="font-mono text-sm font-bold tabular-nums text-error-600">
+                {formatAtRisk(group.atRiskDollars)}
+              </span>
+              <span className="text-xs text-muted-foreground">at risk</span>
+              <span className="text-neutral-300" aria-hidden>
+                ·
+              </span>
+              <span className="text-sm tabular-nums text-foreground">
+                {group.skuCount}{" "}
+                <span className="text-muted-foreground">
+                  {group.skuCount === 1 ? "SKU" : "SKUs"}
                 </span>
-                <span className="text-neutral-300" aria-hidden>
-                  ·
-                </span>
-                <span className="text-sm tabular-nums text-foreground">
-                  {group.skuCount}{" "}
-                  <span className="text-muted-foreground">
-                    {group.skuCount === 1 ? "SKU" : "SKUs"}
-                  </span>
-                </span>
-              </div>
+              </span>
             </div>
-          </AlertCardFeedback>
+          </div>
         </div>
 
         {group.aiSignal && (
@@ -151,11 +145,11 @@ export function AlertDetailPanel({
             </div>
 
             <div className="overflow-x-auto">
-              {/* Content-sized columns — extra pane width stays empty on the right */}
-              <table className="w-max table-auto text-sm">
+              {/* Full-width table so rows reach the card edges */}
+              <table className="w-full min-w-full table-auto text-sm">
                 <thead className="bg-neutral-50 text-2xs tracking-wide text-muted-foreground uppercase">
                   <tr>
-                    <th className="whitespace-nowrap px-3 py-2 text-left font-medium">
+                    <th className="w-full px-3 py-2 text-left font-medium">
                       Product
                     </th>
                     <th className="whitespace-nowrap px-3 py-2 text-right font-medium">
@@ -234,7 +228,7 @@ function SkuRow({
           : "hover:bg-neutral-50",
       )}
     >
-      <td className="whitespace-nowrap px-3 py-2.5 text-left">
+      <td className="w-full px-3 py-2.5 text-left">
         <div className="flex items-center gap-2.5">
           <SkuThumbnail name={sku.name} size={36} />
           <span className="font-medium text-foreground">{sku.name}</span>

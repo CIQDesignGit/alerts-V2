@@ -25,10 +25,66 @@ import {
   BUY_BOX_WIN_RATE,
   CONVERSION_TREND,
   GAP_DRIVERS,
+  ISSUE_TRENDS,
   MEDIA_VS_SALES,
   OOS_DAYS,
   REVENUE_VS_PLAN,
 } from "@/lib/insights-chart-data";
+
+/** Count of SKUs hit by each issue type — Trends default for this level. */
+export function IssueTrendsChart() {
+  const config = {
+    buyBox: { label: "Buy Box", color: "var(--chart-5)" },
+    dealPage: { label: "Deal Page", color: "var(--chart-4)" },
+    stock: { label: "Stock", color: "var(--chart-3)" },
+    conversion: { label: "Conversion", color: "var(--chart-1)" },
+  } satisfies ChartConfig;
+
+  return (
+    <ChartContainer config={config} className="aspect-auto h-40 w-full">
+      <LineChart accessibilityLayer data={ISSUE_TRENDS}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="week" tickLine={false} axisLine={false} />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          width={28}
+          allowDecimals={false}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="buyBox"
+          stroke="var(--color-buyBox)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="dealPage"
+          stroke="var(--color-dealPage)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="stock"
+          stroke="var(--color-stock)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="conversion"
+          stroke="var(--color-conversion)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      </LineChart>
+    </ChartContainer>
+  );
+}
 
 export function RevenueVsPlanChart() {
   const config = {
