@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  AllyAiHeader,
+  AllyAiSurface,
+} from "@/components/alerts-insights/ally-ai-surface";
+import {
   formatAsp,
   formatSignedInt,
   LiveMetricCard,
@@ -57,27 +61,13 @@ export function InsightsLivePanel({
         />
       </section>
 
-      <section className="rounded-lg border border-border border-l-4 border-l-primary bg-brand-50/40 p-4">
-        <p className="text-2xs font-semibold tracking-wider text-primary uppercase">
-          AI {selected.level} Insights · Snapshot
-        </p>
+      <AllyAiSurface contentClassName="p-4 md:p-5">
+        <AllyAiHeader label={`AllyAI ${selected.level} Insights · Snapshot`} />
         <p className="mt-1 text-2xs text-muted-foreground">
           {period.label} · {period.rangeText}
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-700">{insight}</p>
-        {metrics.issueChips && metrics.issueChips.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {metrics.issueChips.map((chip) => (
-              <span
-                key={chip.chip}
-                className="rounded-md bg-background px-2 py-0.5 text-2xs font-semibold text-neutral-700 ring-1 ring-border"
-              >
-                {chip.chip} ×{chip.count}
-              </span>
-            ))}
-          </div>
-        )}
-      </section>
+        <p className="mt-3 text-sm leading-relaxed text-neutral-700">{insight}</p>
+      </AllyAiSurface>
 
       {!isLeaf && (
         <section>

@@ -1,24 +1,41 @@
-import { Sparkles } from "lucide-react";
-
+import {
+  AllyAiHeader,
+  AllyAiSurface,
+} from "@/components/alerts-insights/ally-ai-surface";
 import { aiBrief } from "@/lib/mock-alerts-insights";
 
-/** AllyAI narrative — short brief of what is driving the gap. */
+/**
+ * AllyAI narrative — left: avatar + label + portfolio title;
+ * right: Brand / Category / Issue points.
+ */
 export function OverviewAiBrief() {
   return (
-    <section className="rounded-xl border border-border bg-background p-5 shadow-xs">
-      <div className="flex items-center gap-2">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
-          <Sparkles className="size-3.5" aria-hidden />
-        </span>
-        <div>
-          <p className="text-2xs font-semibold tracking-wider text-primary uppercase">
-            AllyAI Brief
-          </p>
-          <p className="text-xs text-muted-foreground">What is driving this week’s gap</p>
-        </div>
+    <AllyAiSurface contentClassName="grid gap-5 p-5 md:grid-cols-2 md:gap-8 md:p-6">
+      {/* Left — Ally label + portfolio one-liner */}
+      <div className="flex flex-col justify-center gap-3">
+        <AllyAiHeader label="AllyAI Brief" />
+        <p className="text-base font-semibold leading-snug text-neutral-900 md:text-lg">
+          {aiBrief.title}
+        </p>
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-neutral-700">{aiBrief}</p>
-    </section>
+      {/* Right — supporting points */}
+      <div className="flex flex-col justify-center border-t border-brand-200/50 pt-4 md:border-t-0 md:border-l md:pt-0 md:pl-8">
+        <ul className="space-y-2">
+          {aiBrief.points.map((point) => (
+            <li
+              key={point.level}
+              className="flex gap-2 text-sm leading-snug text-neutral-700"
+            >
+              <span
+                className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-500"
+                aria-hidden
+              />
+              <span>{point.text}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </AllyAiSurface>
   );
 }

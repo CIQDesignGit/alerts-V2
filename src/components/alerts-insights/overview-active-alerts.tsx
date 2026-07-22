@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   alertsSummary,
-  formatAtRisk,
+  formatGapDollars,
   getIssueAlertInsights,
   issueAlerts,
   issueLabel,
@@ -31,7 +31,7 @@ export function OverviewActiveAlerts({
           <h2 className="text-sm font-semibold text-foreground">Active Alerts</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {alertsSummary.count} issues ·{" "}
-            {formatAtRisk(alertsSummary.atRiskDollars)} at risk
+            {formatGapDollars(alertsSummary.gapDollars)} Gap
           </p>
         </div>
         <Button
@@ -108,12 +108,6 @@ function AlertTeaserRow({
             {insights.signalTeaser}
           </p>
         )}
-
-        {insights.lastSeen && (
-          <p className="mt-1.5 text-xs text-neutral-500">
-            Since {insights.lastSeen}
-          </p>
-        )}
       </div>
 
       <div className="shrink-0 text-right">
@@ -125,9 +119,9 @@ function AlertTeaserRow({
             alert.severity === "low" && "text-neutral-500",
           )}
         >
-          {formatAtRisk(alert.atRiskDollars)}
+          {formatGapDollars(alert.gapDollars)}
         </p>
-        <p className="mt-0.5 text-2xs text-muted-foreground">at risk</p>
+        <p className="mt-0.5 text-2xs text-muted-foreground">Gap</p>
       </div>
     </button>
   );

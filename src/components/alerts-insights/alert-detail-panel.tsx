@@ -1,12 +1,16 @@
 "use client";
 
-import { Package, Zap } from "lucide-react";
+import { Package } from "lucide-react";
 import { useMemo } from "react";
 
 import { AlertImpactInsights } from "@/components/alerts-insights/alert-impact-insights";
+import {
+  AllyAiHeader,
+  AllyAiSurface,
+} from "@/components/alerts-insights/ally-ai-surface";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import {
-  formatAtRisk,
+  formatGapDollars,
   getAlertStrategicInsights,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
@@ -18,7 +22,7 @@ export type AlertGroupDetail = {
   /** Stable id for feedback (issueKey or category id) */
   feedbackKey: string;
   skuCount: number;
-  atRiskDollars: number;
+  gapDollars: number;
   aiSignal?: string;
   skus: IssueSku[];
 };
@@ -35,18 +39,13 @@ export function AlertDetailPanel({
   onSelectSku,
 }: AlertDetailPanelProps) {
   const remaining = Math.max(group.skuCount - group.skus.length, 0);
-  const remainingGap = Math.max(
-    group.atRiskDollars -
-      group.skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0),
-    0,
-  );
+  // Remaining Gap $ when only a subset of SKUs is loaded in the table
+  const remainingGap =
+    group.gapDollars - group.skus.reduce((sum, s) => sum + s.gapDollars, 0);
 
-  // Highest revenue at risk first (same number as Gap $, shown as positive $)
+  // Worst Gap $ first (most negative)
   const sortedSkus = useMemo(
-    () =>
-      [...group.skus].sort(
-        (a, b) => Math.abs(b.gapDollars) - Math.abs(a.gapDollars),
-      ),
+    () => [...group.skus].sort((a, b) => a.gapDollars - b.gapDollars),
     [group.skus],
   );
 
@@ -55,10 +54,10 @@ export function AlertDetailPanel({
     () =>
       getAlertStrategicInsights(
         group.skus,
-        group.atRiskDollars,
+        group.gapDollars,
         group.feedbackKey,
       ),
-    [group.skus, group.atRiskDollars, group.feedbackKey],
+    [group.skus, group.gapDollars, group.feedbackKey],
   );
 
   // Competitive columns when every visible row has BB / price data
@@ -88,9 +87,9 @@ export function AlertDetailPanel({
               aria-label="Alert summary"
             >
               <span className="font-mono text-sm font-bold tabular-nums text-error-600">
-                {formatAtRisk(group.atRiskDollars)}
+                {formatGapDollars(group.gapDollars)}
               </span>
-              <span className="text-xs text-muted-foreground">at risk</span>
+              <span className="text-xs text-muted-foreground">Gap</span>
               <span className="text-neutral-300" aria-hidden>
                 ·
               </span>
@@ -105,15 +104,12 @@ export function AlertDetailPanel({
         </div>
 
         {group.aiSignal && (
-          <section className="shrink-0 rounded-lg border border-warning-200 bg-warning-50 p-4">
-            <p className="flex items-center gap-1.5 text-2xs font-semibold tracking-wider text-warning-700 uppercase">
-              <Zap className="size-3.5 fill-warning-500 text-warning-500" />
-              AI Signal — Systemic Pattern
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-800">
+          <AllyAiSurface className="shrink-0" contentClassName="p-4 md:p-5">
+            <AllyAiHeader label="AllyAI Signal — Systemic Pattern" />
+            <p className="mt-3 text-sm leading-relaxed text-neutral-800">
               {group.aiSignal}
             </p>
-          </section>
+          </AllyAiSurface>
         )}
 
         {group.skus.length > 0 && (
@@ -140,7 +136,7 @@ export function AlertDetailPanel({
                 </span>
               </div>
               <p className="text-2xs text-muted-foreground">
-                Sorted by revenue at risk ↓
+                Sorted by $ Gap ↓
               </p>
             </div>
 
@@ -153,7 +149,7 @@ export function AlertDetailPanel({
                       Product
                     </th>
                     <th className="whitespace-nowrap px-3 py-2 text-right font-medium">
-                      Revenue at risk
+                      $ Gap
                     </th>
                     {showCompetitiveCols ? (
                       <>
@@ -192,7 +188,8 @@ export function AlertDetailPanel({
             </div>
             {remaining > 0 && (
               <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
-                + {remaining} more SKUs · {formatAtRisk(remainingGap)} combined
+                + {remaining} more SKUs · {formatGapDollars(remainingGap)}{" "}
+                combined
               </p>
             )}
           </section>
@@ -235,7 +232,7 @@ function SkuRow({
         </div>
       </td>
       <td className="whitespace-nowrap px-3 py-2.5 text-right font-mono font-semibold text-error-600">
-        {formatAtRisk(Math.abs(sku.gapDollars))}
+        {formatGapDollars(sku.gapDollars)}
       </td>
       {showCompetitiveCols ? (
         <>

@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   brandCards,
+  formatAtRisk,
   formatGapDollars,
   portfolioGap,
 } from "@/lib/mock-alerts-insights";
@@ -63,11 +64,20 @@ export function OverviewGapHero({ onGoToInsights }: OverviewGapHeroProps) {
             {formatGapDollars(portfolioGap.gapDollars)}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {portfolioGap.periodLabel} · vs plan ·{" "}
-            {portfolioGap.attainmentPct}% attainment
+            {portfolioGap.periodLabel} · vs plan
           </p>
-          <div className="mt-4">
+          <div className="mt-4 space-y-1.5">
             <AttainmentBar pct={portfolioGap.attainmentPct} />
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {formatAtRisk(portfolioGap.achievedDollars)}
+              </span>{" "}
+              attained of{" "}
+              <span className="font-medium text-foreground">
+                {formatAtRisk(portfolioGap.targetDollars)}
+              </span>{" "}
+              target
+            </p>
           </div>
         </button>
 
@@ -86,23 +96,8 @@ export function OverviewGapHero({ onGoToInsights }: OverviewGapHeroProps) {
                     "border-b border-border sm:border-r sm:border-b-0",
                 )}
               >
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-sm font-semibold text-foreground">
-                    {brand.name}
-                  </p>
-                  <span
-                    className={cn(
-                      "rounded-md px-1.5 py-0.5 text-2xs font-semibold tabular-nums",
-                      positive
-                        ? "bg-success-100 text-success-700"
-                        : "bg-error-25 text-error-700",
-                    )}
-                  >
-                    {brand.attainmentPct}%
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {brand.subtitle}
+                <p className="text-sm font-semibold text-foreground">
+                  {brand.name}
                 </p>
                 <p
                   className={cn(
@@ -112,8 +107,15 @@ export function OverviewGapHero({ onGoToInsights }: OverviewGapHeroProps) {
                 >
                   {formatGapDollars(brand.gapDollars)}
                 </p>
-                <div className="mt-auto pt-3">
+                <div className="mt-auto space-y-1.5 pt-3">
                   <AttainmentBar pct={brand.attainmentPct} compact />
+                  <p className="text-2xs text-muted-foreground">
+                    <span className="font-medium text-foreground">
+                      {formatAtRisk(brand.achievedDollars)}
+                    </span>
+                    {" / "}
+                    {formatAtRisk(brand.targetDollars)}
+                  </p>
                 </div>
               </button>
             );
@@ -154,24 +156,35 @@ function AttainmentBar({ pct, compact }: { pct: number; compact?: boolean }) {
   const overPlan = pct >= 100;
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-full bg-neutral-100",
-        compact ? "h-1.5" : "h-2",
-      )}
-      role="progressbar"
-      aria-valuenow={pct}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={`${pct}% attainment`}
-    >
+    <div className="flex items-center gap-1">
       <div
         className={cn(
-          "h-full rounded-full",
-          WIDTH_BY_BUCKET[bucket],
-          overPlan ? "bg-success-500" : "bg-error-500",
+          "min-w-0 flex-1 overflow-hidden rounded-none bg-neutral-100",
+          compact ? "h-3" : "h-3.5",
         )}
-      />
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${pct}% attainment`}
+      >
+        <div
+          className={cn(
+            "h-full rounded-none",
+            WIDTH_BY_BUCKET[bucket],
+            overPlan ? "bg-success-500/35" : "bg-error-500/35",
+          )}
+        />
+      </div>
+      {/* Attainment % sits after the bar */}
+      <span
+        className={cn(
+          "shrink-0 font-mono font-semibold tabular-nums text-neutral-600",
+          compact ? "min-w-7 text-right text-2xs" : "min-w-8 text-right text-xs",
+        )}
+      >
+        {pct}%
+      </span>
     </div>
   );
 }

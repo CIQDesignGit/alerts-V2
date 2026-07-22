@@ -6,9 +6,12 @@ import {
 
 export type BrandCard = {
   name: string;
-  subtitle: string;
   gapDollars: number;
   attainmentPct: number;
+  /** Sales achieved so far this period */
+  achievedDollars: number;
+  /** Sales target (plan) for this period */
+  targetDollars: number;
 };
 
 export type IssueSku = {
@@ -140,7 +143,7 @@ export type CategoryAlert = {
   id: string;
   name: string;
   skuCount: number;
-  atRiskDollars: number;
+  gapDollars: number;
   severity: "high" | "mid" | "low";
   aiSignal?: string;
   skus: CategorySku[];
@@ -151,7 +154,7 @@ export type AlertsGroupBy = "issue" | "category";
 export type IssueAlert = {
   issueKey: IssueKey;
   skuCount: number;
-  atRiskDollars: number;
+  gapDollars: number;
   /** visual weight: high = error red, mid = warning, low = muted */
   severity: "high" | "mid" | "low";
   aiSignal?: string;
@@ -237,7 +240,7 @@ export function formatAtRisk(value: number): string {
   return `$${abs.toLocaleString()}`;
 }
 
-/** One slice of $ at risk (conversion / margin / traffic) */
+/** One slice of Gap $ impact (conversion / margin / traffic) */
 export type ImpactBucket = {
   id: "conversion" | "margin" | "traffic";
   label: string;
@@ -353,14 +356,15 @@ function rollupConcentration(
  */
 export function getAlertStrategicInsights(
   skus: IssueSku[],
-  atRiskDollars: number,
+  gapDollars: number,
   feedbackKey: string,
 ): AlertStrategicInsights {
   const totalFromSkus = skus.reduce(
     (sum, s) => sum + Math.abs(s.gapDollars),
     0,
   );
-  const total = totalFromSkus > 0 ? totalFromSkus : atRiskDollars;
+  // Impact mix charts use magnitude (absolute Gap $)
+  const total = totalFromSkus > 0 ? totalFromSkus : Math.abs(gapDollars);
   const mix = impactMixForKey(feedbackKey);
 
   const impactDefs: {
@@ -446,7 +450,7 @@ export function getAlertStrategicInsights(
         ? `${topSeller.pct}% of damage from one seller — treat as a single actor, not SKU-by-SKU.`
         : sellers.length === 1
           ? `All visible damage traces to ${topSeller.name}.`
-          : `Top seller drives ${topSeller.pct}% of $ at risk.`
+          : `Top seller drives ${topSeller.pct}% of Gap $.`
       : undefined;
 
   const noun =
@@ -528,6 +532,10 @@ export function getIssueAlertInsights(alert: IssueAlert): IssueAlertInsights {
 export const portfolioGap = {
   gapDollars: -4_200_000,
   attainmentPct: 79,
+  /** Sales achieved so far this period */
+  achievedDollars: 15_800_000,
+  /** Sales target (plan) for this period */
+  targetDollars: 20_000_000,
   /** Metric name only — period shown separately so the window is obvious */
   label: "Portfolio gap",
   /** Plain-language window (avoid cryptic “WTD” alone in the UI) */
@@ -539,21 +547,24 @@ export const portfolioGap = {
 export const brandCards: BrandCard[] = [
   {
     name: "PowerA",
-    subtitle: "Gaming accessories",
     gapDollars: -2_800_000,
     attainmentPct: 76,
+    achievedDollars: 8_867_000,
+    targetDollars: 11_667_000,
   },
   {
     name: "Shark",
-    subtitle: "Floor care",
     gapDollars: -1_800_000,
     attainmentPct: 82,
+    achievedDollars: 8_200_000,
+    targetDollars: 10_000_000,
   },
   {
     name: "Ninja",
-    subtitle: "Kitchen",
     gapDollars: 400_000,
     attainmentPct: 104,
+    achievedDollars: 10_400_000,
+    targetDollars: 10_000_000,
   },
 ];
 
@@ -617,15 +628,36 @@ export const overviewWins: OverviewWin[] = [
   },
 ];
 
-export const aiBrief =
-  "Shark is driving the majority of this week’s miss — down $1.8M vs plan, with losses concentrated in floor care robotics. A Lost Buy Box problem affecting 12 SKUs (same 3P seller) is the primary cause. Ninja is above plan at +$400K.";
+/**
+ * AllyAI Overview brief —
+ * title = one-line portfolio performance summary;
+ * points = Brand → Category → Issue insights.
+ */
+export const aiBrief = {
+  title:
+    "Week to date, the portfolio is −$4.2M vs plan (79% attainment) — PowerA and Shark are driving the miss.",
+  points: [
+    {
+      level: "Brand",
+      text: "PowerA is the largest gap at −$2.8M; Shark follows at −$1.8M, while Ninja is ahead at +$400K.",
+    },
+    {
+      level: "Category",
+      text: "Shark’s miss is concentrated in floor care robotics.",
+    },
+    {
+      level: "Issue",
+      text: "Lost Buy Box on 12 SKUs (same 3P seller) is the primary cause.",
+    },
+  ],
+};
 
-/** Issue-level alerts — sorted by $ at risk (highest first) */
+/** Issue-level alerts — sorted by Gap $ (most negative first) */
 const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "lostBuyBox",
     skuCount: 6,
-    atRiskDollars: 231_000,
+    gapDollars: -231_000,
     severity: "high",
     aiSignal:
       "VacuumKing_US holds Buy Box on several high-gap SKUs at $20–30 below list. Damage spans robotics, uprights, hair care, and more — not a single-category problem.",
@@ -716,7 +748,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "dealPageVisibility",
     skuCount: 8,
-    atRiskDollars: 180_000,
+    gapDollars: -180_000,
     severity: "mid",
     aiSignal:
       "8 SKUs lost Deal Page Visibility this week. Traffic and conversion drops concentrate on Shark floor care ASINs.",
@@ -806,7 +838,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "stockAvailability",
     skuCount: 5,
-    atRiskDollars: 90_000,
+    gapDollars: -90_000,
     severity: "mid",
     aiSignal:
       "5 SKUs show Stock Availability risk. Expedite replenishment on the highest Gap ASINs first.",
@@ -866,7 +898,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "shippingSpeed",
     skuCount: 4,
-    atRiskDollars: 40_000,
+    gapDollars: -40_000,
     severity: "low",
     aiSignal:
       "4 PowerA and Shark SKUs slipped below 2-day shipping promise this week. Late FC handoffs are the main driver.",
@@ -916,7 +948,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "keywordRank",
     skuCount: 6,
-    atRiskDollars: 30_000,
+    gapDollars: -30_000,
     severity: "low",
     aiSignal:
       "6 SKUs lost page-1 keyword rank on high-intent terms. Sponsored coverage gap opened after budget pause.",
@@ -956,7 +988,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "ratingReviews",
     skuCount: 3,
-    atRiskDollars: 20_000,
+    gapDollars: -20_000,
     severity: "low",
     aiSignal:
       "3 SKUs dropped below 4.2★ after a cluster of negative reviews. Conversion impact concentrated on Ninja kitchen.",
@@ -996,7 +1028,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "conversionDrop",
     skuCount: 2,
-    atRiskDollars: 12_000,
+    gapDollars: -12_000,
     severity: "low",
     aiSignal:
       "2 Shark robot SKUs show conversion down >15% WoW with traffic flat — PDP content and price parity are the top suspects.",
@@ -1026,7 +1058,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "mediaSpend",
     skuCount: 4,
-    atRiskDollars: 8_000,
+    gapDollars: -8_000,
     severity: "low",
     aiSignal:
       "4 campaigns underspent vs plan while SOV slipped on Controllers. Budget pacing is behind by ~18%.",
@@ -1106,11 +1138,11 @@ export const issueAlerts: IssueAlert[] = [...issueAlertsUnsorted]
     ...issue,
     skus: issue.skus.map(enrichSkuCompetitiveFields),
   }))
-  .sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+  .sort((a, b) => a.gapDollars - b.gapDollars);
 
 export const alertsSummary = {
   count: issueAlerts.length,
-  atRiskDollars: issueAlerts.reduce((sum, a) => sum + a.atRiskDollars, 0),
+  gapDollars: issueAlerts.reduce((sum, a) => sum + a.gapDollars, 0),
 };
 
 const SEVERITY_RANK: Record<IssueAlert["severity"], number> = {
@@ -1119,13 +1151,13 @@ const SEVERITY_RANK: Record<IssueAlert["severity"], number> = {
   low: 1,
 };
 
-/** Roll issue SKUs up into category groups, sorted by $ at risk (highest first). */
+/** Roll issue SKUs up into category groups, sorted by Gap $ (most negative first). */
 export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
   const byCategory = new Map<
     string,
     {
       skus: CategorySku[];
-      atRiskDollars: number;
+      gapDollars: number;
       severity: IssueAlert["severity"];
       issueKeys: Set<IssueKey>;
     }
@@ -1135,12 +1167,12 @@ export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
     for (const sku of issue.skus) {
       const existing = byCategory.get(sku.category) ?? {
         skus: [],
-        atRiskDollars: 0,
+        gapDollars: 0,
         severity: "low" as IssueAlert["severity"],
         issueKeys: new Set<IssueKey>(),
       };
       existing.skus.push({ ...sku, issueKey: issue.issueKey });
-      existing.atRiskDollars += Math.abs(sku.gapDollars);
+      existing.gapDollars += sku.gapDollars;
       existing.issueKeys.add(issue.issueKey);
       if (SEVERITY_RANK[issue.severity] > SEVERITY_RANK[existing.severity]) {
         existing.severity = issue.severity;
@@ -1157,15 +1189,15 @@ export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
         id: name.toLowerCase().replace(/\s+/g, "-"),
         name,
         skuCount: skus.length,
-        atRiskDollars: data.atRiskDollars,
+        gapDollars: data.gapDollars,
         severity: data.severity,
-        aiSignal: `${name} has ${skus.length} SKUs at risk across ${issueList.join(", ")}. Focus on the highest Gap SKUs first.`,
+        aiSignal: `${name} has ${skus.length} SKUs with Gap across ${issueList.join(", ")}. Focus on the highest Gap SKUs first.`,
         skus,
       };
     },
   );
 
-  return groups.sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+  return groups.sort((a, b) => a.gapDollars - b.gapDollars);
 }
 
 export const categoryAlerts: CategoryAlert[] = buildCategoryAlerts(issueAlerts);
@@ -1364,19 +1396,19 @@ export function filterIssueAlerts(
       ) {
         return null;
       }
-      const atRiskDollars =
+      const gapDollars =
         skus.length > 0
-          ? skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0)
-          : issue.atRiskDollars;
+          ? skus.reduce((sum, s) => sum + s.gapDollars, 0)
+          : issue.gapDollars;
       return {
         ...issue,
         skus,
         skuCount: skus.length > 0 ? skus.length : issue.skuCount,
-        atRiskDollars,
+        gapDollars,
       };
     })
     .filter((issue): issue is IssueAlert => issue != null)
-    .sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+    .sort((a, b) => a.gapDollars - b.gapDollars);
 }
 
 /** Apply the same filters when the left list is grouped by category */
@@ -1397,11 +1429,11 @@ export function filterCategoryAlerts(
         ...cat,
         skus,
         skuCount: skus.length,
-        atRiskDollars: skus.reduce((sum, s) => sum + Math.abs(s.gapDollars), 0),
+        gapDollars: skus.reduce((sum, s) => sum + s.gapDollars, 0),
       };
     })
     .filter((cat): cat is CategoryAlert => cat != null)
-    .sort((a, b) => b.atRiskDollars - a.atRiskDollars);
+    .sort((a, b) => a.gapDollars - b.gapDollars);
 }
 
 export const emptyAlertsFilters: AlertsFilters = {

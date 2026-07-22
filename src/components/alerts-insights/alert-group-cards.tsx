@@ -5,7 +5,6 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { IssueKey } from "@/components/alerts/issue-names";
 import {
-  formatAtRisk,
   formatGapDollars,
   issueGroup,
   issueLabel,
@@ -109,7 +108,7 @@ export function IssueGroupCard({
             severityText(issue.severity),
           )}
         >
-          {formatAtRisk(issue.atRiskDollars)}
+          {formatGapDollars(issue.gapDollars)}
         </p>
       </button>
 
@@ -184,7 +183,7 @@ export function CategoryGroupCard({
             severityText(category.severity),
           )}
         >
-          {formatAtRisk(category.atRiskDollars)}
+          {formatGapDollars(category.gapDollars)}
         </p>
       </button>
 

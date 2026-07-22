@@ -176,7 +176,7 @@ export function AlertsTab({
             title: issueLabel(selectedIssue.issueKey),
             feedbackKey: selectedIssue.issueKey,
             skuCount: selectedIssue.skuCount,
-            atRiskDollars: selectedIssue.atRiskDollars,
+            gapDollars: selectedIssue.gapDollars,
             aiSignal: selectedIssue.aiSignal,
             skus: selectedIssue.skus,
           }}
@@ -189,7 +189,7 @@ export function AlertsTab({
             title: selectedCategory.name,
             feedbackKey: `category:${selectedCategory.id}`,
             skuCount: selectedCategory.skuCount,
-            atRiskDollars: selectedCategory.atRiskDollars,
+            gapDollars: selectedCategory.gapDollars,
             aiSignal: selectedCategory.aiSignal,
             skus: selectedCategory.skus,
           }}
