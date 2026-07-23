@@ -1,44 +1,15 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import {
-  Award,
-  Box,
-  CalendarDays,
-  ChevronDown,
-  DollarSign,
-  Filter,
-  Megaphone,
-  PieChart,
-  Shield,
-  ShoppingCart,
-  Star,
-  Tag,
-  Truck,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
-import { ISSUE_NAMES, type IssueKey } from "@/components/alerts/issue-names";
+import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
+import { ISSUE_NAMES } from "@/components/alerts/issue-names";
 import {
   formatCompactDollars,
   type RcaIssueRow,
   type RcaLiveStatus,
 } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
-
-const ISSUE_ICONS: Record<IssueKey, LucideIcon> = {
-  lostBuyBox: ShoppingCart,
-  promoBadge: Megaphone,
-  dealPageVisibility: CalendarDays,
-  coupon: Tag,
-  bestSellerRank: Award,
-  ratingReviews: Star,
-  stockAvailability: Box,
-  shippingSpeed: Truck,
-  sponsoredSov: PieChart,
-  conversionDrop: Filter,
-  keywordRank: Shield,
-  mediaSpend: DollarSign,
-};
 
 type SkuRcaIssueRowProps = {
   issue: RcaIssueRow;

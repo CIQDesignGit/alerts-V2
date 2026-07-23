@@ -33,7 +33,7 @@ export function InsightsSkuListPanel({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline"
         >
           <ArrowLeft className="size-3.5" />
           Back to hierarchy

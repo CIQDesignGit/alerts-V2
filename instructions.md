@@ -35,9 +35,10 @@ Always follow them unless the user explicitly says otherwise.
 - All pages share the AppShell layout: CommerceIQ dark left sidebar + light top header + main content.
 - **Alerts and insights** (`/`) has three in-page tabs: Overview · Alerts · Insights (see `product_context.md`).
 - Alerts tab: left issue→SKU panel. Insights tab: left hierarchy panel + Snapshot/Trends modes (Trends = customizable persisted widgets). Overview: no left product panel.
-- SKU is the shared leaf from Alerts or Insights; use `SkuRca` (`src/components/sku-rca/`) for the fixed detail layout (collapsing header + diagnosis body + chat footer). Snapshot/Trends on SKU is hidden for now.
-- SKU page shows period metrics / issues / diagnosis (Trends widgets stay on Insights levels only for now).
-- Insights Snapshot and Trends both use a shared date-range picker and the floating `AllyChatFooter` at the bottom of the right pane.
+- **Two SKU pages (not shared):**
+  - **Alerts** → `SkuRca` (`src/components/sku-rca/`) — Alert SKU detail (collapsing header + diagnosis body + chat footer).
+  - **Insights** → same Insights level shell as Brand/Category (`InsightsLevelHeader` + Snapshot/Trends panels + `AllyChatFooter`). Do **not** open `SkuRca` from Insights. SKU has no child breakdown table.
+- Insights Snapshot and Trends both use a shared date-range picker and the floating `AllyChatFooter` at the bottom of the right pane (including at SKU).
 - Keep pages under 300 lines. Extract reusable pieces into `src/components/`.
 
 ## Typography

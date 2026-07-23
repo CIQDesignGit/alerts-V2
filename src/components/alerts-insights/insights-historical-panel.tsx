@@ -53,8 +53,9 @@ export function InsightsHistoricalPanel({
           />
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             size="sm"
+            className="border-brand-500 text-brand-700 hover:bg-brand-50 hover:text-brand-800"
             onClick={() => {
               setAdding(true);
               setEditingId(null);
@@ -103,10 +104,7 @@ export function InsightsHistoricalPanel({
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {widget.kind}
-                  </p>
-                  <h4 className="mt-0.5 text-sm font-semibold text-foreground">
+                  <h4 className="text-sm font-semibold text-foreground">
                     {widget.title}
                   </h4>
                 </div>

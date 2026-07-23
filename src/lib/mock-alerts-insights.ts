@@ -1229,14 +1229,15 @@ export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
 
 export const categoryAlerts: CategoryAlert[] = buildCategoryAlerts(issueAlerts);
 
-/** Find the issue alert that owns a SKU id (for shared SKU leaf). */
+/** Find the issue alert that owns a SKU id (Alerts → Alert SKU detail). */
 export function findIssueForSku(skuId: string): IssueAlert | undefined {
   return issueAlerts.find((issue) => issue.skus.some((s) => s.id === skuId));
 }
 
 /**
- * Map an Insights hierarchy SKU node → IssueSku for the shared SkuRca page.
+ * Map an Insights hierarchy SKU node → IssueSku for Alert SKU detail (`SkuRca`).
  * Prefer a matching Alerts SKU (same product name); otherwise synthesize fields.
+ * Insights SKU page does not use this — it stays on the hierarchy node.
  */
 export function issueSkuFromHierarchyNode(node: HierarchyNode): IssueSku {
   // Same product may already exist on an alert — reuse that richer row
@@ -1541,6 +1542,8 @@ export const hierarchyTree: HierarchyNode = {
                   name: "Shark IQ AV970",
                   level: "sku",
                   gapDollars: -62_000,
+                  insight:
+                    "Shark IQ AV970 is the largest Gap SKU in Robot Vacuums (−$62K, 48% attainment). Lost Buy Box to a 3P seller is the primary driver; ASP is also down ~$30 vs plan.",
                   metrics: {
                     attainmentPct: 48,
                     unitsDelta: -410,
@@ -1553,6 +1556,8 @@ export const hierarchyTree: HierarchyNode = {
                   name: "Shark AI Robot RV2310",
                   level: "sku",
                   gapDollars: -48_000,
+                  insight:
+                    "Shark AI Robot RV2310 Gap (−$48K) tracks with Buy Box loss and softer conversion. Units are −320 vs plan for this period.",
                   metrics: {
                     attainmentPct: 52,
                     unitsDelta: -320,

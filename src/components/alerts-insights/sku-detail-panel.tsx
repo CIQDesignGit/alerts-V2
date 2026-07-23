@@ -8,7 +8,7 @@ type SkuDetailPanelProps = {
   onBackToAlert: () => void;
 };
 
-/** Alerts / Insights shared SKU leaf — same SkuRca layout either way. */
+/** Alerts-only SKU detail — Insights uses the Insights level shell instead. */
 export function SkuDetailPanel({ sku, onBackToAlert }: SkuDetailPanelProps) {
   return <SkuRca sku={sku} onClose={onBackToAlert} />;
 }

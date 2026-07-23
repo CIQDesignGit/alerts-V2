@@ -9,6 +9,7 @@ import {
   findHierarchyNode,
   findHierarchyParent,
   HierarchyTree,
+  hierarchyPath,
   hierarchyPathIds,
   isSkuParent,
 } from "@/components/alerts-insights/hierarchy-tree";
@@ -16,7 +17,6 @@ import { InsightsHistoricalPanel } from "@/components/alerts-insights/insights-h
 import { InsightsLevelHeader } from "@/components/alerts-insights/insights-level-header";
 import { InsightsLivePanel } from "@/components/alerts-insights/insights-live-panel";
 import { InsightsSkuListPanel } from "@/components/alerts-insights/insights-sku-list-panel";
-import { SkuRca } from "@/components/sku-rca/sku-rca";
 import { AllyChatFooter } from "@/components/shared/ally-chat-footer";
 import {
   DEFAULT_INSIGHTS_DATE_RANGE,
@@ -26,7 +26,6 @@ import {
 import type { InsightsMode } from "@/lib/insights-widgets";
 import {
   hierarchyTree,
-  issueSkuFromHierarchyNode,
   type AlertsFilters,
 } from "@/lib/mock-alerts-insights";
 import { usePersistedWidgets } from "@/lib/use-persisted-widgets";
@@ -113,6 +112,14 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
     () => findHierarchyNode(hierarchyTree, selectedId) ?? hierarchyTree,
     [selectedId],
   );
+  const breadcrumbs = useMemo(
+    () =>
+      hierarchyPath(hierarchyTree, selected.id).map((node) => ({
+        id: node.id,
+        name: node.name,
+      })),
+    [selected.id],
+  );
   const skuListParent = useMemo(
     () =>
       skuListParentId
@@ -140,10 +147,6 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
   );
   const widgetsApi = usePersistedWidgets(selected.id);
 
-  // Shared leaf with Alerts — full SkuRca, not the level Insights shell
-  const selectedSku =
-    selected.level === "sku" ? issueSkuFromHierarchyNode(selected) : null;
-
   function drillTo(childId: string) {
     const child = findHierarchyNode(hierarchyTree, childId);
     setSelectedId(childId);
@@ -156,11 +159,6 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
   function openSkuList(parentId: string) {
     setSkuListParentId(parentId);
     setExpandedIds((prev) => new Set(prev).add(parentId));
-  }
-
-  function backFromSku() {
-    const parent = findHierarchyParent(hierarchyTree, selected.id);
-    if (parent) setSelectedId(parent.id);
   }
 
   const filterHint = hasActiveFilters(filters)
@@ -211,61 +209,63 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
         )}
       </aside>
 
-      {selectedSku ? (
-        <SkuRca sku={selectedSku} onClose={backFromSku} />
-      ) : (
-        <div className="relative flex min-w-0 flex-1 flex-col bg-background">
-          {/* Page header — outside scroll body (same pattern as SkuRca) */}
-          <InsightsLevelHeader
-            name={selected.name}
-            mode={mode}
-            onModeChange={setMode}
-          />
+      {/* Insights SKU uses this same shell — not Alert SkuRca */}
+      <div className="relative flex min-w-0 flex-1 flex-col bg-background">
+        <InsightsLevelHeader
+          name={selected.name}
+          breadcrumbs={breadcrumbs}
+          onBreadcrumbClick={(id) => {
+            setSelectedId(id);
+            setSkuListParentId(null);
+            setExpandedIds(new Set(hierarchyPathIds(hierarchyTree, id)));
+          }}
+          mode={mode}
+          onModeChange={setMode}
+        />
 
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6",
-              chatExpanded ? "pb-36" : "pb-16",
-            )}
-          >
-            {mode === "live" ? (
-              <InsightsLivePanel
-                selected={selected}
-                constituents={liveConstituents}
-                dateRange={snapshotDateRange}
-                onDateRangeChange={setSnapshotDateRange}
-                onDrill={drillTo}
-              />
-            ) : (
-              <InsightsHistoricalPanel
-                entityName={selected.name}
-                dateRange={trendsDateRange}
-                onDateRangeChange={setTrendsDateRange}
-                widgets={widgetsApi.widgets}
-                onAdd={widgetsApi.addWidget}
-                onAddSuggestion={widgetsApi.addSuggestion}
-                onUpdate={widgetsApi.updateWidget}
-                onRemove={widgetsApi.removeWidget}
-              />
-            )}
-          </div>
-
-          <AllyChatFooter
-            expanded={chatExpanded}
-            onExpandedChange={setChatExpanded}
-            collapsedLabel={
-              mode === "live"
-                ? `Ask AllyAI about ${selected.name}…`
-                : `Ask AllyAI about ${selected.name} trends…`
-            }
-            inputPlaceholder={
-              mode === "live"
-                ? "Ask about metrics for this period…"
-                : "Ask about issue trends, or describe a widget to add…"
-            }
-          />
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6",
+            chatExpanded ? "pb-36" : "pb-16",
+          )}
+        >
+          {mode === "live" ? (
+            <InsightsLivePanel
+              selected={selected}
+              constituents={liveConstituents}
+              dateRange={snapshotDateRange}
+              onDateRangeChange={setSnapshotDateRange}
+              onDrill={drillTo}
+            />
+          ) : (
+            <InsightsHistoricalPanel
+              entityName={selected.name}
+              dateRange={trendsDateRange}
+              onDateRangeChange={setTrendsDateRange}
+              widgets={widgetsApi.widgets}
+              onAdd={widgetsApi.addWidget}
+              onAddSuggestion={widgetsApi.addSuggestion}
+              onUpdate={widgetsApi.updateWidget}
+              onRemove={widgetsApi.removeWidget}
+            />
+          )}
         </div>
-      )}
+
+        <AllyChatFooter
+          expanded={chatExpanded}
+          onExpandedChange={setChatExpanded}
+          collapsedLabel={
+            mode === "live"
+              ? `Ask AllyAI about ${selected.name}…`
+              : `Ask AllyAI about ${selected.name} trends…`
+          }
+          inputPlaceholder={
+            mode === "live"
+              ? "Ask about metrics for this period…"
+              : "Ask about issue trends, or describe a widget to add…"
+          }
+        />
+      </div>
     </div>
   );
 }

@@ -10,12 +10,14 @@ import {
   formatSignedInt,
   LiveMetricCard,
 } from "@/components/alerts-insights/live-metric-card";
+import { getIssueIconForLabel } from "@/components/alerts/issue-icons";
 import { formatInsightsDateRange } from "@/lib/insights-date-range";
 import type { InsightsDateRange } from "@/lib/insights-date-range";
 import {
   childLevelLabel,
   formatGapDollars,
   getLiveMetrics,
+  type HierarchyIssueChip,
   type HierarchyNode,
 } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,39 @@ type InsightsLivePanelProps = {
   onDateRangeChange: (next: InsightsDateRange) => void;
   onDrill: (childId: string) => void;
 };
+
+/** Compact issue chip with the same Lucide icon used on Alert SKU detail. */
+function IssueChipBadge({
+  chip,
+  size = "sm",
+}: {
+  chip: HierarchyIssueChip;
+  size?: "sm" | "md";
+}) {
+  const Icon = getIssueIconForLabel(chip.chip);
+  const showCount = size === "sm" || chip.count > 1;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 font-medium text-neutral-700",
+        size === "md"
+          ? "rounded-md bg-neutral-100 px-2 py-1 text-xs"
+          : "rounded bg-neutral-100 px-1.5 py-0.5 text-2xs text-neutral-600",
+      )}
+    >
+      <Icon
+        className={cn(
+          "shrink-0",
+          size === "md" ? "size-3.5 text-neutral-500" : "size-3 text-neutral-500",
+        )}
+        aria-hidden
+      />
+      {chip.chip}
+      {showCount ? ` ×${chip.count}` : ""}
+    </span>
+  );
+}
 
 /**
  * Snapshot Insights for a hierarchy parent:
@@ -93,7 +128,8 @@ export function InsightsLivePanel({
         <p className="mt-3 text-sm leading-relaxed text-neutral-700">{insight}</p>
       </AllyAiSurface>
 
-      {!isLeaf && (
+      {/* Parent levels: drill table. SKU leaf: issue chips only (no children). */}
+      {!isLeaf ? (
         <section>
           <h3 className="text-sm font-semibold text-foreground">
             Breakdown by {childLabel.toLowerCase()}
@@ -155,12 +191,7 @@ export function InsightsLivePanel({
                       <td className="px-3 py-2.5">
                         <div className="flex flex-wrap gap-1">
                           {(m.issueChips ?? []).map((chip) => (
-                            <span
-                              key={chip.chip}
-                              className="rounded bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600"
-                            >
-                              {chip.chip} ×{chip.count}
-                            </span>
+                            <IssueChipBadge key={chip.chip} chip={chip} />
                           ))}
                           {!m.issueChips?.length && (
                             <span className="text-2xs text-muted-foreground">
@@ -176,12 +207,29 @@ export function InsightsLivePanel({
             </table>
           </div>
         </section>
-      )}
-
-      {isLeaf && (
+      ) : selected.level === "sku" ? (
+        <section>
+          <h3 className="text-sm font-semibold text-foreground">
+            Active issues on this SKU
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Issue chips for {period.label.toLowerCase()} · open Alerts for
+            full diagnosis on a specific issue
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(metrics.issueChips ?? []).map((chip) => (
+              <IssueChipBadge key={chip.chip} chip={chip} size="md" />
+            ))}
+            {!metrics.issueChips?.length && (
+              <p className="rounded-lg border border-dashed border-border bg-neutral-50 px-4 py-3 text-sm text-muted-foreground">
+                No active issue chips for this SKU in the selected period.
+              </p>
+            )}
+          </div>
+        </section>
+      ) : (
         <p className="rounded-lg border border-dashed border-border bg-neutral-50 px-4 py-3 text-sm text-muted-foreground">
-          No child breakdown at this level. Pick a SKU from the left rail to open
-          the full detail page.
+          No child breakdown at this level.
         </p>
       )}
     </div>

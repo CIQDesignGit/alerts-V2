@@ -39,7 +39,7 @@ type AllyAiHeaderProps = {
 /** Ally avatar + title (optional subtitle) — use inside AllyAiSurface. */
 export function AllyAiHeader({ label, subtitle }: AllyAiHeaderProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-start gap-2">
       <span className="flex size-7 shrink-0 overflow-hidden rounded-lg bg-white">
         <img
           src="/ally-avatar.png"

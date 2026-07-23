@@ -24,7 +24,8 @@ type SkuRcaProps = {
 const COLLAPSE_AT = 24;
 
 /**
- * Shared SKU leaf — collapsing header (with period control) + diagnosis + chat.
+ * Alert SKU detail — collapsing header (with period control) + diagnosis + chat.
+ * Used from Alerts only; Insights SKU stays in the Insights level shell.
  */
 export function SkuRca({ sku, onClose }: SkuRcaProps) {
   const data = useMemo(() => getSkuRcaData(sku), [sku]);

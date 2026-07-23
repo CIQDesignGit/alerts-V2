@@ -224,3 +224,23 @@ export function hierarchyPathIds(
   }
   return walk(root, []) ?? [root.id];
 }
+
+/** Nodes from root → target (inclusive) for Insights breadcrumbs. */
+export function hierarchyPath(
+  root: HierarchyNode,
+  targetId: string,
+): HierarchyNode[] {
+  function walk(
+    node: HierarchyNode,
+    trail: HierarchyNode[],
+  ): HierarchyNode[] | null {
+    const next = [...trail, node];
+    if (node.id === targetId) return next;
+    for (const child of node.children ?? []) {
+      const found = walk(child, next);
+      if (found) return found;
+    }
+    return null;
+  }
+  return walk(root, []) ?? [root];
+}
