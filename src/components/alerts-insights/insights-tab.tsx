@@ -20,11 +20,11 @@ import { SkuRca } from "@/components/sku-rca/sku-rca";
 import { AllyChatFooter } from "@/components/shared/ally-chat-footer";
 import {
   DEFAULT_INSIGHTS_DATE_RANGE,
+  DEFAULT_TRENDS_DATE_RANGE,
   type InsightsDateRange,
 } from "@/lib/insights-date-range";
 import type { InsightsMode } from "@/lib/insights-widgets";
 import {
-  getLiveMetrics,
   hierarchyTree,
   issueSkuFromHierarchyNode,
   type AlertsFilters,
@@ -63,8 +63,12 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
   );
   const [configOpen, setConfigOpen] = useState(false);
   const [mode, setMode] = useState<InsightsMode>("live");
-  const [dateRange, setDateRange] = useState<InsightsDateRange>(
+  // Separate windows — Snapshot is short; Trends needs a longer WoW range
+  const [snapshotDateRange, setSnapshotDateRange] = useState<InsightsDateRange>(
     DEFAULT_INSIGHTS_DATE_RANGE,
+  );
+  const [trendsDateRange, setTrendsDateRange] = useState<InsightsDateRange>(
+    DEFAULT_TRENDS_DATE_RANGE,
   );
   const [chatExpanded, setChatExpanded] = useState(false);
   // When set, left rail shows SKU list for this parent instead of the tree
@@ -134,7 +138,6 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
       ),
     [skuListParent, filters],
   );
-  const liveMetrics = getLiveMetrics(selected);
   const widgetsApi = usePersistedWidgets(selected.id);
 
   // Shared leaf with Alerts — full SkuRca, not the level Insights shell
@@ -215,12 +218,8 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
           {/* Page header — outside scroll body (same pattern as SkuRca) */}
           <InsightsLevelHeader
             name={selected.name}
-            gapDollars={selected.gapDollars}
-            attainmentPct={liveMetrics.attainmentPct}
             mode={mode}
             onModeChange={setMode}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
           />
 
           <div
@@ -233,19 +232,20 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
               <InsightsLivePanel
                 selected={selected}
                 constituents={liveConstituents}
-                dateRange={dateRange}
+                dateRange={snapshotDateRange}
+                onDateRangeChange={setSnapshotDateRange}
                 onDrill={drillTo}
               />
             ) : (
               <InsightsHistoricalPanel
                 entityName={selected.name}
-                dateRange={dateRange}
+                dateRange={trendsDateRange}
+                onDateRangeChange={setTrendsDateRange}
                 widgets={widgetsApi.widgets}
                 onAdd={widgetsApi.addWidget}
                 onAddSuggestion={widgetsApi.addSuggestion}
                 onUpdate={widgetsApi.updateWidget}
                 onRemove={widgetsApi.removeWidget}
-                onReset={widgetsApi.resetToDefaults}
               />
             )}
           </div>

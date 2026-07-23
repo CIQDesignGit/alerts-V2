@@ -14,8 +14,8 @@ import type { InsightsDateRange } from "@/lib/insights-date-range";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
-/** Same reading column as SkuRca body — keeps header + content aligned on wide screens */
-export const SKU_RCA_CONTENT_WIDTH = "mx-auto w-full max-w-3xl";
+/** Same reading column as SkuRca body — 10% wider than max-w-3xl (48rem → 52.8rem) */
+export const SKU_RCA_CONTENT_WIDTH = "mx-auto w-full max-w-[52.8rem]";
 
 type SkuRcaHeaderProps = {
   data: SkuRcaData;

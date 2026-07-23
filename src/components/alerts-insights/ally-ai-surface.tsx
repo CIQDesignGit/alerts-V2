@@ -30,12 +30,14 @@ export function AllyAiSurface({
 }
 
 type AllyAiHeaderProps = {
-  /** Uppercase label next to the Ally avatar */
+  /** Title next to the Ally avatar */
   label: string;
+  /** Optional line under the title (e.g. date range) */
+  subtitle?: string;
 };
 
-/** Ally avatar + uppercase label — use inside AllyAiSurface. */
-export function AllyAiHeader({ label }: AllyAiHeaderProps) {
+/** Ally avatar + title (optional subtitle) — use inside AllyAiSurface. */
+export function AllyAiHeader({ label, subtitle }: AllyAiHeaderProps) {
   return (
     <div className="flex items-center gap-2">
       <span className="flex size-7 shrink-0 overflow-hidden rounded-lg bg-white">
@@ -45,9 +47,12 @@ export function AllyAiHeader({ label }: AllyAiHeaderProps) {
           className="size-full object-cover"
         />
       </span>
-      <p className="text-2xs font-semibold tracking-wider text-primary uppercase">
-        {label}
-      </p>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <p className="text-md font-medium text-neutral-800">{label}</p>
+        {subtitle ? (
+          <p className="text-2xs text-muted-foreground">{subtitle}</p>
+        ) : null}
+      </div>
     </div>
   );
 }

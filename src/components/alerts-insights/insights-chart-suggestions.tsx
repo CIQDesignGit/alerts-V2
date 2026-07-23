@@ -22,7 +22,7 @@ export function InsightsChartSuggestions({
 
   return (
     <div className="rounded-lg border border-border bg-neutral-50 px-3 py-2.5">
-      <p className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <p className="text-2xs font-semibold text-muted-foreground">
         Suggested issue & performance charts
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">

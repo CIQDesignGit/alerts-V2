@@ -74,22 +74,26 @@ export function AlertDetailPanel({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="flex flex-col gap-5 p-6">
-        {/* Title + compact $ / SKU strip */}
-        <div className="shrink-0">
-          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-            <h2 className="text-xl font-semibold text-foreground">
+    <div className="relative flex min-h-0 flex-1 flex-col bg-background">
+      {/* Same flat header pattern as InsightsLevelHeader */}
+      <header className="relative shrink-0 border-b border-border bg-background">
+        <div className="px-6 py-3">
+          <div className="flex w-full min-w-0 items-center justify-between gap-4">
+            <h2 className="min-w-0 flex-1 truncate text-lg font-bold leading-snug text-foreground">
               {group.title}
             </h2>
             <div
-              className="inline-flex items-center gap-2 rounded-md border border-border bg-neutral-50 px-2 py-1"
+              className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-2 gap-y-0.5"
               aria-label="Alert summary"
             >
-              <span className="font-mono text-sm font-bold tabular-nums text-error-600">
+              <span
+                className={cn(
+                  "font-mono text-sm font-semibold tabular-nums",
+                  group.gapDollars < 0 ? "text-error-600" : "text-success-600",
+                )}
+              >
                 {formatGapDollars(group.gapDollars)}
               </span>
-              <span className="text-xs text-muted-foreground">Gap</span>
               <span className="text-neutral-300" aria-hidden>
                 ·
               </span>
@@ -102,10 +106,12 @@ export function AlertDetailPanel({
             </div>
           </div>
         </div>
+      </header>
 
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6">
         {group.aiSignal && (
           <AllyAiSurface className="shrink-0" contentClassName="p-4 md:p-5">
-            <AllyAiHeader label="AllyAI Signal — Systemic Pattern" />
+            <AllyAiHeader label={strategicInsights.headline} />
             <p className="mt-3 text-sm leading-relaxed text-neutral-800">
               {group.aiSignal}
             </p>

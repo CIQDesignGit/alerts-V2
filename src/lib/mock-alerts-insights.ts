@@ -265,6 +265,8 @@ export type AlertStrategicInsights = {
   categories: ConcentrationRow[];
   /** Card title — "Categories exposed" or "Brands most exposed" when only one category */
   categoryCardTitle: string;
+  /** Short 6–7 word AllyAI header summary */
+  headline: string;
   /** One-line takeaway for seller concentration */
   sellerTakeaway?: string;
   /** One-line takeaway for category concentration */
@@ -475,11 +477,36 @@ export function getAlertStrategicInsights(
           : `${topCategory.name} is the most exposed ${noun} (${topCategory.pct}%).`
       : undefined;
 
+  // Short header line (~6–7 words) — pattern first, not a section title
+  let headline = "Systemic pattern across affected SKUs";
+  if (topSeller && topSeller.pct >= 70) {
+    headline = "One seller drives most Gap";
+  } else if (topSeller && sellers.length === 1) {
+    headline = "Single seller behind the miss";
+  } else if (topCategory && topCategory.pct >= 60) {
+    headline =
+      exposureMode === "category"
+        ? "Gap concentrated in one category"
+        : exposureMode === "brand"
+          ? "Gap concentrated in one brand"
+          : "Gap concentrated in top SKUs";
+  } else if (categories.length >= 2 && (topCategory?.pct ?? 100) < 50) {
+    headline =
+      exposureMode === "category"
+        ? "Gap spread across categories"
+        : exposureMode === "brand"
+          ? "Gap spread across brands"
+          : "Gap spread across SKUs";
+  } else if (topSeller && topSeller.pct >= 40) {
+    headline = "Top seller drives the Gap";
+  }
+
   return {
     impact,
     sellers,
     categories,
     categoryCardTitle,
+    headline,
     sellerTakeaway,
     categoryTakeaway,
   };

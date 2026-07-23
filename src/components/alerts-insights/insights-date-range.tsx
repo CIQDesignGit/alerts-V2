@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, ChevronDown } from "lucide-react";
+import { Calendar, ChevronDown } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -199,31 +199,25 @@ export function InsightsDateRangePicker({
             }
             onClick={() => setOpen((prev) => !prev)}
             className={cn(
-              "inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground hover:bg-neutral-50",
-              showRangeInTrigger ? "h-auto items-start py-1.5" : "h-7",
+              "inline-flex h-8 max-w-full items-center gap-2 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50",
             )}
           >
-            <CalendarRange
-              className={cn(
-                "size-3.5 shrink-0 text-muted-foreground",
-                showRangeInTrigger && "mt-0.5",
-              )}
+            <Calendar
+              className="size-3.5 shrink-0 text-neutral-600"
               aria-hidden
             />
             {showRangeInTrigger ? (
-              <span className="flex min-w-0 flex-col items-start gap-0.5 text-left">
-                <span className="truncate leading-tight">{selectedLabel}</span>
-                <span className="truncate text-2xs font-normal leading-tight text-muted-foreground">
-                  {display.rangeText}
-                </span>
+              <span className="min-w-0 truncate">
+                {selectedLabel}
+                <span className="text-neutral-400"> · </span>
+                {display.rangeText}
               </span>
             ) : (
               <span className="truncate">{selectedLabel}</span>
             )}
             <ChevronDown
               className={cn(
-                "size-3.5 shrink-0 text-muted-foreground transition-transform",
-                showRangeInTrigger && "mt-0.5",
+                "size-3.5 shrink-0 text-neutral-600 transition-transform",
                 open && "rotate-180",
               )}
               aria-hidden

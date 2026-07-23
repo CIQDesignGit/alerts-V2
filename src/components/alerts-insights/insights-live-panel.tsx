@@ -4,6 +4,7 @@ import {
   AllyAiHeader,
   AllyAiSurface,
 } from "@/components/alerts-insights/ally-ai-surface";
+import { InsightsDateRangePicker } from "@/components/alerts-insights/insights-date-range";
 import {
   formatAsp,
   formatSignedInt,
@@ -24,18 +25,21 @@ type InsightsLivePanelProps = {
   /** Child nodes that make up this parent (brands, categories, SKUs…) */
   constituents: HierarchyNode[];
   dateRange: InsightsDateRange;
+  onDateRangeChange: (next: InsightsDateRange) => void;
   onDrill: (childId: string) => void;
 };
 
 /**
  * Snapshot Insights for a hierarchy parent:
- * 1) Level KPIs for the selected period + AI narrative
- * 2) Breakdown table of constituents (click to drill)
+ * 1) Period metrics + date range (mode-specific toolbar)
+ * 2) Level KPIs + AI narrative
+ * 3) Breakdown table of constituents (click to drill)
  */
 export function InsightsLivePanel({
   selected,
   constituents,
   dateRange,
+  onDateRangeChange,
   onDrill,
 }: InsightsLivePanelProps) {
   const metrics = getLiveMetrics(selected);
@@ -46,9 +50,29 @@ export function InsightsLivePanel({
   const childLabel = childLevelLabel(selected.level);
   const isLeaf = constituents.length === 0;
 
+  const levelTitle =
+    selected.level.charAt(0).toUpperCase() + selected.level.slice(1);
+
   return (
     <div className="flex flex-col gap-5">
-      <section className="grid gap-3 sm:grid-cols-2">
+      {/* Snapshot period control */}
+      <div className="flex justify-end">
+        <InsightsDateRangePicker
+          value={dateRange}
+          onChange={onDateRangeChange}
+          variant="toolbar"
+          menuAlign="right"
+          showRangeInTrigger
+        />
+      </div>
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <LiveMetricCard
+          label="$ Gap"
+          value={formatGapDollars(selected.gapDollars)}
+          tone={selected.gapDollars < 0 ? "neg" : "pos"}
+          progressPct={metrics.attainmentPct}
+        />
         <LiveMetricCard
           label="Units Δ"
           value={formatSignedInt(metrics.unitsDelta)}
@@ -62,10 +86,10 @@ export function InsightsLivePanel({
       </section>
 
       <AllyAiSurface contentClassName="p-4 md:p-5">
-        <AllyAiHeader label={`AllyAI ${selected.level} Insights · Snapshot`} />
-        <p className="mt-1 text-2xs text-muted-foreground">
-          {period.label} · {period.rangeText}
-        </p>
+        <AllyAiHeader
+          label={`AllyAI ${levelTitle} Insights · Snapshot`}
+          subtitle={`${period.label} · ${period.rangeText}`}
+        />
         <p className="mt-3 text-sm leading-relaxed text-neutral-700">{insight}</p>
       </AllyAiSurface>
 
@@ -83,10 +107,10 @@ export function InsightsLivePanel({
               <thead className="bg-neutral-50 text-2xs tracking-wide text-muted-foreground uppercase">
                 <tr>
                   <th className="px-3 py-2 font-medium">{childLabel}</th>
-                  <th className="px-3 py-2 font-medium">$ Gap</th>
-                  <th className="px-3 py-2 font-medium">Units Δ</th>
-                  <th className="px-3 py-2 font-medium">ASP Δ</th>
-                  <th className="px-3 py-2 font-medium">Attainment</th>
+                  <th className="px-3 py-2 text-right font-medium">$ Gap</th>
+                  <th className="px-3 py-2 text-right font-medium">Units Δ</th>
+                  <th className="px-3 py-2 text-right font-medium">ASP Δ</th>
+                  <th className="px-3 py-2 text-right font-medium">Attainment</th>
                   <th className="px-3 py-2 font-medium">Issues</th>
                 </tr>
               </thead>
@@ -111,7 +135,7 @@ export function InsightsLivePanel({
                       </td>
                       <td
                         className={cn(
-                          "px-3 py-2.5 font-mono font-semibold",
+                          "px-3 py-2.5 text-right font-mono font-semibold tabular-nums",
                           child.gapDollars > 0
                             ? "text-success-600"
                             : "text-error-600",
@@ -119,13 +143,13 @@ export function InsightsLivePanel({
                       >
                         {formatGapDollars(child.gapDollars)}
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-neutral-700">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-neutral-700">
                         {formatSignedInt(m.unitsDelta)}
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-neutral-700">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-neutral-700">
                         {formatAsp(m.aspDelta)}
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-neutral-700">
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-neutral-700">
                         {m.attainmentPct}%
                       </td>
                       <td className="px-3 py-2.5">

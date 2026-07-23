@@ -39,7 +39,7 @@ export function PageTabs({
         Minimal text tabs — same type language as TopBar breadcrumb
         (muted inactive / medium active). No icons, thin underline.
       */}
-      <nav aria-label="Alerts and insights tabs" className="flex shrink-0 gap-5">
+      <nav aria-label="Alerts and insights tabs" className="flex shrink-0 gap-8">
         {TABS.map((tab) => {
           const isActive = active === tab.id;
           return (
@@ -57,7 +57,7 @@ export function PageTabs({
             >
               {tab.label}
               {tab.id === "alerts" && (
-                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-1 text-2xs font-medium text-neutral-600">
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-2 text-2xs font-medium text-neutral-600">
                   {alertsCount}
                 </span>
               )}

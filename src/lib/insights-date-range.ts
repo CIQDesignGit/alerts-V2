@@ -15,7 +15,11 @@ export type InsightsDateRange = {
   customTo?: string;
 };
 
+/** Snapshot default — current week (point-in-time). */
 export const DEFAULT_INSIGHTS_DATE_RANGE: InsightsDateRange = { id: "wtd" };
+
+/** Trends default — longer window for week-over-week movement. */
+export const DEFAULT_TRENDS_DATE_RANGE: InsightsDateRange = { id: "4w" };
 
 export const INSIGHTS_DATE_RANGE_PRESETS: {
   id: Exclude<InsightsDateRangeId, "custom">;
