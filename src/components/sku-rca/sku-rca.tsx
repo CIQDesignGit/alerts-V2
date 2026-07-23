@@ -8,10 +8,6 @@ import {
   SKU_RCA_CONTENT_WIDTH,
 } from "@/components/sku-rca/sku-rca-header";
 import { SkuRcaLivePanel } from "@/components/sku-rca/sku-rca-live-panel";
-import {
-  DEFAULT_INSIGHTS_DATE_RANGE,
-  type InsightsDateRange,
-} from "@/lib/insights-date-range";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { getSkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
@@ -19,21 +15,20 @@ import { cn } from "@/lib/utils";
 type SkuRcaProps = {
   sku: IssueSku;
   onClose: () => void;
+  /** Hand-off to Insights SKU page for this product */
+  onViewSkuInsights?: () => void;
 };
 
 const COLLAPSE_AT = 24;
 
 /**
- * Alert SKU detail — collapsing header (with period control) + diagnosis + chat.
+ * Alert SKU detail — collapsing header + diagnosis + chat.
  * Used from Alerts only; Insights SKU stays in the Insights level shell.
  */
-export function SkuRca({ sku, onClose }: SkuRcaProps) {
+export function SkuRca({ sku, onClose, onViewSkuInsights }: SkuRcaProps) {
   const data = useMemo(() => getSkuRcaData(sku), [sku]);
   const [collapsed, setCollapsed] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
-  const [dateRange, setDateRange] = useState<InsightsDateRange>(
-    DEFAULT_INSIGHTS_DATE_RANGE,
-  );
 
   useEffect(() => {
     setCollapsed(false);
@@ -48,9 +43,8 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
       <SkuRcaHeader
         data={data}
         collapsed={collapsed}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
         onClose={onClose}
+        onViewSkuInsights={onViewSkuInsights}
       />
 
       <div

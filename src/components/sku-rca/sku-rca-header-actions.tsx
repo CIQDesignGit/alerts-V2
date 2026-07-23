@@ -1,4 +1,4 @@
-import { ExternalLink, History } from "lucide-react";
+import { ChartNoAxesCombined, ExternalLink, History } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatCompactDollars } from "@/lib/mock-sku-rca";
@@ -57,6 +57,22 @@ export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
     >
       <History className="size-3.5 text-brand-600" />
       {!compact && "PDP Snapshots"}
+    </Button>
+  );
+}
+
+/** Jump from Alert SKU detail → Insights SKU page for the same product. */
+export function SkuInsightsLink({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="h-7 gap-1.5 rounded-lg border-neutral-200 bg-background px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+    >
+      <ChartNoAxesCombined className="size-3.5 text-neutral-500" />
+      SKU Insights
     </Button>
   );
 }

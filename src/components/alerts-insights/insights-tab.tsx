@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ConfigureLevels } from "@/components/alerts-insights/configure-levels";
 import {
@@ -19,8 +19,10 @@ import { InsightsLivePanel } from "@/components/alerts-insights/insights-live-pa
 import { InsightsSkuListPanel } from "@/components/alerts-insights/insights-sku-list-panel";
 import { AllyChatFooter } from "@/components/shared/ally-chat-footer";
 import {
+  DEFAULT_INSIGHTS_COMPARISON,
   DEFAULT_INSIGHTS_DATE_RANGE,
   DEFAULT_TRENDS_DATE_RANGE,
+  type InsightsComparisonPeriod,
   type InsightsDateRange,
 } from "@/lib/insights-date-range";
 import type { InsightsMode } from "@/lib/insights-widgets";
@@ -55,11 +57,30 @@ function hasActiveFilters(filters: AlertsFilters) {
   );
 }
 
-export function InsightsTab({ filters }: { filters: AlertsFilters }) {
-  const [selectedId, setSelectedId] = useState("shark");
-  const [expandedIds, setExpandedIds] = useState(
-    () => new Set(["biz", "shark"]),
-  );
+export function InsightsTab({
+  filters,
+  initialSkuId = null,
+}: {
+  filters: AlertsFilters;
+  /** Hierarchy node id to open on mount (Alert → Insights deep link) */
+  initialSkuId?: string | null;
+}) {
+  const [selectedId, setSelectedId] = useState(() => {
+    if (initialSkuId && findHierarchyNode(hierarchyTree, initialSkuId)) {
+      return initialSkuId;
+    }
+    return "shark";
+  });
+  const [expandedIds, setExpandedIds] = useState(() => {
+    if (initialSkuId && findHierarchyNode(hierarchyTree, initialSkuId)) {
+      const parent = findHierarchyParent(hierarchyTree, initialSkuId);
+      // Expand path to parent so the SKU list / tree context is ready
+      return new Set(
+        hierarchyPathIds(hierarchyTree, parent?.id ?? initialSkuId),
+      );
+    }
+    return new Set(["biz", "shark"]);
+  });
   const [configOpen, setConfigOpen] = useState(false);
   const [mode, setMode] = useState<InsightsMode>("live");
   // Separate windows — Snapshot is short; Trends needs a longer WoW range
@@ -69,12 +90,29 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
   const [trendsDateRange, setTrendsDateRange] = useState<InsightsDateRange>(
     DEFAULT_TRENDS_DATE_RANGE,
   );
+  // Compare-to period — shared default; kept per mode so switching tabs doesn’t reset
+  const [snapshotComparison, setSnapshotComparison] =
+    useState<InsightsComparisonPeriod>(DEFAULT_INSIGHTS_COMPARISON);
+  const [trendsComparison, setTrendsComparison] =
+    useState<InsightsComparisonPeriod>(DEFAULT_INSIGHTS_COMPARISON);
   const [chatExpanded, setChatExpanded] = useState(false);
   // When set, left rail shows SKU list for this parent instead of the tree
-  const [skuListParentId, setSkuListParentId] = useState<string | null>(null);
+  const [skuListParentId, setSkuListParentId] = useState<string | null>(() => {
+    if (!initialSkuId) return null;
+    const node = findHierarchyNode(hierarchyTree, initialSkuId);
+    if (!node || node.level !== "sku") return null;
+    return findHierarchyParent(hierarchyTree, initialSkuId)?.id ?? null;
+  });
 
   // Jump hierarchy when Brand / Category / SKU filters change
+  const skipFirstFilterJump = useRef(Boolean(initialSkuId));
   useEffect(() => {
+    // Keep Alert → Insights deep link; don’t let empty/active filters steal focus on mount
+    if (skipFirstFilterJump.current) {
+      skipFirstFilterJump.current = false;
+      return;
+    }
+
     if (filters.skuId) {
       const sku = findHierarchyNode(hierarchyTree, filters.skuId);
       const parent = sku
@@ -106,7 +144,7 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
       setSkuListParentId(null);
       setExpandedIds(new Set(hierarchyPathIds(hierarchyTree, brand.id)));
     }
-  }, [filters.brand, filters.category, filters.skuId]);
+  }, [filters.brand, filters.category, filters.skuId, initialSkuId]);
 
   const selected = useMemo(
     () => findHierarchyNode(hierarchyTree, selectedId) ?? hierarchyTree,
@@ -235,6 +273,8 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
               constituents={liveConstituents}
               dateRange={snapshotDateRange}
               onDateRangeChange={setSnapshotDateRange}
+              comparison={snapshotComparison}
+              onComparisonChange={setSnapshotComparison}
               onDrill={drillTo}
             />
           ) : (
@@ -242,6 +282,8 @@ export function InsightsTab({ filters }: { filters: AlertsFilters }) {
               entityName={selected.name}
               dateRange={trendsDateRange}
               onDateRangeChange={setTrendsDateRange}
+              comparison={trendsComparison}
+              onComparisonChange={setTrendsComparison}
               widgets={widgetsApi.widgets}
               onAdd={widgetsApi.addWidget}
               onAddSuggestion={widgetsApi.addSuggestion}

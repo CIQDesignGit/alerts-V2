@@ -19,16 +19,20 @@ import {
   issueLabel,
   type AlertsFilters,
   type AlertsGroupBy,
+  type IssueSku,
 } from "@/lib/mock-alerts-insights";
 
 export function AlertsTab({
   filters,
   groupBy = "issue",
   onGroupByChange,
+  onViewSkuInsights,
 }: {
   filters: AlertsFilters;
   groupBy?: AlertsGroupBy;
   onGroupByChange?: (value: AlertsGroupBy) => void;
+  /** Open Insights on the matching hierarchy SKU for this alert SKU */
+  onViewSkuInsights?: (sku: IssueSku) => void;
 }) {
   // Apply Brand / Category / SKU + fixed 24-hour lookback
   const visibleIssues = useMemo(
@@ -169,6 +173,11 @@ export function AlertsTab({
         <SkuDetailPanel
           sku={selectedSku}
           onBackToAlert={() => setSelectedSkuId(null)}
+          onViewSkuInsights={
+            onViewSkuInsights
+              ? () => onViewSkuInsights(selectedSku)
+              : undefined
+          }
         />
       ) : groupBy === "issue" && selectedIssue ? (
         <AlertDetailPanel

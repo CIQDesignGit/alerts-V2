@@ -15,11 +15,30 @@ export type InsightsDateRange = {
   customTo?: string;
 };
 
+/**
+ * How the selected period is compared (Gap Δ / WoW style).
+ * Resolves concrete dates from the primary range.
+ */
+export type InsightsComparisonId =
+  | "previous_period"
+  | "prior_week"
+  | "same_period_last_year"
+  | "none";
+
+export type InsightsComparisonPeriod = {
+  id: InsightsComparisonId;
+};
+
 /** Snapshot default — current week (point-in-time). */
 export const DEFAULT_INSIGHTS_DATE_RANGE: InsightsDateRange = { id: "wtd" };
 
 /** Trends default — longer window for week-over-week movement. */
 export const DEFAULT_TRENDS_DATE_RANGE: InsightsDateRange = { id: "4w" };
+
+/** Default compare-to window for Snapshot / Trends. */
+export const DEFAULT_INSIGHTS_COMPARISON: InsightsComparisonPeriod = {
+  id: "previous_period",
+};
 
 export const INSIGHTS_DATE_RANGE_PRESETS: {
   id: Exclude<InsightsDateRangeId, "custom">;
@@ -29,6 +48,16 @@ export const INSIGHTS_DATE_RANGE_PRESETS: {
   { id: "7d", label: "Last 7 days" },
   { id: "4w", label: "Last 4 weeks" },
   { id: "8w", label: "Last 8 weeks" },
+];
+
+export const INSIGHTS_COMPARISON_PRESETS: {
+  id: InsightsComparisonId;
+  label: string;
+}[] = [
+  { id: "previous_period", label: "Previous period" },
+  { id: "prior_week", label: "Prior week" },
+  { id: "same_period_last_year", label: "Same period last year" },
+  { id: "none", label: "No comparison" },
 ];
 
 function startOfWeekMonday(d: Date): Date {
@@ -61,21 +90,54 @@ function parseYmd(ymd: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** Human-readable window for headers and chart captions. */
-export function formatInsightsDateRange(
+function dayCountInclusive(from: Date, to: Date): number {
+  const ms = to.getTime() - from.getTime();
+  return Math.max(1, Math.round(ms / 86_400_000) + 1);
+}
+
+/** Inclusive start/end for a primary Insights window. */
+export function resolveInsightsDateBounds(
   range: InsightsDateRange,
   now = new Date(),
-): { label: string; rangeText: string } {
+): { from: Date; to: Date } | null {
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
 
   if (range.id === "custom") {
     const from = range.customFrom ? parseYmd(range.customFrom) : null;
     const to = range.customTo ? parseYmd(range.customTo) : null;
-    if (from && to) {
+    if (from && to) return { from, to };
+    return null;
+  }
+
+  if (range.id === "wtd") {
+    return { from: startOfWeekMonday(today), to: today };
+  }
+  if (range.id === "7d") {
+    return { from: addDays(today, -6), to: today };
+  }
+  if (range.id === "4w") {
+    return { from: addDays(today, -27), to: today };
+  }
+  // 8w
+  return { from: addDays(today, -55), to: today };
+}
+
+/** Human-readable window for headers and chart captions. */
+export function formatInsightsDateRange(
+  range: InsightsDateRange,
+  now = new Date(),
+): { label: string; rangeText: string } {
+  const bounds = resolveInsightsDateBounds(range, now);
+  const presetLabel =
+    INSIGHTS_DATE_RANGE_PRESETS.find((p) => p.id === range.id)?.label ??
+    "Custom range";
+
+  if (range.id === "custom") {
+    if (bounds) {
       return {
         label: "Custom range",
-        rangeText: `${formatShort(from)} – ${formatShort(to)}`,
+        rangeText: `${formatShort(bounds.from)} – ${formatShort(bounds.to)}`,
       };
     }
     return {
@@ -84,34 +146,72 @@ export function formatInsightsDateRange(
     };
   }
 
-  if (range.id === "wtd") {
-    const from = startOfWeekMonday(today);
-    return {
-      label: "Week to date",
-      rangeText: `${formatShort(from)} – ${formatShort(today)}`,
-    };
+  if (!bounds) {
+    return { label: presetLabel, rangeText: "—" };
   }
 
-  if (range.id === "7d") {
-    const from = addDays(today, -6);
-    return {
-      label: "Last 7 days",
-      rangeText: `${formatShort(from)} – ${formatShort(today)}`,
-    };
-  }
-
-  if (range.id === "4w") {
-    const from = addDays(today, -27);
-    return {
-      label: "Last 4 weeks",
-      rangeText: `${formatShort(from)} – ${formatShort(today)}`,
-    };
-  }
-
-  // 8w
-  const from = addDays(today, -55);
   return {
-    label: "Last 8 weeks",
-    rangeText: `${formatShort(from)} – ${formatShort(today)}`,
+    label: presetLabel,
+    rangeText: `${formatShort(bounds.from)} – ${formatShort(bounds.to)}`,
+  };
+}
+
+/** Resolve comparison window dates from the primary period. */
+export function resolveInsightsComparisonBounds(
+  comparison: InsightsComparisonPeriod,
+  primary: InsightsDateRange,
+  now = new Date(),
+): { from: Date; to: Date } | null {
+  if (comparison.id === "none") return null;
+
+  const primaryBounds = resolveInsightsDateBounds(primary, now);
+  if (!primaryBounds) return null;
+
+  const { from, to } = primaryBounds;
+  const length = dayCountInclusive(from, to);
+
+  if (comparison.id === "previous_period") {
+    const compareTo = addDays(from, -1);
+    const compareFrom = addDays(compareTo, -(length - 1));
+    return { from: compareFrom, to: compareTo };
+  }
+
+  if (comparison.id === "prior_week") {
+    // Full Mon–Sun week before the primary window’s week
+    const primaryWeekStart = startOfWeekMonday(from);
+    const priorWeekStart = addDays(primaryWeekStart, -7);
+    return { from: priorWeekStart, to: addDays(priorWeekStart, 6) };
+  }
+
+  // same_period_last_year — shift both ends back one calendar year
+  const compareFrom = new Date(from);
+  compareFrom.setFullYear(compareFrom.getFullYear() - 1);
+  const compareTo = new Date(to);
+  compareTo.setFullYear(compareTo.getFullYear() - 1);
+  return { from: compareFrom, to: compareTo };
+}
+
+/** Label + date text for the comparison control / AllyAI subtitle. */
+export function formatInsightsComparison(
+  comparison: InsightsComparisonPeriod,
+  primary: InsightsDateRange,
+  now = new Date(),
+): { label: string; rangeText: string } {
+  const label =
+    INSIGHTS_COMPARISON_PRESETS.find((p) => p.id === comparison.id)?.label ??
+    "Comparison";
+
+  if (comparison.id === "none") {
+    return { label, rangeText: "Off" };
+  }
+
+  const bounds = resolveInsightsComparisonBounds(comparison, primary, now);
+  if (!bounds) {
+    return { label, rangeText: "Pick a primary range first" };
+  }
+
+  return {
+    label,
+    rangeText: `${formatShort(bounds.from)} – ${formatShort(bounds.to)}`,
   };
 }

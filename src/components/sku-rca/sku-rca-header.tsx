@@ -2,15 +2,14 @@
 
 import { X } from "lucide-react";
 
-import { InsightsDateRangePicker } from "@/components/alerts-insights/insights-date-range";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import {
   GapBadge,
   PdpPageLink,
   PdpSnapshotsButton,
+  SkuInsightsLink,
 } from "@/components/sku-rca/sku-rca-header-actions";
 import { Button } from "@/components/ui/button";
-import type { InsightsDateRange } from "@/lib/insights-date-range";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
@@ -20,17 +19,16 @@ export const SKU_RCA_CONTENT_WIDTH = "mx-auto w-full max-w-[52.8rem]";
 type SkuRcaHeaderProps = {
   data: SkuRcaData;
   collapsed: boolean;
-  dateRange: InsightsDateRange;
-  onDateRangeChange: (next: InsightsDateRange) => void;
   onClose: () => void;
+  /** Opens Insights tab on this SKU’s Insights page */
+  onViewSkuInsights?: () => void;
 };
 
 export function SkuRcaHeader({
   data,
   collapsed,
-  dateRange,
-  onDateRangeChange,
   onClose,
+  onViewSkuInsights,
 }: SkuRcaHeaderProps) {
   const pdpUrl = `https://www.amazon.com/dp/${data.asin}`;
 
@@ -61,20 +59,13 @@ export function SkuRcaHeader({
               <h2 className="mt-0.5 text-lg font-bold leading-snug text-foreground">
                 {data.name}
               </h2>
-              {/* Actions left · period selector right (bottom-aligned) */}
-              <div className="mt-2 flex w-full min-w-0 items-end justify-between gap-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <PdpPageLink href={pdpUrl} />
-                  <PdpSnapshotsButton />
-                  <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
-                </div>
-                <InsightsDateRangePicker
-                  value={dateRange}
-                  onChange={onDateRangeChange}
-                  variant="toolbar"
-                  menuAlign="right"
-                  showRangeInTrigger
-                />
+              <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+                <PdpSnapshotsButton />
+                <PdpPageLink href={pdpUrl} />
+                {onViewSkuInsights && (
+                  <SkuInsightsLink onClick={onViewSkuInsights} />
+                )}
+                <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
               </div>
             </div>
           </div>
@@ -103,8 +94,8 @@ export function SkuRcaHeader({
             {data.name}
           </p>
           <div className="flex shrink-0 items-center gap-2">
-            <PdpPageLink href={pdpUrl} />
             <PdpSnapshotsButton />
+            <PdpPageLink href={pdpUrl} />
           </div>
         </div>
       </div>

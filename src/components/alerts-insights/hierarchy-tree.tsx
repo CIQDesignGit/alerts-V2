@@ -194,6 +194,31 @@ export function findBrandByName(
   );
 }
 
+/**
+ * Find an Insights SKU node by product name.
+ * Alert SKUs use ids like "s1"; hierarchy uses "sku-av970" — name is the bridge.
+ */
+export function findHierarchySkuByName(
+  root: HierarchyNode,
+  skuName: string,
+): HierarchyNode | null {
+  const target = skuName.trim().toLowerCase();
+  if (!target) return null;
+
+  function walk(node: HierarchyNode): HierarchyNode | null {
+    if (node.level === "sku" && node.name.toLowerCase() === target) {
+      return node;
+    }
+    for (const child of node.children ?? []) {
+      const found = walk(child);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  return walk(root);
+}
+
 /** Category (or nested) under a brand by display name. */
 export function findCategoryByName(
   brandNode: HierarchyNode,

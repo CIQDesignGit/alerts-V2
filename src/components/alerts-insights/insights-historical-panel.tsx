@@ -8,13 +8,18 @@ import { InsightsDateRangePicker } from "@/components/alerts-insights/insights-d
 import { InsightsWidgetChart } from "@/components/alerts-insights/insights-widget-chart";
 import { InsightsWidgetForm } from "@/components/alerts-insights/insights-widget-form";
 import { Button } from "@/components/ui/button";
-import type { InsightsDateRange } from "@/lib/insights-date-range";
+import type {
+  InsightsComparisonPeriod,
+  InsightsDateRange,
+} from "@/lib/insights-date-range";
 import type { ChartSuggestion, InsightWidget } from "@/lib/insights-widgets";
 
 type InsightsHistoricalPanelProps = {
   entityName: string;
   dateRange: InsightsDateRange;
   onDateRangeChange: (next: InsightsDateRange) => void;
+  comparison: InsightsComparisonPeriod;
+  onComparisonChange: (next: InsightsComparisonPeriod) => void;
   widgets: InsightWidget[];
   onAdd: (title: string, prompt: string) => void;
   onAddSuggestion: (suggestion: ChartSuggestion) => void;
@@ -27,6 +32,8 @@ export function InsightsHistoricalPanel({
   entityName,
   dateRange,
   onDateRangeChange,
+  comparison,
+  onComparisonChange,
   widgets,
   onAdd,
   onAddSuggestion,
@@ -38,7 +45,7 @@ export function InsightsHistoricalPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Title + period/actions on one row */}
+      {/* Title + period/comparison/actions on one row */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="min-w-0 text-sm font-semibold text-foreground">
           Trends for {entityName}
@@ -47,6 +54,8 @@ export function InsightsHistoricalPanel({
           <InsightsDateRangePicker
             value={dateRange}
             onChange={onDateRangeChange}
+            comparison={comparison}
+            onComparisonChange={onComparisonChange}
             variant="toolbar"
             menuAlign="right"
             showRangeInTrigger

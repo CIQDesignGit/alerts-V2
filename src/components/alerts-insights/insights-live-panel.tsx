@@ -11,8 +11,14 @@ import {
   LiveMetricCard,
 } from "@/components/alerts-insights/live-metric-card";
 import { getIssueIconForLabel } from "@/components/alerts/issue-icons";
-import { formatInsightsDateRange } from "@/lib/insights-date-range";
-import type { InsightsDateRange } from "@/lib/insights-date-range";
+import {
+  formatInsightsComparison,
+  formatInsightsDateRange,
+} from "@/lib/insights-date-range";
+import type {
+  InsightsComparisonPeriod,
+  InsightsDateRange,
+} from "@/lib/insights-date-range";
 import {
   childLevelLabel,
   formatGapDollars,
@@ -28,6 +34,8 @@ type InsightsLivePanelProps = {
   constituents: HierarchyNode[];
   dateRange: InsightsDateRange;
   onDateRangeChange: (next: InsightsDateRange) => void;
+  comparison: InsightsComparisonPeriod;
+  onComparisonChange: (next: InsightsComparisonPeriod) => void;
   onDrill: (childId: string) => void;
 };
 
@@ -75,10 +83,13 @@ export function InsightsLivePanel({
   constituents,
   dateRange,
   onDateRangeChange,
+  comparison,
+  onComparisonChange,
   onDrill,
 }: InsightsLivePanelProps) {
   const metrics = getLiveMetrics(selected);
   const period = formatInsightsDateRange(dateRange);
+  const compare = formatInsightsComparison(comparison, dateRange);
   const insight =
     selected.insight ??
     `${selected.name} Gap is ${formatGapDollars(selected.gapDollars)} (${metrics.attainmentPct}% attainment). Drill into ${childLevelLabel(selected.level).toLowerCase()}s to see drivers.`;
@@ -88,13 +99,20 @@ export function InsightsLivePanel({
   const levelTitle =
     selected.level.charAt(0).toUpperCase() + selected.level.slice(1);
 
+  const periodSubtitle =
+    comparison.id === "none"
+      ? `${period.label} · ${period.rangeText}`
+      : `${period.label} · ${period.rangeText} vs ${compare.label}`;
+
   return (
     <div className="flex flex-col gap-5">
-      {/* Snapshot period control */}
+      {/* Snapshot period + comparison */}
       <div className="flex justify-end">
         <InsightsDateRangePicker
           value={dateRange}
           onChange={onDateRangeChange}
+          comparison={comparison}
+          onComparisonChange={onComparisonChange}
           variant="toolbar"
           menuAlign="right"
           showRangeInTrigger
@@ -123,7 +141,7 @@ export function InsightsLivePanel({
       <AllyAiSurface contentClassName="p-4 md:p-5">
         <AllyAiHeader
           label={`AllyAI ${levelTitle} Insights · Snapshot`}
-          subtitle={`${period.label} · ${period.rangeText}`}
+          subtitle={periodSubtitle}
         />
         <p className="mt-3 text-sm leading-relaxed text-neutral-700">{insight}</p>
       </AllyAiSurface>
