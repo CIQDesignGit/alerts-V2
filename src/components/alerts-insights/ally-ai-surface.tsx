@@ -36,10 +36,10 @@ type AllyAiHeaderProps = {
   subtitle?: string;
 };
 
-/** Ally avatar + title (optional subtitle) — use inside AllyAiSurface. */
+/** Ally avatar + title (optional subtitle on the right) — use inside AllyAiSurface. */
 export function AllyAiHeader({ label, subtitle }: AllyAiHeaderProps) {
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex w-full items-center gap-2">
       <span className="flex size-7 shrink-0 overflow-hidden rounded-lg bg-white">
         <img
           src="/ally-avatar.png"
@@ -47,12 +47,14 @@ export function AllyAiHeader({ label, subtitle }: AllyAiHeaderProps) {
           className="size-full object-cover"
         />
       </span>
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <p className="text-md font-medium text-neutral-800">{label}</p>
-        {subtitle ? (
-          <p className="text-2xs text-muted-foreground">{subtitle}</p>
-        ) : null}
-      </div>
+      <p className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800">
+        {label}
+      </p>
+      {subtitle ? (
+        <p className="max-w-[55%] shrink-0 text-right text-2xs text-muted-foreground">
+          {subtitle}
+        </p>
+      ) : null}
     </div>
   );
 }

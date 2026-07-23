@@ -29,9 +29,15 @@ export function ConfigureLevels({ open, onOpenChange }: ConfigureLevelsProps) {
 
   return (
     <div className="relative">
-      <Button variant="outline" size="xs" onClick={() => onOpenChange(!open)}>
+      <Button
+        variant="outline"
+        size="icon-xs"
+        aria-label="Configure levels"
+        title="Configure levels"
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+      >
         <Settings2 className="size-3.5" />
-        Configure levels
       </Button>
 
       {open && (

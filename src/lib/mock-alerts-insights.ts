@@ -3,6 +3,7 @@ import {
   type IssueGroup,
   type IssueKey,
 } from "@/components/alerts/issue-names";
+import { snapshotMetricLabel } from "@/lib/insights-metrics-config";
 
 export type BrandCard = {
   name: string;
@@ -174,6 +175,22 @@ export type HierarchyLiveMetrics = {
   issueChips?: HierarchyIssueChip[];
 };
 
+/**
+ * One cell in the Snapshot metrics strip (OPS, GV, CONV., …).
+ * Matches the CommerceIQ consolidated-total metric row.
+ */
+export type SnapshotMetricCell = {
+  id: string;
+  label: string;
+  value: string;
+  /** % change vs comparison period — omit for inventory-style metrics */
+  deltaPct?: number;
+  /** Secondary line under the value (e.g. attainment plan dollars) */
+  subtitle?: string;
+  /** Render attainment as a colored % badge instead of a delta chip */
+  variant?: "default" | "attainment";
+};
+
 export type HierarchyNode = {
   id: string;
   name: string;
@@ -207,6 +224,177 @@ export function getLiveMetrics(node: HierarchyNode): HierarchyLiveMetrics {
           ]
         : undefined,
   };
+}
+
+function formatCompactCount(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (abs >= 10_000) return `${(n / 1_000).toFixed(1)}K`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+
+function formatMoneyCompact(n: number): string {
+  const abs = Math.abs(n);
+  const formatted =
+    abs >= 1_000_000
+      ? `$${(abs / 1_000_000).toFixed(1)}M`
+      : abs >= 1_000
+        ? `$${(abs / 1_000).toFixed(1)}K`
+        : `$${abs.toFixed(0)}`;
+  return n < 0 ? `−${formatted}` : formatted;
+}
+
+/**
+ * Snapshot performance strip — same columns as the CIQ consolidated metrics row.
+ * Values are mock, scaled from the node’s Gap $ so levels look different.
+ */
+export function getSnapshotMetricCells(node: HierarchyNode): SnapshotMetricCell[] {
+  const live = getLiveMetrics(node);
+  const gapAbs = Math.max(5_000, Math.abs(node.gapDollars));
+  // Rough “sales” scale so SKUs look smaller than brands
+  const scale =
+    node.level === "business"
+      ? 1
+      : node.level === "brand"
+        ? 0.45
+        : node.level === "category"
+          ? 0.22
+          : node.level === "subcategory"
+            ? 0.12
+            : 0.04;
+
+  const ops = Math.round(4_600_000 * scale + gapAbs * 0.4);
+  const plan = Math.round(ops / Math.max(0.35, live.attainmentPct / 100));
+  const achieved = Math.round(plan * (live.attainmentPct / 100));
+  const orgSales = Math.round(ops * 0.96);
+  const adSales = Math.round(ops * 0.042);
+  const adSpend = node.gapDollars < -40_000 ? 0 : Math.round(adSales * 0.35);
+  const units = Math.round(188_600 * scale);
+  const gv = Math.round(687_000 * scale);
+  const convPct = Math.min(45, Math.max(8, 27.5 + live.unitsDelta / 500));
+  const asp = Math.max(8, 24.65 + live.aspDelta);
+  const orgTraffic = Math.round(677_800 * scale);
+  const clicks = Math.round(9_210 * scale);
+  const subRev = Math.round(271_600 * scale);
+  const subUnits = Math.round(11_649 * scale);
+  const subs = Math.round(80_840 * scale);
+  const onHand = Math.round(318_300 * scale);
+  const openPo = Math.round(83_072 * scale);
+  const woc = Math.max(1.2, 9.7 + (node.gapDollars < 0 ? -1.4 : 0.6));
+
+  // Comparison deltas — slightly worse when Gap is negative
+  const miss = node.gapDollars < 0;
+  const d = (up: number, down: number) => (miss ? down : up);
+
+  return [
+    {
+      id: "gap",
+      label: snapshotMetricLabel("gap"),
+      value: formatGapDollars(node.gapDollars),
+      deltaPct: d(3.2, -8.4),
+    },
+    {
+      id: "ops",
+      label: snapshotMetricLabel("ops"),
+      value: formatMoneyCompact(ops),
+      deltaPct: d(4.1, -5.2),
+    },
+    {
+      id: "attain",
+      label: snapshotMetricLabel("attain"),
+      value: `${live.attainmentPct}%`,
+      subtitle: `${formatMoneyCompact(achieved)} vs ${formatMoneyCompact(plan)} plan`,
+      variant: "attainment",
+    },
+    {
+      id: "org-sales",
+      label: snapshotMetricLabel("org-sales"),
+      value: formatMoneyCompact(orgSales),
+      deltaPct: d(12.4, -3.1),
+    },
+    {
+      id: "ad-sales",
+      label: snapshotMetricLabel("ad-sales"),
+      value: formatMoneyCompact(adSales),
+      deltaPct: d(4.8, -61.6),
+    },
+    {
+      id: "ad-spend",
+      label: snapshotMetricLabel("ad-spend"),
+      value: formatMoneyCompact(adSpend),
+      deltaPct: adSpend === 0 ? -100 : d(2.1, -18.4),
+    },
+    {
+      id: "units",
+      label: snapshotMetricLabel("units"),
+      value: formatCompactCount(units),
+      deltaPct: d(2.5, -6.8),
+    },
+    {
+      id: "gv",
+      label: snapshotMetricLabel("gv"),
+      value: formatCompactCount(gv),
+      deltaPct: d(3.4, -11.1),
+    },
+    {
+      id: "conv",
+      label: snapshotMetricLabel("conv"),
+      value: `${convPct.toFixed(1)}%`,
+      deltaPct: d(15.2, -4.6),
+    },
+    {
+      id: "asp",
+      label: snapshotMetricLabel("asp"),
+      value: `$${asp.toFixed(2)}`,
+      deltaPct: d(1.6, -2.8),
+    },
+    {
+      id: "org-traffic",
+      label: snapshotMetricLabel("org-traffic"),
+      value: formatCompactCount(orgTraffic),
+      deltaPct: d(1.2, -8.9),
+    },
+    {
+      id: "clicks",
+      label: snapshotMetricLabel("clicks"),
+      value: clicks.toLocaleString(),
+      deltaPct: d(5.0, -67.5),
+    },
+    {
+      id: "sub-rev",
+      label: snapshotMetricLabel("sub-rev"),
+      value: formatMoneyCompact(subRev),
+      deltaPct: d(8.6, -1.4),
+    },
+    {
+      id: "sub-units",
+      label: snapshotMetricLabel("sub-units"),
+      value: subUnits.toLocaleString(),
+      deltaPct: d(6.3, -2.0),
+    },
+    {
+      id: "subs",
+      label: snapshotMetricLabel("subs"),
+      value: subs.toLocaleString(),
+      deltaPct: d(5.4, -0.8),
+    },
+    {
+      id: "on-hand",
+      label: snapshotMetricLabel("on-hand"),
+      value: formatCompactCount(onHand),
+    },
+    {
+      id: "open-po",
+      label: snapshotMetricLabel("open-po"),
+      value: openPo.toLocaleString(),
+    },
+    {
+      id: "woc",
+      label: snapshotMetricLabel("woc"),
+      value: `${woc.toFixed(1)} wk`,
+    },
+  ];
 }
 
 export function childLevelLabel(

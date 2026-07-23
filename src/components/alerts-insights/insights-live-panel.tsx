@@ -1,31 +1,34 @@
 "use client";
 
+import { ListTree } from "lucide-react";
+
 import {
   AllyAiHeader,
   AllyAiSurface,
 } from "@/components/alerts-insights/ally-ai-surface";
+import { ConfigureMetrics } from "@/components/alerts-insights/configure-metrics";
 import { InsightsDateRangePicker } from "@/components/alerts-insights/insights-date-range";
+import { InsightsMetricsStrip } from "@/components/alerts-insights/insights-metrics-strip";
 import {
   formatAsp,
   formatSignedInt,
-  LiveMetricCard,
 } from "@/components/alerts-insights/live-metric-card";
 import { getIssueIconForLabel } from "@/components/alerts/issue-icons";
-import {
-  formatInsightsComparison,
-  formatInsightsDateRange,
-} from "@/lib/insights-date-range";
+import { formatInsightsDateRange } from "@/lib/insights-date-range";
 import type {
   InsightsComparisonPeriod,
   InsightsDateRange,
 } from "@/lib/insights-date-range";
+import { filterSnapshotMetrics } from "@/lib/insights-metrics-config";
 import {
   childLevelLabel,
   formatGapDollars,
   getLiveMetrics,
+  getSnapshotMetricCells,
   type HierarchyIssueChip,
   type HierarchyNode,
 } from "@/lib/mock-alerts-insights";
+import { usePersistedMetricsConfig } from "@/lib/use-persisted-metrics-config";
 import { cn } from "@/lib/utils";
 
 type InsightsLivePanelProps = {
@@ -88,8 +91,12 @@ export function InsightsLivePanel({
   onDrill,
 }: InsightsLivePanelProps) {
   const metrics = getLiveMetrics(selected);
+  const metricsConfig = usePersistedMetricsConfig(selected.level);
+  const snapshotMetrics = filterSnapshotMetrics(
+    getSnapshotMetricCells(selected),
+    metricsConfig.visibleIds,
+  );
   const period = formatInsightsDateRange(dateRange);
-  const compare = formatInsightsComparison(comparison, dateRange);
   const insight =
     selected.insight ??
     `${selected.name} Gap is ${formatGapDollars(selected.gapDollars)} (${metrics.attainmentPct}% attainment). Drill into ${childLevelLabel(selected.level).toLowerCase()}s to see drivers.`;
@@ -99,64 +106,63 @@ export function InsightsLivePanel({
   const levelTitle =
     selected.level.charAt(0).toUpperCase() + selected.level.slice(1);
 
-  const periodSubtitle =
-    comparison.id === "none"
-      ? `${period.label} · ${period.rangeText}`
-      : `${period.label} · ${period.rangeText} vs ${compare.label}`;
-
   return (
     <div className="flex flex-col gap-5">
-      {/* Snapshot period + comparison */}
-      <div className="flex justify-end">
-        <InsightsDateRangePicker
-          value={dateRange}
-          onChange={onDateRangeChange}
-          comparison={comparison}
-          onComparisonChange={onComparisonChange}
-          variant="toolbar"
-          menuAlign="right"
-          showRangeInTrigger
-        />
+      {/* Title left · period/comparison + configure metrics right (same as Trends) */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="min-w-0 text-sm font-semibold text-foreground">
+          Snapshot for {selected.name}
+        </h3>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <InsightsDateRangePicker
+            value={dateRange}
+            onChange={onDateRangeChange}
+            comparison={comparison}
+            onComparisonChange={onComparisonChange}
+            variant="toolbar"
+            menuAlign="right"
+            showRangeInTrigger
+          />
+          <ConfigureMetrics
+            level={selected.level}
+            selectedIds={metricsConfig.visibleIds}
+            hasLevelOverride={metricsConfig.hasLevelOverride}
+            onSave={metricsConfig.saveSelection}
+            onReset={metricsConfig.resetToDefaults}
+          />
+        </div>
       </div>
 
-      <section className="grid gap-3 sm:grid-cols-3">
-        <LiveMetricCard
-          label="$ Gap"
-          value={formatGapDollars(selected.gapDollars)}
-          tone={selected.gapDollars < 0 ? "neg" : "pos"}
-          progressPct={metrics.attainmentPct}
-        />
-        <LiveMetricCard
-          label="Units Δ"
-          value={formatSignedInt(metrics.unitsDelta)}
-          tone={metrics.unitsDelta < 0 ? "neg" : "pos"}
-        />
-        <LiveMetricCard
-          label="ASP Δ"
-          value={formatAsp(metrics.aspDelta)}
-          tone={metrics.aspDelta < 0 ? "neg" : "pos"}
-        />
-      </section>
+      <InsightsMetricsStrip
+        metrics={snapshotMetrics}
+        showDeltas={comparison.id !== "none"}
+      />
 
       <AllyAiSurface contentClassName="p-4 md:p-5">
-        <AllyAiHeader
-          label={`AllyAI ${levelTitle} Insights · Snapshot`}
-          subtitle={periodSubtitle}
-        />
+        <AllyAiHeader label={`AllyAI ${levelTitle} Insights`} />
         <p className="mt-3 text-sm leading-relaxed text-neutral-700">{insight}</p>
       </AllyAiSurface>
 
       {/* Parent levels: drill table. SKU leaf: issue chips only (no children). */}
       {!isLeaf ? (
-        <section>
-          <h3 className="text-sm font-semibold text-foreground">
-            Breakdown by {childLabel.toLowerCase()}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Constituents of {selected.name} for {period.label.toLowerCase()} ·
-            click a row to drill down
-          </p>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-border">
+        <section className="overflow-hidden rounded-xl border border-border bg-background shadow-xs">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-neutral-50/80 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <ListTree
+                className="size-4 text-muted-foreground"
+                aria-hidden
+              />
+              <h3 className="text-sm font-semibold text-foreground">
+                Breakdown by {childLabel.toLowerCase()}
+              </h3>
+              <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600">
+                {constituents.length}
+              </span>
+            </div>
+            <p className="text-2xs text-muted-foreground">Sorted by $ Gap ↓</p>
+          </div>
+
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-left text-sm">
               <thead className="bg-neutral-50 text-2xs tracking-wide text-muted-foreground uppercase">
                 <tr>

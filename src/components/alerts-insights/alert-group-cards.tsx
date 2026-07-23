@@ -104,7 +104,7 @@ export function IssueGroupCard({
         </div>
         <p
           className={cn(
-            "shrink-0 font-mono text-sm font-bold",
+            "shrink-0 font-mono text-sm font-bold tabular-nums",
             severityText(issue.severity),
           )}
         >
@@ -179,7 +179,7 @@ export function CategoryGroupCard({
         </div>
         <p
           className={cn(
-            "shrink-0 font-mono text-sm font-bold",
+            "shrink-0 font-mono text-sm font-bold tabular-nums",
             severityText(category.severity),
           )}
         >
@@ -270,9 +270,12 @@ function SkuList({
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 font-mono text-xs font-semibold text-error-600">
-                  {formatGapDollars(sku.gapDollars)}
-                </span>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-xs font-semibold tabular-nums text-error-600">
+                    {formatGapDollars(sku.gapDollars)}
+                  </p>
+                  <p className="mt-0.5 text-2xs text-muted-foreground">Gap</p>
+                </div>
               </button>
             </li>
           );

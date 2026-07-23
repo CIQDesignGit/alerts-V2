@@ -259,7 +259,7 @@ export function InsightsDateRangePicker({
       <div
         className={cn(
           "flex flex-wrap items-center gap-x-2 gap-y-1.5",
-          isToolbar && "justify-end",
+          isToolbar ? "justify-start" : undefined,
         )}
       >
         {!isToolbar && (
@@ -337,7 +337,7 @@ export function InsightsDateRangePicker({
         <div
           className={cn(
             "flex flex-wrap items-end gap-2",
-            isToolbar && "justify-end",
+            isToolbar && "justify-start",
           )}
         >
           <label className="flex flex-col gap-0.5 text-2xs text-muted-foreground">
