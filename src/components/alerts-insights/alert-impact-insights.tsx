@@ -35,15 +35,16 @@ type AlertImpactInsightsProps = {
 };
 
 /**
- * Alert-level metric strip: impact mix · seller mix · category mix.
+ * Alert-level metric strip: recency mix · seller mix · category mix.
  * All three cards use the same composition pattern (one bar + legend).
  */
 export function AlertImpactInsights({ insights }: AlertImpactInsightsProps) {
-  const impactRows: CompositionRow[] = insights.impact.map((bucket) => ({
-    id: bucket.id,
-    name: bucket.label,
-    dollars: bucket.dollars,
-    pct: bucket.pct,
+  const recencyRows: CompositionRow[] = insights.recency.map((row) => ({
+    id: row.id,
+    name: row.name,
+    dollars: row.dollars,
+    pct: row.pct,
+    subtitle: `${row.skuCount} ${row.skuCount === 1 ? "SKU" : "SKUs"}`,
   }));
 
   const sellerRows: CompositionRow[] = insights.sellers.map((row) => ({
@@ -67,8 +68,12 @@ export function AlertImpactInsights({ insights }: AlertImpactInsightsProps) {
       aria-label="Issue strategic insights"
       className="grid items-stretch gap-4 lg:grid-cols-3"
     >
-      <InsightCard title="What's driving the $">
-        <CompositionBlock rows={impactRows} />
+      <InsightCard title="$ at risk by recency">
+        {recencyRows.length === 0 ? (
+          <EmptyNote text="No timing data on these SKUs yet." />
+        ) : (
+          <CompositionBlock rows={recencyRows} />
+        )}
       </InsightCard>
 
       <InsightCard title="Sellers behind it">

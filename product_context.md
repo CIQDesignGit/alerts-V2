@@ -19,13 +19,12 @@
 | **C1** | Alerts are **issue-first**; SKUs nest inside each issue. SKU is still the leaf. | ✅ Locked |
 | **C2** | Prefer **old / canonical issue names** (e.g. “Lost Buy Box”, not mock “Buy Box Lost”). Use the three-location table + `issue-names.ts`. | ✅ Locked |
 | **C3** | Every issue **belongs to one group**: Sales · Operations · Marketing. Store/show as an **issue group tag**. Do **not** organize the Alerts UI into Sales/Ops/Marketing sections yet — list issues by **$ at risk**. | ✅ Locked |
-| **C4** | Primary surface = Alerts and insights with Overview / Alerts / Insights tabs. | ✅ Locked |
-| **C5** | **Revamp the landing experience** to the new Overview (not the old “Gap banner + top 3 brands only” landing). Old top-3 API is superseded for this page. | ✅ Locked — build Overview as landing |
-| **C6** | Product = issue-level alerts + top-down Insights; **SKU is the leaf on both paths, but each path has its own SKU page** (not one shared detail). | ✅ Locked |
+| **C4** | Primary surface = **Alerts** at `/` — no separate homepage or hierarchy Insights page. | ✅ Locked |
+| **C5** | **Landing = Alerts** (issue/category list). No Overview tab. | ✅ Locked |
+| **C6** | SKU detail lives inside Alerts: **Alert sub-tab** (live diagnosis) + **SKU Insights sub-tab** (issue trends over time). | ✅ Locked |
 | **C7** | Alerts tab headers = **filter / full** names (e.g. “Lost Buy Box”). Compact chips elsewhere = chip names (e.g. “Buy Box”). | ✅ Locked |
-| **C8** | **Two SKU pages:** Alerts → **Alert SKU detail** (`SkuRca`). Insights → **Insights SKU page** (same shell as Brand / Category / etc.). | ✅ Locked |
-
-**Still TBD:** Optional deep links / hand-off between Alert SKU detail and Insights SKU page for the same product.
+| **C8** | **No historic trends in Alerts** — aggregate views and Alert sub-tab are live/current only. Trends live in SKU Insights sub-tab only. | ✅ Locked |
+| **C9** | Alerts list layout (issue + category/taxonomy grouping) is **final** — do not restructure left/right panels. | ✅ Locked |
 
 ---
 
@@ -54,65 +53,41 @@ Brand ecommerce teams are **lean (3–5 people)** managing hundreds or thousands
 
 ---
 
-## What Are We Building? — Alerts and insights
+## What Are We Building? — Alerts
 
 These features live inside **Sales Agent (AllyAI)** — the AI-powered command center for ecommerce sales teams.
 
-**Product focus:** One page — **Alerts and insights** — with three tabs. Both Alerts and Insights end at a **SKU**, but each opens a **different SKU page**:
+**Product focus:** One page — **Alerts** at `/`. The landing experience opens directly on the issue-first alerts list. There is no separate homepage or hierarchy Insights page.
 
-1. **Overview** — combination of Alerts + Insights (portfolio health, AI brief, active alerts teaser, business overview teaser).
-2. **Alerts** — issue-level early warning; each issue expands to the SKUs driving it → **Alert SKU detail**.
-3. **Insights** — top-down drill-down of the business hierarchy with AI summaries at each level (including SKU) → **Insights SKU page**.
+1. **Alerts (landing)** — issue-level early warning; grouped by **issue type** or **category/taxonomy**; each issue expands to SKUs → **Alert SKU detail** (`SkuRca`).
+2. **SKU Insights sub-tab** — inside Alert SKU detail only; shows **issue trends over time** (date range, widgets, AllyAI chat). Not shown in aggregate alert views or on the Alert sub-tab.
 
 ---
 
-## Page IA — Three Tabs
+## Page IA — Alerts-first
 
-Route: `/` (Alerts and insights). Tabs are **in-page**, not separate product areas.
+Route: `/` (**Alerts**). No top-level tabs.
 
-| Tab | Job to be done | Primary layout |
+| Surface | Job to be done | Primary layout |
 |---|---|---|
-| **Overview** | Answer “how is the business doing, and what needs attention?” in one scan | KPI / Gap cards → AI Brief → Active Alerts teaser → Business Overview teaser |
-| **Alerts** | Act on the highest-$ issues fast | Left: issue → SKU tree · Right: issue aggregate **or Alert SKU detail** |
-| **Insights** | Diagnose top-down by hierarchy | Left: hierarchy tree · Right: level view for **any** level including SKU (AI insight + Snapshot/Trends + child breakdown when applicable) |
+| **Alerts (landing)** | Act on the highest-$ issues fast | Header: filters · Left: issue or category → SKU tree · Right: issue aggregate **or Alert SKU detail** |
+| **Alert SKU detail** | Diagnose and act on one SKU under an alert | `SkuRca` with **Alert** and **SKU Insights** sub-tabs |
 
-### SKU leaf — two separate pages (not shared)
+### Alert SKU detail — two sub-tabs (in one shell)
 
 ```
-Alerts path:     Issue (e.g. Lost Buy Box)  →  SKU  →  Alert SKU detail (SkuRca)
-Insights path:   Entire Business → Brand → Category → (Sub-category) → SKU  →  Insights SKU page
+Issue (e.g. Lost Buy Box)  →  SKU  →  SkuRca
+                                        ├── Alert sub-tab — live diagnosis, issues, recommendations (NO historic trends)
+                                        └── SKU Insights sub-tab — issue trends over time, date range, widgets
 ```
 
-- A **SKU is always the end leaf**, regardless of entry path.
-- **Do not** reuse one detail UI for both paths. Job-to-be-done differs:
-  - **Alert SKU detail** — issue-centric diagnosis for that SKU under a specific alert (what broke, root cause, recommended action, Ask AllyAI).
-  - **Insights SKU page** — hierarchy-centric performance for that SKU (same Insights shell as Brand / Category: header, Snapshot/Trends, Gap KPIs, AllyAI level insight, Trends widgets). No child breakdown table (SKU has no children).
-- Selecting a SKU in **Alerts** opens Alert SKU detail only.
-- Selecting a SKU in **Insights** stays inside the Insights right pane (does **not** open `SkuRca`).
+- Selecting a SKU in **Alerts** opens `SkuRca` with the **Alert** sub-tab active by default.
+- **SKU Insights** is reached via the header control or sub-tab toggle — stays in-place (no separate page).
+- **Do not** show historic trend charts in aggregate alert views or on the Alert sub-tab.
 
 ---
 
-### Tab 1 — Overview (**this is the landing experience**)
-
-Overview **replaces** the old landing (Gap banner + top-3 brand cards only). Build Overview as the default tab on `/`.
-
-Overview is a **combined teaser** of Alerts and Insights (mock is direction; refine for clarity — dollar-first, action-oriented).
-
-**Required blocks:**
-1. **Summary Gap cards** — Portfolio gap (e.g. WTD) + top brands with Gap $, attainment %, sparkline.
-2. **AI Brief** — short AllyAI narrative of what is driving the miss / win + “Show reasoning”.
-3. **Active Alerts** — issue-level cards using **canonical issue names** (issue · SKU count · $ at risk · optional group tag) + CTA “Go to Alerts”.
-4. **Business Overview** — hierarchy path reminder (Entire Business → Brand → Category → SKU) + brand cards + CTA “Go to Insights”.
-
-**Rules:**
-- Dollar Gap / $ at risk first; never alphabetical default sort.
-- Overview should not require sorting or filters to find the biggest problem.
-- CTAs deep-link into Alerts or Insights with context when possible.
-- Do **not** ship the superseded “top 3 brands only” landing as the primary experience.
-
----
-
-### Tab 2 — Alerts (issue-first)
+### Alerts (issue-first) — landing & final layout
 
 **Generation grain: issue level (not one alert per SKU).**
 
@@ -130,8 +105,12 @@ Each alert = one **issue type** rolled up across affected SKUs, showing:
 - Lower-severity issues may appear visually de-emphasized
 
 **Right panel:**
-- **No SKU selected** → aggregated issue view (AI signal + stats + SKU table)
-- **SKU selected** → **Alert SKU detail** (`SkuRca`: collapsing header + issues / diagnosis body + chat footer). This is Alerts-only — not the Insights SKU page.
+- **No SKU selected** → aggregated issue view (AI signal + stats + SKU table) — **no historic trends**
+- **SKU selected** → **Alert SKU detail** (`SkuRca`: Alert sub-tab default + optional SKU Insights sub-tab)
+
+**List grouping (final):**
+- **Issue type** — canonical issue names, sorted by $ at risk
+- **Taxonomy** — nested Overall → Brand → Category → SKU tree (same left/right shell)
 
 **Breadcrumb example:** `Alerts > Lost Buy Box > Shark IQ AV970`
 
@@ -142,36 +121,16 @@ Additional signal types (Sales Drop / Increase, Predictive OOS, Content Change, 
 
 ---
 
-### Tab 3 — Insights (top-down hierarchy)
-
-**Job:** Drill the business from portfolio → brand → category → (optional sub-category) → SKU, with **AI-driven insight / summary at each level**.
-
-**Left panel — Hierarchy:**
-- Configurable visible levels (Entire Business, Brand, Category, Sub-category, SKU)
-- Tree nodes show entity name + Gap $
-- Sorted by Gap impact (most negative first), not alphabetically
-- Selecting a node drives the right panel
-
-**Right panel — Level view (Brand, Category, Sub-category, and SKU):**
-- Level label + entity name (breadcrumb path)
-- Gap vs plan + attainment
-- Snapshot / Trends toggle with a shared date-range picker
-- **AI {Level} Insights** narrative (e.g. “AllyAI SKU Insights · Snapshot”)
-- Trends mode: customizable widgets (same pattern as other levels)
-- **Child breakdown table** (click row to drill) — for non-SKU levels only; columns such as $ Gap, Units Δ, ASP Δ, Attainment; may show issue badges using **chip** names (e.g. Buy Box ×4)
-- At **SKU leaf** → **Insights SKU page**: same header + Snapshot/Trends + KPIs + AllyAI insight + chat footer as other Insights levels. **No** child breakdown. **Do not** switch to Alert SKU detail (`SkuRca`).
-
-**Breadcrumb example:** `Entire Business > Shark > Robot Vacuums > Shark IQ AV970`
-
-### Insights SKU page (summary)
+### SKU Insights sub-tab (inside SkuRca)
 
 | Block | Behavior |
 |---|---|
-| Header | Hierarchy breadcrumb + SKU name + Snapshot / Trends toggle |
-| Snapshot | Date range · $ Gap / Units Δ / ASP Δ cards · AllyAI SKU Insights narrative · optional issue chips on the SKU |
-| Trends | Same widget canvas as Brand / Category for this SKU entity |
-| Footer | `AllyChatFooter` scoped to the SKU |
-| Not included | Alert-style RCA accordion, issue-under-alert framing, or Alerts `SkuRca` chrome |
+| Header | Same `SkuRca` header + sub-tab toggle (Alert · SKU Insights) |
+| Trends | Date range + comparison picker · default **Issue trends over time** widget · optional add/edit widgets (persisted per SKU) |
+| Footer | `SkuRcaChatFooter` / AllyAI — trends-focused placeholder copy |
+| Not included | Live diagnosis accordion, aggregate alert framing, or revenue trend on Alert sub-tab |
+
+**Superseded (not mounted from `/`):** Overview tab, hierarchy Insights tab, separate Insights SKU page.
 
 ---
 
@@ -181,8 +140,9 @@ Additional signal types (Sales Drop / Increase, Predictive OOS, Content Change, 
 Automatically identifies *why* sales are changing — drilling across traffic, conversion, price, availability, and media spend — at the SKU, category, and brand level.
 
 **How it relates to this page:**
-- Overview AI Brief / Insights AI cards / Alerts issue aggregate views are **surfaces** for AllyAI diagnosis.
-- Full conversational RCA Chat (“Ask Ally”) remains a related workflow; entry from an alert or insight should carry entity context when we wire it.
+- Alerts issue aggregate views and Alert sub-tab diagnosis are **surfaces** for AllyAI.
+- SKU Insights sub-tab carries historical issue-trend context.
+- Full conversational RCA Chat (“Ask Ally”) remains a related workflow at `/chat`.
 
 **How chat works (when present):**
 1. System surfaces a diagnosis.
@@ -195,12 +155,12 @@ Automatically identifies *why* sales are changing — drilling across traffic, c
 ## The "Diagnose → Act" Loop
 
 ```
-Overview / Alerts / Insights  →  surface the problem (Gap $, issue, or hierarchy node)
+Alerts (landing)  →  surface the problem ($ at risk, issue, SKU)
    ↓
-Issue or entity selected  →  AllyAI brief / insight / reasoning
+Issue or category selected  →  AllyAI brief / aggregate view (no trends)
    ↓
-SKU from Alerts   →  Alert SKU detail (issue diagnosis + recommended action)
-SKU from Insights →  Insights SKU page (level KPIs + AllyAI SKU insight + Trends)
+SKU selected  →  Alert sub-tab (live diagnosis + recommended action)
+              →  SKU Insights sub-tab (issue trends over time)
    ↓
 Recommendations / ops follow-through  →  “what do I do next?”
 ```
@@ -240,7 +200,7 @@ Recommendations / ops follow-through  →  “what do I do next?”
 | AllyAI | The AI agent (not "chatbot") |
 | Insight | Finding / Result |
 | Recommendation | Suggestion |
-| Alerts and insights | News Feed & Alerts *(old nav label)* |
+| Alerts | News Feed & Alerts *(old nav label)* |
 | Issue (alert) | Ticket / Incident *(unless ops tooling)* |
 | Group tag (Sales / Operations / Marketing) | Organizing the Alerts list into three sections *(not yet)* |
 | $ at risk | Vague “impact” without $ |
@@ -290,7 +250,7 @@ Each RCA issue type has **three display names** depending on where it appears. C
 3. **Lean team-friendly** — Minimize clicks. A manager should get to the answer in under 30 seconds.
 4. **Trust through specificity** — Show the exact SKU, the exact keyword, the exact drop.
 5. **Agentic, not just reporting** — Feels like talking to a smart analyst, not reading a dense dashboard.
-6. **One leaf, two pages** — Alerts and Insights both end at a SKU, but each path has its **own** SKU page (Alert detail vs Insights level view). Do not force one UI for both jobs.
+6. **Trends stay in SKU Insights** — Historic issue trends never appear in aggregate alert views or the Alert sub-tab. Live diagnosis and trends are separated by sub-tab.
 
 ---
 
@@ -320,32 +280,27 @@ Each RCA issue type has **three display names** depending on where it appears. C
 
 | Route / UI | Purpose |
 |---|---|
-| `/` · Tab **Overview** (**landing**) | Revamped combined Alerts + Insights experience |
-| `/` · Tab **Alerts** | Issue → SKU left tree; aggregate or **Alert SKU detail** (`SkuRca`) right |
-| `/` · Tab **Insights** | Hierarchy tree; level AI insight + breakdown for Brand/Category/…; **Insights SKU page** at SKU (same shell, no child table) |
-| `/chat` | RCA Chat with AllyAI (future; not this page’s tabs) |
+| `/` · **Alerts** (**landing**) | Issue/category left tree; aggregate or **Alert SKU detail** (`SkuRca`) right |
+| `/` · **SkuRca · Alert sub-tab** | Live diagnosis — no historic trends |
+| `/` · **SkuRca · SKU Insights sub-tab** | Issue trends over time for the selected SKU |
+| `/chat` | RCA Chat with AllyAI (future) |
 | `/settings` | Prototype settings placeholder |
 | Other shell nav links | Platform chrome placeholders only |
 
 ---
 
-## Landing / Overview Data Expectations (revamp)
-
-> **Supersedes** the old “overall Gap + top 3 brands (+ 3 categories)” as the sole landing contract for this page.
+## Landing data expectations (Alerts)
 
 | Data | Where it appears |
 |---|---|
-| Portfolio / overall Gap + attainment | Overview summary cards |
-| Top brands by Gap (+ sparklines) | Overview cards + Business Overview teaser + Insights tree |
-| AI Brief narrative | Overview |
-| Issue-level active alerts (canonical name, group tag, SKU count, $ at risk) | Overview Active Alerts + Alerts tab |
-| Hierarchy path Entire Business → … → SKU | Insights + Overview Business Overview label |
-| Sort order (impact first) | All ranked lists |
+| Issue-level alerts (canonical name, group tag, SKU count, $ at risk) | Alerts list (landing) |
+| Taxonomy grouping | Alerts list — Group by Taxonomy (Overall → Brand → Category → SKU) |
+| Sort order ($ at risk / Gap first) | All ranked lists |
+| SKU issue trends over time | SKU Insights sub-tab only |
 
 ### Important design implications
 
 - **Never sort alphabetically** by default.
 - **Always show dollar Gap / $ at risk prominently.**
-- Overview loads **pre-prioritized** — biggest problems front and center.
-- Overview is the **default landing tab** — implement this before polishing secondary shells.
-- SKU has **two pages**: Alert SKU detail (Alerts path) and Insights SKU page (Insights path). Build each for its job; do not merge them into one shared leaf UI.
+- `/` loads **directly on Alerts** — pre-prioritized issue list.
+- **No historic trends** in Alerts aggregate or Alert sub-tab.

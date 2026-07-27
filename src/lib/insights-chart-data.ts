@@ -76,3 +76,25 @@ export const OOS_DAYS = [
   { week: "W7", days: 2 },
   { week: "W8", days: 0 },
 ];
+
+export type IssueTrendPoint = {
+  week: string;
+  buyBox: number;
+  dealPage: number;
+  stock: number;
+  conversion: number;
+};
+
+/** SKU-scoped issue trend series — varies slightly per entity for the prototype. */
+export function getSkuIssueTrends(entityId: string): IssueTrendPoint[] {
+  const seed = entityId.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const offset = seed % 3;
+
+  return ISSUE_TRENDS.map((point, index) => ({
+    week: point.week,
+    buyBox: Math.max(0, point.buyBox - offset + (index % 2)),
+    dealPage: Math.max(0, point.dealPage - (offset > 1 ? 1 : 0)),
+    stock: Math.max(0, point.stock - (offset > 0 ? 1 : 0)),
+    conversion: Math.max(0, point.conversion - (offset > 2 ? 1 : 0)),
+  }));
+}

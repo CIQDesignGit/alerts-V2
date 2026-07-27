@@ -42,7 +42,7 @@ export const SHELL_NAV_ITEMS: ShellNavItem[] = [
     match: "prefix",
   },
   {
-    label: "Alerts and insights",
+    label: "Alerts",
     href: "/",
     icon: "mail",
     badge: "NEW",

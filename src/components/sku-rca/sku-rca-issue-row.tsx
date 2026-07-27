@@ -54,12 +54,9 @@ export function SkuRcaIssueRow({ issue, open, onToggle }: SkuRcaIssueRowProps) {
 
       {open && (
         <div className="border-t border-border bg-neutral-50 px-3 py-3">
-          <p className="text-xs font-medium text-muted-foreground">
-            {label} detail — placeholder
+          <p className="text-xs text-muted-foreground">
+            {label} detail — live status and recommended action (prototype).
           </p>
-          <div className="mt-2 flex h-20 items-center justify-center rounded-md border border-dashed border-border bg-background text-2xs text-muted-foreground">
-            Issue detail + optional last-week trend
-          </div>
         </div>
       )}
     </li>

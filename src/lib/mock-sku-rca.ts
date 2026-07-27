@@ -31,12 +31,6 @@ export type RcaAnalysisBlock = {
   body: string;
 };
 
-export type RcaTrendPoint = {
-  week: string;
-  plan: number;
-  actual: number;
-};
-
 export type SkuRcaData = {
   category: string;
   modelId: string;
@@ -49,8 +43,6 @@ export type SkuRcaData = {
   alertBanner?: string;
   issuesLastUpdated: string;
   issueGroups: RcaIssueGroup[];
-  trend: RcaTrendPoint[];
-  trendCaption: string;
   analysis: RcaAnalysisBlock[];
   recommendations: string[];
 };
@@ -216,18 +208,6 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
     ],
     issuesLastUpdated: "Last updated 11:35 AM today (2h ago)",
     issueGroups: buildIssueGroups(),
-    trend: [
-      { week: "W1", plan: 220, actual: 215 },
-      { week: "W2", plan: 225, actual: 230 },
-      { week: "W3", plan: 228, actual: 210 },
-      { week: "W4", plan: 230, actual: 198 },
-      { week: "W5", plan: 228, actual: 185 },
-      { week: "W6", plan: 228, actual: 0.8 },
-      { week: "W7", plan: 229, actual: 126 },
-      { week: "W8", plan: 229, actual: 180 },
-    ],
-    trendCaption:
-      "Plan vs actual revenue ($K). Week 6 shows the buy-box loss collapse; W7–W8 recovery underway.",
     analysis: [
       {
         heading: "Primary cause — Lost Buy Box (May 3–9)",

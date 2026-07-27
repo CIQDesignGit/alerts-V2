@@ -25,14 +25,24 @@ import {
   BUY_BOX_WIN_RATE,
   CONVERSION_TREND,
   GAP_DRIVERS,
+  getSkuIssueTrends,
   ISSUE_TRENDS,
   MEDIA_VS_SALES,
   OOS_DAYS,
   REVENUE_VS_PLAN,
+  type IssueTrendPoint,
 } from "@/lib/insights-chart-data";
 
-/** Count of SKUs hit by each issue type — Trends default for this level. */
-export function IssueTrendsChart() {
+/** Count of active issues over time — level default or SKU-scoped when entityId is set. */
+export function IssueTrendsChart({
+  entityId,
+  data,
+}: {
+  entityId?: string;
+  data?: IssueTrendPoint[];
+}) {
+  const series =
+    data ?? (entityId ? getSkuIssueTrends(entityId) : ISSUE_TRENDS);
   const config = {
     buyBox: { label: "Buy Box", color: "var(--chart-5)" },
     dealPage: { label: "Deal Page", color: "var(--chart-4)" },
@@ -42,7 +52,7 @@ export function IssueTrendsChart() {
 
   return (
     <ChartContainer config={config} className="aspect-auto h-40 w-full">
-      <LineChart accessibilityLayer data={ISSUE_TRENDS}>
+      <LineChart accessibilityLayer data={series}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="week" tickLine={false} axisLine={false} />
         <YAxis

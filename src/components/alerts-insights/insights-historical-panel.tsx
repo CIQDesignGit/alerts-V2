@@ -16,6 +16,8 @@ import type { ChartSuggestion, InsightWidget } from "@/lib/insights-widgets";
 
 type InsightsHistoricalPanelProps = {
   entityName: string;
+  /** When set, issue-trend charts use SKU-scoped mock series */
+  entityId?: string;
   dateRange: InsightsDateRange;
   onDateRangeChange: (next: InsightsDateRange) => void;
   comparison: InsightsComparisonPeriod;
@@ -30,6 +32,7 @@ type InsightsHistoricalPanelProps = {
 /** Trends dashboard — issue & performance movement; widgets persist per entity. */
 export function InsightsHistoricalPanel({
   entityName,
+  entityId,
   dateRange,
   onDateRangeChange,
   comparison,
@@ -145,7 +148,7 @@ export function InsightsHistoricalPanel({
                 {widget.prompt}
               </p>
               <div className="mt-3 min-h-40">
-                <InsightsWidgetChart widget={widget} />
+                <InsightsWidgetChart widget={widget} entityId={entityId} />
               </div>
             </article>
           ),

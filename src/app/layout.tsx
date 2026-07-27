@@ -17,8 +17,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Alerts and insights",
-  description: "Intelligent alerts and insights for CommerceIQ Sales Agent",
+  title: "Alerts",
+  description: "Intelligent alerts for CommerceIQ Sales Agent",
 };
 
 export default function RootLayout({

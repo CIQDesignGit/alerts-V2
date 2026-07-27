@@ -8,7 +8,7 @@ import { cn, controlFocusClass } from "@/lib/utils";
 
 const GROUP_BY_OPTIONS = [
   { id: "issue" as const, label: "Issue type" },
-  { id: "category" as const, label: "Categories" },
+  { id: "category" as const, label: "Taxonomy" },
 ];
 
 type AlertsGroupBySelectProps = {

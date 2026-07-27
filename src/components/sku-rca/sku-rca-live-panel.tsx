@@ -5,17 +5,13 @@ import { SkuRcaFeedback } from "@/components/sku-rca/sku-rca-feedback";
 import { SkuRcaIssues } from "@/components/sku-rca/sku-rca-issues";
 import { SkuRcaRecommendations } from "@/components/sku-rca/sku-rca-recommendations";
 import { SkuRcaSummary } from "@/components/sku-rca/sku-rca-summary";
-import { SkuRcaTrend } from "@/components/sku-rca/sku-rca-trend";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
 
 type SkuRcaLivePanelProps = {
   data: SkuRcaData;
 };
 
-/**
- * Live SKU view — current metrics, issues, short trend, diagnosis, and actions.
- * (Historical mode swaps this for the widget dashboard.)
- */
+/** Live alert diagnosis — no historic trend charts (those live in SKU Insights). */
 export function SkuRcaLivePanel({ data }: SkuRcaLivePanelProps) {
   return (
     <div className="flex flex-col gap-8">
@@ -28,7 +24,6 @@ export function SkuRcaLivePanel({ data }: SkuRcaLivePanelProps) {
         groups={data.issueGroups}
         lastUpdated={data.issuesLastUpdated}
       />
-      <SkuRcaTrend data={data.trend} caption={data.trendCaption} />
       <SkuRcaAnalysis blocks={data.analysis} />
       <SkuRcaRecommendations items={data.recommendations} />
       <SkuRcaFeedback feedbackKey={data.asin} />

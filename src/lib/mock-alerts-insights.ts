@@ -428,14 +428,191 @@ export function formatAtRisk(value: number): string {
   return `$${abs.toLocaleString()}`;
 }
 
-/** One slice of Gap $ impact (conversion / margin / traffic) */
-export type ImpactBucket = {
-  id: "conversion" | "margin" | "traffic";
+/** Rich text segment inside an Ally Insight bullet */
+export type AllyInsightSegment =
+  | { kind: "text"; text: string }
+  | { kind: "strong"; text: string }
+  | {
+      kind: "money";
+      amount: number;
+      /** emphasis = hero $ at risk; inline = parenthetical SKU amounts */
+      variant?: "emphasis" | "inline";
+    };
+
+export type AllyInsightBullet = {
+  id: string;
+  segments: AllyInsightSegment[];
+};
+
+/** Bulleted Ally Insight copy for alert aggregate panels */
+export function buildAlertAllyInsightBullets(
+  title: string,
+  skus: IssueSku[],
+  gapDollars: number,
+  skuCount: number,
+  aiSignal?: string,
+): AllyInsightBullet[] {
+  const sorted = [...skus].sort((a, b) => a.gapDollars - b.gapDollars);
+  const topSkus = sorted.slice(0, 5);
+
+  const sellerRollup = new Map<string, { skuCount: number; gap: number }>();
+  for (const sku of skus) {
+    const seller = sku.bbOwner ?? sku.seller;
+    const row = sellerRollup.get(seller) ?? { skuCount: 0, gap: 0 };
+    row.skuCount += 1;
+    row.gap += Math.abs(sku.gapDollars);
+    sellerRollup.set(seller, row);
+  }
+  const topSeller = [...sellerRollup.entries()].sort(
+    (a, b) => b[1].gap - a[1].gap,
+  )[0];
+
+  const bullets: AllyInsightBullet[] = [
+    {
+      id: "summary",
+      segments: [
+        { kind: "text", text: `${title} is active on ` },
+        { kind: "strong", text: `${skuCount} SKUs` },
+        { kind: "text", text: " right now, putting " },
+        { kind: "money", amount: gapDollars, variant: "emphasis" },
+        { kind: "text", text: " of weekly revenue at risk." },
+      ],
+    },
+  ];
+
+  if (topSkus.length > 0) {
+    const segments: AllyInsightSegment[] = [
+      { kind: "text", text: "Top contributors: " },
+    ];
+    topSkus.forEach((sku, index) => {
+      if (index > 0) segments.push({ kind: "text", text: ", " });
+      segments.push({ kind: "strong", text: sku.name });
+      segments.push({ kind: "text", text: " (" });
+      segments.push({
+        kind: "money",
+        amount: sku.gapDollars,
+        variant: "inline",
+      });
+      segments.push({ kind: "text", text: ")" });
+    });
+    segments.push({ kind: "text", text: "." });
+    bullets.push({ id: "contributors", segments });
+  }
+
+  if (topSeller) {
+    const [sellerName, stats] = topSeller;
+    bullets.push({
+      id: "seller",
+      segments: [
+        { kind: "strong", text: sellerName },
+        {
+          kind: "text",
+          text: ` has been the biggest offender in the last 24 hours — winning Buy Box on ${stats.skuCount} of our hero SKUs at $20–30 below MAP. Suspected MAP violation.`,
+        },
+      ],
+    });
+  } else if (aiSignal) {
+    bullets.push({
+      id: "context",
+      segments: [{ kind: "text", text: aiSignal }],
+    });
+  }
+
+  return bullets;
+}
+
+/** Clickable AllyAI prompt chips — shared by Ally Insight + taxonomy RCA */
+export type AllyAiPrompt = {
+  id: string;
+  /** Short chip label shown in the UI */
   label: string;
-  /** Who typically owns fixing this slice */
-  owner: string;
-  dollars: number;
-  pct: number;
+  /** Full prompt sent to Ally when selected */
+  prompt: string;
+};
+
+/** @deprecated Use AllyAiPrompt */
+export type TaxonomyRcaPrompt = AllyAiPrompt;
+
+/** Contextual follow-up prompts beneath issue-level Ally Insight */
+export function buildAlertAllyInsightPrompts(
+  title: string,
+  skus: IssueSku[],
+  gapDollars: number,
+  skuCount: number,
+): AllyAiPrompt[] {
+  const sorted = [...skus].sort((a, b) => a.gapDollars - b.gapDollars);
+  const topSku = sorted[0];
+
+  const sellerRollup = new Map<string, { skuCount: number; gap: number }>();
+  for (const sku of skus) {
+    const seller = sku.bbOwner ?? sku.seller;
+    const row = sellerRollup.get(seller) ?? { skuCount: 0, gap: 0 };
+    row.skuCount += 1;
+    row.gap += Math.abs(sku.gapDollars);
+    sellerRollup.set(seller, row);
+  }
+  const topSeller = [...sellerRollup.entries()].sort(
+    (a, b) => b[1].gap - a[1].gap,
+  )[0];
+
+  const prompts: AllyAiPrompt[] = [
+    {
+      id: "rank-skus",
+      label: `Which SKUs drive most of the ${title} gap?`,
+      prompt: `Rank the SKUs contributing to ${title} (${skuCount} SKUs, ${formatGapDollars(gapDollars)} at risk) and explain why each is flagged.`,
+    },
+  ];
+
+  if (topSku) {
+    prompts.push({
+      id: "top-sku",
+      label: `Why is ${topSku.name} the top contributor?`,
+      prompt: `Explain the root cause for ${topSku.name} under ${title} and recommend the fastest fix.`,
+    });
+  }
+
+  if (topSeller) {
+    const [sellerName] = topSeller;
+    prompts.push({
+      id: "seller-map",
+      label: `Is ${sellerName} violating MAP on these SKUs?`,
+      prompt: `Analyze whether ${sellerName} is undercutting MAP on SKUs affected by ${title} and recommend enforcement steps.`,
+    });
+  }
+
+  prompts.push({
+    id: "24h-fix",
+    label: `Highest-ROI fix for ${title} in 24h?`,
+    prompt: `Recommend the highest-ROI actions to reduce ${title} impact across ${skuCount} SKUs within the next 24 hours.`,
+  });
+
+  return prompts.slice(0, 3);
+}
+
+/** One ranked issue in a taxonomy RCA summary */
+export type TaxonomyRcaTopIssue = {
+  rank: number;
+  issueKey: IssueKey;
+  name: string;
+  skuCount: number;
+  group: IssueGroup;
+  gapDollars: number;
+};
+
+/** Level-scoped RCA view when grouping Alerts by taxonomy */
+export type TaxonomyRcaView = {
+  levelLabel: string;
+  entityName: string;
+  alertCount: number;
+  skuCount: number;
+  gapDollars: number;
+  narratives: AllyInsightBullet[];
+  topIssues: TaxonomyRcaTopIssue[];
+  skus: CategorySku[];
+  /** Prompts beneath key insights — explain the narrative */
+  insightPrompts: TaxonomyRcaPrompt[];
+  /** Prompts beneath top issues — invite issue-level drill-down */
+  issuePrompts: TaxonomyRcaPrompt[];
 };
 
 /** One actor or category in a concentration chart */
@@ -448,7 +625,8 @@ export type ConcentrationRow = {
 };
 
 export type AlertStrategicInsights = {
-  impact: ImpactBucket[];
+  /** $ at risk grouped by when the issue became active */
+  recency: ConcentrationRow[];
   sellers: ConcentrationRow[];
   categories: ConcentrationRow[];
   /** Card title — "Categories exposed" or "Brands most exposed" when only one category */
@@ -461,33 +639,61 @@ export type AlertStrategicInsights = {
   categoryTakeaway?: string;
 };
 
-/** Split total $ into conversion / margin / traffic (mock ratios by issue type). */
-function impactMixForKey(
-  feedbackKey: string,
-): { conversion: number; margin: number; traffic: number } {
-  // Competitive / Buy Box — mostly units lost, some price-match, some rank bleed
-  if (feedbackKey === "lostBuyBox" || feedbackKey.includes("Buy Box")) {
-    return { conversion: 0.58, margin: 0.27, traffic: 0.15 };
+/** $ at risk by when each SKU’s alert became active (uses Lost At timestamps). */
+function rollupRecency(
+  skus: IssueSku[],
+  totalDollars: number,
+): ConcentrationRow[] {
+  type BucketId = "24h" | "2-7d" | "older" | "unknown";
+  const buckets: Record<
+    BucketId,
+    { name: string; skuCount: number; dollars: number }
+  > = {
+    "24h": { name: "Last 24 hours", skuCount: 0, dollars: 0 },
+    "2-7d": { name: "2–7 days ago", skuCount: 0, dollars: 0 },
+    older: { name: "Older than 7 days", skuCount: 0, dollars: 0 },
+    unknown: { name: "Timing unknown", skuCount: 0, dollars: 0 },
+  };
+
+  for (const sku of skus) {
+    const dollars = Math.abs(sku.gapDollars);
+    if (!sku.lostAt) {
+      buckets.unknown.skuCount += 1;
+      buckets.unknown.dollars += dollars;
+      continue;
+    }
+    const lost = parseLostAt(sku.lostAt);
+    if (!lost) {
+      buckets.unknown.skuCount += 1;
+      buckets.unknown.dollars += dollars;
+      continue;
+    }
+    const hoursAgo =
+      (ALERTS_MOCK_NOW.getTime() - lost.getTime()) / (1000 * 60 * 60);
+    if (hoursAgo <= 24) {
+      buckets["24h"].skuCount += 1;
+      buckets["24h"].dollars += dollars;
+    } else if (hoursAgo <= 7 * 24) {
+      buckets["2-7d"].skuCount += 1;
+      buckets["2-7d"].dollars += dollars;
+    } else {
+      buckets.older.skuCount += 1;
+      buckets.older.dollars += dollars;
+    }
   }
-  // Visibility / deal — traffic-heavy
-  if (
-    feedbackKey === "dealPageVisibility" ||
-    feedbackKey === "promoBadge" ||
-    feedbackKey === "keywordRank" ||
-    feedbackKey === "sponsoredShareOfVoice" ||
-    feedbackKey === "mediaSpend"
-  ) {
-    return { conversion: 0.32, margin: 0.18, traffic: 0.5 };
-  }
-  // Ops / availability
-  if (
-    feedbackKey === "stockAvailability" ||
-    feedbackKey === "shippingSpeed"
-  ) {
-    return { conversion: 0.72, margin: 0.08, traffic: 0.2 };
-  }
-  // Default balanced mix
-  return { conversion: 0.45, margin: 0.3, traffic: 0.25 };
+
+  const safeTotal = totalDollars > 0 ? totalDollars : 1;
+  const order: BucketId[] = ["24h", "2-7d", "older", "unknown"];
+
+  return order
+    .filter((id) => buckets[id].skuCount > 0)
+    .map((id) => ({
+      id,
+      name: buckets[id].name,
+      skuCount: buckets[id].skuCount,
+      dollars: buckets[id].dollars,
+      pct: Math.round((buckets[id].dollars / safeTotal) * 100),
+    }));
 }
 
 /**
@@ -553,52 +759,9 @@ export function getAlertStrategicInsights(
     (sum, s) => sum + Math.abs(s.gapDollars),
     0,
   );
-  // Impact mix charts use magnitude (absolute Gap $)
+  // Charts use magnitude (absolute Gap $)
   const total = totalFromSkus > 0 ? totalFromSkus : Math.abs(gapDollars);
-  const mix = impactMixForKey(feedbackKey);
-
-  const impactDefs: {
-    id: ImpactBucket["id"];
-    label: string;
-    owner: string;
-    weight: number;
-  }[] = [
-    {
-      id: "conversion",
-      label: "Conversion loss",
-      owner: "Sales",
-      weight: mix.conversion,
-    },
-    {
-      id: "margin",
-      label: "Margin loss",
-      owner: "Pricing",
-      weight: mix.margin,
-    },
-    {
-      id: "traffic",
-      label: "Traffic loss",
-      owner: "Media",
-      weight: mix.traffic,
-    },
-  ];
-
-  // Round dollars so the three buckets still sum to total
-  let allocated = 0;
-  const impact: ImpactBucket[] = impactDefs.map((def, index) => {
-    const isLast = index === impactDefs.length - 1;
-    const dollars = isLast
-      ? Math.max(0, total - allocated)
-      : Math.round(total * def.weight);
-    allocated += dollars;
-    return {
-      id: def.id,
-      label: def.label,
-      owner: def.owner,
-      dollars,
-      pct: total > 0 ? Math.round((dollars / total) * 100) : 0,
-    };
-  });
+  const recency = rollupRecency(skus, total);
 
   // Retailers on the listing (seller) — drives the composition bar
   const sellers = rollupConcentration(skus, (sku) => sku.seller, total, 3);
@@ -690,7 +853,7 @@ export function getAlertStrategicInsights(
   }
 
   return {
-    impact,
+    recency,
     sellers,
     categories,
     categoryCardTitle,
@@ -1416,6 +1579,458 @@ export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
 }
 
 export const categoryAlerts: CategoryAlert[] = buildCategoryAlerts(issueAlerts);
+
+/** Taxonomy tree node for Alerts left panel — Overall → Brand → Category → SKU */
+export type AlertsTaxonomyLevel = "overall" | "brand" | "category" | "sku";
+
+export type AlertsTaxonomyNode = {
+  id: string;
+  name: string;
+  level: AlertsTaxonomyLevel;
+  skuCount: number;
+  brandCount?: number;
+  categoryCount?: number;
+  issueCount?: number;
+  asin?: string;
+  skuId?: string;
+  gapDollars: number;
+  skus: CategorySku[];
+  children: AlertsTaxonomyNode[];
+};
+
+function taxonomyRcaLevelLabel(level: AlertsTaxonomyLevel): string {
+  if (level === "overall") return "Portfolio RCA";
+  if (level === "brand") return "Brand RCA";
+  return "Category RCA";
+}
+
+function rollupIssuesByKey(skus: CategorySku[]) {
+  const byIssue = new Map<
+    IssueKey,
+    { skuIds: Set<string>; gapDollars: number }
+  >();
+
+  for (const sku of skus) {
+    const row = byIssue.get(sku.issueKey) ?? {
+      skuIds: new Set<string>(),
+      gapDollars: 0,
+    };
+    row.skuIds.add(sku.id);
+    row.gapDollars += sku.gapDollars;
+    byIssue.set(sku.issueKey, row);
+  }
+
+  return [...byIssue.entries()]
+    .map(([issueKey, data]) => ({
+      issueKey,
+      name: issueLabel(issueKey),
+      skuCount: data.skuIds.size,
+      group: issueGroup(issueKey),
+      gapDollars: data.gapDollars,
+    }))
+    .sort((a, b) => a.gapDollars - b.gapDollars);
+}
+
+function avgPriceUndercut(skus: CategorySku[]): number {
+  const diffs = skus
+    .filter((sku) => sku.theirPrice != null && sku.ourPrice != null)
+    .map((sku) => sku.ourPrice! - sku.theirPrice!);
+
+  if (diffs.length === 0) return 3.8;
+  return diffs.reduce((sum, value) => sum + value, 0) / diffs.length;
+}
+
+function buildTaxonomyInsightPrompts(
+  node: AlertsTaxonomyNode,
+  topIssues: TaxonomyRcaTopIssue[],
+  skus: CategorySku[],
+): TaxonomyRcaPrompt[] {
+  const entity = node.name;
+  const primary = topIssues[0];
+  const prompts: TaxonomyRcaPrompt[] = [];
+
+  if (primary) {
+    prompts.push({
+      id: "why-primary",
+      label: `Why is ${primary.name} hitting ${entity} hardest?`,
+      prompt: `Explain why ${primary.name} is the biggest revenue driver for ${entity} and what changed in the last 7 days.`,
+    });
+  }
+
+  const sellerRollup = new Map<string, number>();
+  for (const sku of skus) {
+    const seller = sku.bbOwner ?? sku.seller;
+    sellerRollup.set(
+      seller,
+      (sellerRollup.get(seller) ?? 0) + Math.abs(sku.gapDollars),
+    );
+  }
+  const topSellers = [...sellerRollup.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2);
+
+  if (topSellers.length >= 2) {
+    prompts.push({
+      id: "seller-map",
+      label: `Are ${topSellers[0][0]} and ${topSellers[1][0]} violating MAP on ${entity}?`,
+      prompt: `Analyze whether sellers ${topSellers[0][0]} and ${topSellers[1][0]} are undercutting MAP on ${entity} SKUs and recommend enforcement steps.`,
+    });
+  } else if (node.level === "overall") {
+    prompts.push({
+      id: "brand-split",
+      label: "Which brands drive most of the portfolio gap?",
+      prompt: `Break down the portfolio revenue gap by brand and rank which brands need immediate attention.`,
+    });
+  } else if (node.level === "brand") {
+    prompts.push({
+      id: "category-split",
+      label: `Which ${entity} categories are worsening fastest?`,
+      prompt: `Compare category-level gap trends for ${entity} over the last 7 days and flag categories accelerating downward.`,
+    });
+  }
+
+  prompts.push({
+    id: "48h-projection",
+    label: `What happens if ${entity} issues stay open 48h?`,
+    prompt: `Project revenue impact for ${entity} if the top issues stay unresolved for the next 48 hours.`,
+  });
+
+  return prompts.slice(0, 3);
+}
+
+function buildTaxonomyIssuePrompts(
+  entity: string,
+  topIssues: TaxonomyRcaTopIssue[],
+): TaxonomyRcaPrompt[] {
+  if (topIssues.length === 0) return [];
+
+  const templates: Array<(issue: TaxonomyRcaTopIssue) => TaxonomyRcaPrompt> = [
+    (issue) => ({
+      id: `drill-${issue.issueKey}`,
+      label: `Break down ${issue.name} by SKU for ${entity}`,
+      prompt: `Run a focused RCA on ${issue.name} for ${entity} — ${issue.skuCount} SKUs affected. Rank root causes and recommend actions.`,
+    }),
+    (issue) => ({
+      id: `compare-${issue.issueKey}`,
+      label: `How does ${issue.name} compare to last week on ${entity}?`,
+      prompt: `Compare ${issue.name} gap and SKU exposure for ${entity} vs the prior 7 days. Highlight what got worse.`,
+    }),
+    (issue) => ({
+      id: `fix-${issue.issueKey}`,
+      label: `Fastest fix for ${issue.name} on ${entity}?`,
+      prompt: `Recommend the highest-ROI actions to resolve ${issue.name} on ${entity} within the next 48 hours.`,
+    }),
+  ];
+
+  return topIssues.slice(0, 3).map((issue, index) => templates[index](issue));
+}
+
+/** Build portfolio / brand / category RCA copy from taxonomy node SKUs */
+export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView {
+  const skus = node.skus;
+  const issueRollup = rollupIssuesByKey(skus);
+  const topIssues = issueRollup.slice(0, 3).map((issue, index) => ({
+    ...issue,
+    rank: index + 1,
+  }));
+
+  const alertCount = issueRollup.length;
+  const primaryIssue = issueRollup[0];
+  const primaryGap = primaryIssue ? Math.abs(primaryIssue.gapDollars) : 0;
+
+  const sellerRollup = new Map<string, number>();
+  for (const sku of skus) {
+    const seller = sku.bbOwner ?? sku.seller;
+    sellerRollup.set(
+      seller,
+      (sellerRollup.get(seller) ?? 0) + Math.abs(sku.gapDollars),
+    );
+  }
+  const topSellers = [...sellerRollup.entries()].sort(
+    (a, b) => b[1] - a[1],
+  );
+  const sellerGapTotal = topSellers.reduce((sum, [, gap]) => sum + gap, 0);
+  const topTwoShare =
+    sellerGapTotal > 0 && topSellers.length >= 2
+      ? Math.round(
+          ((topSellers[0][1] + topSellers[1][1]) / sellerGapTotal) * 100,
+        )
+      : topSellers.length === 1
+        ? 100
+        : 0;
+
+  const projectedCompound =
+    topIssues.reduce((sum, issue) => sum + Math.abs(issue.gapDollars), 0) *
+    2.2;
+
+  const narratives: AllyInsightBullet[] = [];
+
+  if (primaryIssue) {
+    narratives.push({
+      id: "primary-issue",
+      segments: [
+        { kind: "strong", text: primaryIssue.name },
+        {
+          kind: "text",
+          text: ` is the biggest issue for ${node.name} based on last week's data — amounting to `,
+        },
+        { kind: "money", amount: -primaryGap, variant: "emphasis" },
+        { kind: "text", text: " in lost revenue across " },
+        { kind: "strong", text: `${primaryIssue.skuCount} SKUs` },
+        { kind: "text", text: "." },
+      ],
+    });
+  }
+
+  if (topSellers.length >= 2 && topTwoShare > 0) {
+    const undercut = avgPriceUndercut(skus);
+    narratives.push({
+      id: "sellers",
+      segments: [
+        { kind: "text", text: "Sellers " },
+        { kind: "strong", text: `'${topSellers[0][0]}'` },
+        { kind: "text", text: " and " },
+        { kind: "strong", text: `'${topSellers[1][0]}'` },
+        {
+          kind: "text",
+          text: ` contributed to ${topTwoShare}% of the total ${primaryIssue?.name ?? "alert"} revenue impact, undercutting price by an avg of `,
+        },
+        { kind: "strong", text: `$${undercut.toFixed(2)}` },
+        { kind: "text", text: "." },
+      ],
+    });
+  } else if (node.level === "overall" && (node.brandCount ?? 0) > 0) {
+    narratives.push({
+      id: "brands",
+      segments: [
+        { kind: "text", text: "Issues span " },
+        { kind: "strong", text: `${node.brandCount} brands` },
+        { kind: "text", text: " and " },
+        { kind: "strong", text: `${node.skuCount} SKUs` },
+        {
+          kind: "text",
+          text: ". Shark and Ninja account for the majority of revenue at risk this week.",
+        },
+      ],
+    });
+  } else if (node.level === "brand" && (node.categoryCount ?? 0) > 0) {
+    narratives.push({
+      id: "categories",
+      segments: [
+        { kind: "text", text: `${node.name} alerts are concentrated in ` },
+        { kind: "strong", text: `${node.categoryCount} categories` },
+        {
+          kind: "text",
+          text: ". Floor Care and Kitchen categories drive most of the gap this week.",
+        },
+      ],
+    });
+  }
+
+  if (topIssues.length > 0) {
+    narratives.push({
+      id: "projection",
+      segments: [
+        {
+          kind: "text",
+          text: "If unresolved in the next 48h, the top 3 issues below are projected to compound to ",
+        },
+        { kind: "money", amount: -projectedCompound, variant: "emphasis" },
+        { kind: "text", text: " in impact by end of week." },
+      ],
+    });
+  }
+
+  while (narratives.length < 3 && narratives.length > 0) {
+    narratives.push({
+      id: `pad-${narratives.length}`,
+      segments: [
+        {
+          kind: "text",
+          text: `${node.name} has ${alertCount} active alert types affecting ${node.skuCount} SKUs in this view.`,
+        },
+      ],
+    });
+  }
+
+  return {
+    levelLabel: taxonomyRcaLevelLabel(node.level),
+    entityName: node.name,
+    alertCount,
+    skuCount: node.skuCount,
+    gapDollars: node.gapDollars,
+    narratives: narratives.slice(0, 3),
+    topIssues,
+    skus,
+    insightPrompts: buildTaxonomyInsightPrompts(node, topIssues, skus),
+    issuePrompts: buildTaxonomyIssuePrompts(node.name, topIssues),
+  };
+}
+
+function countIssuesPerSku(
+  alerts: IssueAlert[],
+  filters: AlertsFilters,
+  timeWindow: AlertsTimeWindow,
+): Map<string, number> {
+  const counts = new Map<string, Set<IssueKey>>();
+
+  for (const issue of alerts) {
+    for (const sku of issue.skus) {
+      if (
+        !skuPassesFilters(sku, filters) ||
+        !skuWithinTimeWindow(sku, timeWindow)
+      ) {
+        continue;
+      }
+      const set = counts.get(sku.id) ?? new Set<IssueKey>();
+      set.add(issue.issueKey);
+      counts.set(sku.id, set);
+    }
+  }
+
+  return new Map(
+    [...counts.entries()].map(([id, set]) => [id, set.size]),
+  );
+}
+
+/** Build Overall → Brand → Category → SKU tree from filtered alert SKUs. */
+export function buildAlertsTaxonomyTree(
+  alerts: IssueAlert[],
+  filters: AlertsFilters,
+  timeWindow: AlertsTimeWindow = DEFAULT_ALERTS_TIME_WINDOW,
+): AlertsTaxonomyNode | null {
+  const issueCounts = countIssuesPerSku(alerts, filters, timeWindow);
+  const skuById = new Map<string, CategorySku>();
+
+  for (const issue of alerts) {
+    for (const sku of issue.skus) {
+      if (
+        !skuPassesFilters(sku, filters) ||
+        !skuWithinTimeWindow(sku, timeWindow)
+      ) {
+        continue;
+      }
+      if (!skuById.has(sku.id)) {
+        skuById.set(sku.id, { ...sku, issueKey: issue.issueKey });
+      }
+    }
+  }
+
+  const skus = [...skuById.values()];
+  if (skus.length === 0) return null;
+
+  const brandMap = new Map<string, Map<string, CategorySku[]>>();
+
+  for (const sku of skus) {
+    const categories = brandMap.get(sku.brand) ?? new Map<string, CategorySku[]>();
+    const list = categories.get(sku.category) ?? [];
+    list.push(sku);
+    categories.set(sku.category, list);
+    brandMap.set(sku.brand, categories);
+  }
+
+  const brandNodes: AlertsTaxonomyNode[] = [...brandMap.entries()]
+    .map(([brandName, categoryMap]) => {
+      const categoryNodes: AlertsTaxonomyNode[] = [...categoryMap.entries()]
+        .map(([categoryName, categorySkus]) => {
+          const sortedSkus = [...categorySkus].sort(
+            (a, b) => a.gapDollars - b.gapDollars,
+          );
+          const skuNodes: AlertsTaxonomyNode[] = sortedSkus.map((sku) => ({
+            id: `sku:${sku.id}`,
+            name: sku.name,
+            level: "sku",
+            skuCount: 1,
+            issueCount: issueCounts.get(sku.id) ?? 1,
+            asin: sku.asin,
+            skuId: sku.id,
+            gapDollars: sku.gapDollars,
+            skus: [sku],
+            children: [],
+          }));
+
+          return {
+            id: `category:${brandName}:${categoryName}`.toLowerCase().replace(/\s+/g, "-"),
+            name: categoryName,
+            level: "category" as const,
+            skuCount: sortedSkus.length,
+            gapDollars: sortedSkus.reduce((sum, s) => sum + s.gapDollars, 0),
+            skus: sortedSkus,
+            children: skuNodes,
+          };
+        })
+        .sort((a, b) => a.gapDollars - b.gapDollars);
+
+      const brandSkus = categoryNodes.flatMap((c) => c.skus);
+
+      return {
+        id: `brand:${brandName}`.toLowerCase().replace(/\s+/g, "-"),
+        name: brandName,
+        level: "brand" as const,
+        categoryCount: categoryNodes.length,
+        skuCount: brandSkus.length,
+        gapDollars: brandSkus.reduce((sum, s) => sum + s.gapDollars, 0),
+        skus: brandSkus,
+        children: categoryNodes,
+      };
+    })
+    .sort((a, b) => a.gapDollars - b.gapDollars);
+
+  return {
+    id: "overall",
+    name: "Overall",
+    level: "overall",
+    brandCount: brandNodes.length,
+    skuCount: skus.length,
+    gapDollars: skus.reduce((sum, s) => sum + s.gapDollars, 0),
+    skus,
+    children: brandNodes,
+  };
+}
+
+export function findTaxonomyNode(
+  root: AlertsTaxonomyNode,
+  id: string,
+): AlertsTaxonomyNode | undefined {
+  if (root.id === id) return root;
+  for (const child of root.children) {
+    const found = findTaxonomyNode(child, id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** Default expanded ids — open Overall and the first brand + category. */
+export function defaultTaxonomyExpandedIds(
+  root: AlertsTaxonomyNode,
+): Set<string> {
+  const ids = new Set<string>([root.id]);
+  const firstBrand = root.children[0];
+  if (firstBrand) {
+    ids.add(firstBrand.id);
+    const firstCategory = firstBrand.children[0];
+    if (firstCategory) ids.add(firstCategory.id);
+  }
+  return ids;
+}
+
+/** Default selected taxonomy node — first brand (matches design mock). */
+export function defaultTaxonomySelection(root: AlertsTaxonomyNode): string {
+  return root.children[0]?.id ?? root.id;
+}
+
+/** Find a taxonomy node by SKU id (leaf). */
+export function findTaxonomyNodeBySkuId(
+  root: AlertsTaxonomyNode,
+  skuId: string,
+): AlertsTaxonomyNode | undefined {
+  if (root.level === "sku" && root.skuId === skuId) return root;
+  for (const child of root.children) {
+    const found = findTaxonomyNodeBySkuId(child, skuId);
+    if (found) return found;
+  }
+  return undefined;
+}
 
 /** Find the issue alert that owns a SKU id (Alerts → Alert SKU detail). */
 export function findIssueForSku(skuId: string): IssueAlert | undefined {

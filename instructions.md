@@ -33,12 +33,10 @@ Always follow them unless the user explicitly says otherwise.
 
 ## Layout
 - All pages share the AppShell layout: CommerceIQ dark left sidebar + light top header + main content.
-- **Alerts and insights** (`/`) has three in-page tabs: Overview · Alerts · Insights (see `product_context.md`).
-- Alerts tab: left issue→SKU panel. Insights tab: left hierarchy panel + Snapshot/Trends modes (Trends = customizable persisted widgets). Overview: no left product panel.
-- **Two SKU pages (not shared):**
-  - **Alerts** → `SkuRca` (`src/components/sku-rca/`) — Alert SKU detail (collapsing header + diagnosis body + chat footer).
-  - **Insights** → same Insights level shell as Brand/Category (`InsightsLevelHeader` + Snapshot/Trends panels + `AllyChatFooter`). Do **not** open `SkuRca` from Insights. SKU has no child breakdown table.
-- Insights Snapshot and Trends both use a shared date-range picker and the floating `AllyChatFooter` at the bottom of the right pane (including at SKU).
+- **`/` = Alerts (landing)** — no top-level tabs. Header row: title + alert count + Brand · Category · SKU filters.
+- Alerts: left issue→SKU or category→SKU panel (layout **final**). Right: aggregate detail or `SkuRca`.
+- **`SkuRca` sub-tabs:** **Alert** (live diagnosis, no historic trends) · **SKU Insights** (issue trends over time, date range, persisted widgets).
+- Do **not** show historic trend charts in aggregate alert views or on the Alert sub-tab.
 - Keep pages under 300 lines. Extract reusable pieces into `src/components/`.
 
 ## Typography

@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState, type UIEvent } from "react";
+import { useMemo, useState, type UIEvent } from "react";
 
+import { SkuInsightsPanel } from "@/components/sku-rca/sku-insights-panel";
 import { SkuRcaChatFooter } from "@/components/sku-rca/sku-rca-chat-footer";
 import {
   SkuRcaHeader,
   SKU_RCA_CONTENT_WIDTH,
 } from "@/components/sku-rca/sku-rca-header";
 import { SkuRcaLivePanel } from "@/components/sku-rca/sku-rca-live-panel";
+import {
+  SkuRcaViewToggle,
+  type SkuRcaView,
+} from "@/components/sku-rca/sku-rca-view-toggle";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { getSkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
@@ -15,24 +20,18 @@ import { cn } from "@/lib/utils";
 type SkuRcaProps = {
   sku: IssueSku;
   onClose: () => void;
-  /** Hand-off to Insights SKU page for this product */
-  onViewSkuInsights?: () => void;
 };
 
 const COLLAPSE_AT = 24;
 
 /**
- * Alert SKU detail — collapsing header + diagnosis + chat.
- * Used from Alerts only; Insights SKU stays in the Insights level shell.
+ * Alert SKU detail — Alert sub-tab (live diagnosis) + SKU Insights sub-tab (issue trends).
  */
-export function SkuRca({ sku, onClose, onViewSkuInsights }: SkuRcaProps) {
+export function SkuRca({ sku, onClose }: SkuRcaProps) {
   const data = useMemo(() => getSkuRcaData(sku), [sku]);
+  const [view, setView] = useState<SkuRcaView>("alert");
   const [collapsed, setCollapsed] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
-
-  useEffect(() => {
-    setCollapsed(false);
-  }, [data.asin]);
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
@@ -40,12 +39,13 @@ export function SkuRca({ sku, onClose, onViewSkuInsights }: SkuRcaProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
-      <SkuRcaHeader
-        data={data}
-        collapsed={collapsed}
-        onClose={onClose}
-        onViewSkuInsights={onViewSkuInsights}
-      />
+      <SkuRcaHeader data={data} collapsed={collapsed} onClose={onClose} />
+
+      <div className="shrink-0 border-b border-border bg-background px-6 py-2">
+        <div className={SKU_RCA_CONTENT_WIDTH}>
+          <SkuRcaViewToggle view={view} onChange={setView} />
+        </div>
+      </div>
 
       <div
         onScroll={onBodyScroll}
@@ -55,7 +55,11 @@ export function SkuRca({ sku, onClose, onViewSkuInsights }: SkuRcaProps) {
         )}
       >
         <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-8")}>
-          <SkuRcaLivePanel data={data} />
+          {view === "alert" ? (
+            <SkuRcaLivePanel data={data} />
+          ) : (
+            <SkuInsightsPanel entityId={sku.id} skuName={data.name} />
+          )}
         </div>
       </div>
 
@@ -63,6 +67,7 @@ export function SkuRca({ sku, onClose, onViewSkuInsights }: SkuRcaProps) {
         expanded={chatExpanded}
         onExpandedChange={setChatExpanded}
         skuName={data.name}
+        view={view}
       />
     </div>
   );

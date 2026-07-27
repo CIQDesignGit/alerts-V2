@@ -7,7 +7,6 @@ import {
   GapBadge,
   PdpPageLink,
   PdpSnapshotsButton,
-  SkuInsightsLink,
 } from "@/components/sku-rca/sku-rca-header-actions";
 import { Button } from "@/components/ui/button";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
@@ -20,15 +19,12 @@ type SkuRcaHeaderProps = {
   data: SkuRcaData;
   collapsed: boolean;
   onClose: () => void;
-  /** Opens Insights tab on this SKU’s Insights page */
-  onViewSkuInsights?: () => void;
 };
 
 export function SkuRcaHeader({
   data,
   collapsed,
   onClose,
-  onViewSkuInsights,
 }: SkuRcaHeaderProps) {
   const pdpUrl = `https://www.amazon.com/dp/${data.asin}`;
 
@@ -44,7 +40,6 @@ export function SkuRcaHeader({
         )}
         aria-hidden={collapsed}
       >
-        {/* Close sits in the page margin — top right of the header */}
         <CloseButton onClose={onClose} className="absolute top-2.5 right-4 z-10" />
 
         <div className={cn(SKU_RCA_CONTENT_WIDTH, "py-3")}>
@@ -62,9 +57,6 @@ export function SkuRcaHeader({
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
                 <PdpSnapshotsButton />
                 <PdpPageLink href={pdpUrl} />
-                {onViewSkuInsights && (
-                  <SkuInsightsLink onClick={onViewSkuInsights} />
-                )}
                 <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
               </div>
             </div>

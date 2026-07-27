@@ -13,11 +13,17 @@ import {
 import type { InsightWidget } from "@/lib/insights-widgets";
 
 /** Picks the shadcn/Recharts chart for a Trends widget. */
-export function InsightsWidgetChart({ widget }: { widget: InsightWidget }) {
+export function InsightsWidgetChart({
+  widget,
+  entityId,
+}: {
+  widget: InsightWidget;
+  entityId?: string;
+}) {
   const key = widget.chartKey ?? widget.id;
 
   if (key === "issue-trends" || key.startsWith("issue-")) {
-    return <IssueTrendsChart />;
+    return <IssueTrendsChart entityId={entityId} />;
   }
   if (key === "rev-trend" || key.startsWith("rev-")) return <RevenueVsPlanChart />;
   if (key === "gap-drivers" || key.startsWith("gap-")) return <GapDriversChart />;
@@ -28,5 +34,5 @@ export function InsightsWidgetChart({ widget }: { widget: InsightWidget }) {
   if (key === "oos-days") return <OosDaysChart />;
 
   // Freeform custom widgets — show issue trends as a generic placeholder
-  return <IssueTrendsChart />;
+  return <IssueTrendsChart entityId={entityId} />;
 }

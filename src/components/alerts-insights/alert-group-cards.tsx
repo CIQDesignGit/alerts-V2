@@ -5,19 +5,12 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { IssueKey } from "@/components/alerts/issue-names";
 import {
-  formatGapDollars,
   issueGroup,
   issueLabel,
   type CategoryAlert,
   type IssueAlert,
 } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
-
-function severityText(severity: IssueAlert["severity"]) {
-  if (severity === "high") return "text-error-600";
-  if (severity === "mid") return "text-warning-700";
-  return "text-neutral-500";
-}
 
 /**
  * Selected card look for the Alerts master list.
@@ -102,14 +95,6 @@ export function IssueGroupCard({
             {issue.skuCount} SKUs · {issueGroup(issue.issueKey)}
           </p>
         </div>
-        <p
-          className={cn(
-            "shrink-0 font-mono text-sm font-bold tabular-nums",
-            severityText(issue.severity),
-          )}
-        >
-          {formatGapDollars(issue.gapDollars)}
-        </p>
       </button>
 
       {open && issue.skus.length > 0 && (
@@ -177,14 +162,6 @@ export function CategoryGroupCard({
             {issueChips.length > 2 ? ` +${issueChips.length - 2}` : ""}
           </p>
         </div>
-        <p
-          className={cn(
-            "shrink-0 font-mono text-sm font-bold tabular-nums",
-            severityText(category.severity),
-          )}
-        >
-          {formatGapDollars(category.gapDollars)}
-        </p>
       </button>
 
       {open && category.skus.length > 0 && (
@@ -249,14 +226,14 @@ function SkuList({
                 type="button"
                 onClick={() => onSelectSku(sku.id)}
                 className={cn(
-                  "flex w-full items-start justify-between gap-2 rounded-md px-3 py-2 text-left outline-none",
+                  "flex w-full items-start rounded-md px-3 py-2 text-left outline-none",
                   "focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-inset",
                   active
                     ? "bg-brand-100/70 ring-1 ring-brand-200"
                     : "hover:bg-neutral-100",
                 )}
               >
-                <div className="flex min-w-0 flex-1 items-start gap-2 pr-2">
+                <div className="flex min-w-0 flex-1 items-start gap-2">
                   <SkuThumbnail name={sku.name} size={36} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
@@ -269,12 +246,6 @@ function SkuList({
                         : ""}
                     </p>
                   </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-mono text-xs font-semibold tabular-nums text-error-600">
-                    {formatGapDollars(sku.gapDollars)}
-                  </p>
-                  <p className="mt-0.5 text-2xs text-muted-foreground">Gap</p>
                 </div>
               </button>
             </li>

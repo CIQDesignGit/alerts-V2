@@ -66,7 +66,7 @@ export function AlertsFiltersBar({
   return (
     <div
       ref={rootRef}
-      className="flex min-w-0 flex-1 items-center justify-end gap-4"
+      className="flex min-w-0 flex-1 items-center justify-start gap-4"
     >
       <div
         role="group"
