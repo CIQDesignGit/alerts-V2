@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { SkuRcaIssueRow } from "@/components/sku-rca/sku-rca-issue-row";
-import type { RcaIssueGroup } from "@/lib/mock-sku-rca";
+import { isRedIssue, type RcaIssueGroup } from "@/lib/mock-sku-rca";
 
 type SkuRcaIssuesProps = {
   groups: RcaIssueGroup[];
@@ -11,6 +11,17 @@ type SkuRcaIssuesProps = {
 };
 
 export function SkuRcaIssues({ groups, lastUpdated }: SkuRcaIssuesProps) {
+  const visibleGroups = useMemo(
+    () =>
+      groups
+        .map((group) => ({
+          ...group,
+          issues: group.issues.filter((issue) => isRedIssue(issue.liveStatus)),
+        }))
+        .filter((group) => group.issues.length > 0),
+    [groups],
+  );
+
   // Multiple rows can be open at once
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
 
@@ -30,7 +41,13 @@ export function SkuRcaIssues({ groups, lastUpdated }: SkuRcaIssuesProps) {
         <p className="text-xs text-muted-foreground">{lastUpdated}</p>
       </div>
 
-      {groups.map((group) => (
+      {visibleGroups.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No active issues — all checks are healthy.
+        </p>
+      ) : null}
+
+      {visibleGroups.map((group) => (
         <div key={group.id} className="flex flex-col gap-2">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             {group.label}

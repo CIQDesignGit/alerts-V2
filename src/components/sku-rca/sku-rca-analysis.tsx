@@ -2,9 +2,24 @@ import type { RcaAnalysisBlock } from "@/lib/mock-sku-rca";
 
 type SkuRcaAnalysisProps = {
   blocks: RcaAnalysisBlock[];
+  /** Hide visually while keeping content in the DOM for later */
+  hidden?: boolean;
 };
 
-export function SkuRcaAnalysis({ blocks }: SkuRcaAnalysisProps) {
+export function SkuRcaAnalysis({ blocks, hidden = false }: SkuRcaAnalysisProps) {
+  if (hidden) {
+    return (
+      <section className="hidden" aria-hidden data-sku-rca-analysis>
+        {blocks.map((block) => (
+          <div key={block.heading}>
+            <h4>{block.heading}</h4>
+            <p>{block.body}</p>
+          </div>
+        ))}
+      </section>
+    );
+  }
+
   return (
     <section className="flex flex-col gap-6">
       <h3 className="text-base font-semibold text-foreground">Analysis</h3>

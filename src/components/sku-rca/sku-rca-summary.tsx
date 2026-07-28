@@ -7,13 +7,31 @@ type SkuRcaSummaryProps = {
   headline: string;
   kpis: RcaKpiCard[];
   alertBanner?: string;
+  /** Hide visually while keeping content in the DOM for later */
+  hidden?: boolean;
 };
 
 export function SkuRcaSummary({
   headline,
   kpis,
   alertBanner,
+  hidden = false,
 }: SkuRcaSummaryProps) {
+  if (hidden) {
+    return (
+      <section className="hidden" aria-hidden data-sku-rca-summary>
+        <p>{headline}</p>
+        {kpis.map((kpi) => (
+          <article key={kpi.id}>
+            <p>{kpi.title}</p>
+            <p>{kpi.value}</p>
+          </article>
+        ))}
+        {alertBanner && <p>{alertBanner}</p>}
+      </section>
+    );
+  }
+
   return (
     <section className="flex flex-col gap-4">
       <p className="text-sm leading-relaxed text-neutral-700">{headline}</p>

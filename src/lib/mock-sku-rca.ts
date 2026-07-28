@@ -3,6 +3,11 @@ import type { IssueSku } from "@/lib/mock-alerts-insights";
 
 export type RcaLiveStatus = "ok" | "warning" | "bad";
 
+/** Red dot / error pill — active issues only (hide green "ok" and amber "warning"). */
+export function isRedIssue(status: RcaLiveStatus): boolean {
+  return status === "bad";
+}
+
 export type RcaIssueRow = {
   issueKey: IssueKey;
   liveStatus: RcaLiveStatus;
@@ -161,14 +166,55 @@ const DEFAULT_ISSUE_STATE: Record<
   },
 };
 
-function buildIssueGroups(): RcaIssueGroup[] {
+const ALL_ISSUE_KEYS: IssueKey[] = RCA_ISSUE_GROUP_ORDER.flatMap(
+  (group) => group.issueKeys,
+);
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/** Pick 2–5 red issues per SKU — stable for the same id across renders. */
+export function getSkuActiveIssueKeys(entityId: string): IssueKey[] {
+  const hash = hashString(entityId);
+  const count = 2 + (hash % 4);
+
+  const ranked = [...ALL_ISSUE_KEYS].sort((a, b) => {
+    const scoreA = hashString(`${entityId}:${a}`);
+    const scoreB = hashString(`${entityId}:${b}`);
+    return scoreA - scoreB;
+  });
+
+  return ranked.slice(0, count);
+}
+
+function buildIssueGroupsForSku(skuId: string): RcaIssueGroup[] {
+  const activeKeys = new Set(getSkuActiveIssueKeys(skuId));
+
   return RCA_ISSUE_GROUP_ORDER.map((group) => ({
     id: group.id,
     label: group.label,
-    issues: group.issueKeys.map((issueKey) => ({
-      issueKey,
-      ...DEFAULT_ISSUE_STATE[issueKey],
-    })),
+    issues: group.issueKeys.map((issueKey) => {
+      if (activeKeys.has(issueKey)) {
+        const base = DEFAULT_ISSUE_STATE[issueKey];
+        return {
+          issueKey,
+          ...base,
+          liveStatus: "bad" as const,
+        };
+      }
+
+      return {
+        issueKey,
+        liveStatus: "ok" as const,
+        statusLabel: "OK",
+      };
+    }),
   }));
 }
 
@@ -207,7 +253,7 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
       },
     ],
     issuesLastUpdated: "Last updated 11:35 AM today (2h ago)",
-    issueGroups: buildIssueGroups(),
+    issueGroups: buildIssueGroupsForSku(sku.id),
     analysis: [
       {
         heading: "Primary cause — Lost Buy Box (May 3–9)",

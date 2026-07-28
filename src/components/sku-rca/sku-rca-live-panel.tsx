@@ -19,13 +19,14 @@ export function SkuRcaLivePanel({ data }: SkuRcaLivePanelProps) {
         headline={data.summaryHeadline}
         kpis={data.kpis}
         alertBanner={data.alertBanner}
+        hidden
       />
       <SkuRcaIssues
         groups={data.issueGroups}
         lastUpdated={data.issuesLastUpdated}
       />
-      <SkuRcaAnalysis blocks={data.analysis} />
-      <SkuRcaRecommendations items={data.recommendations} />
+      <SkuRcaAnalysis blocks={data.analysis} hidden />
+      <SkuRcaRecommendations items={data.recommendations} hidden />
       <SkuRcaFeedback feedbackKey={data.asin} />
     </div>
   );

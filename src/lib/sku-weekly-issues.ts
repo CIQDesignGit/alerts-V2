@@ -1,4 +1,5 @@
 import { ISSUE_NAMES, type IssueKey } from "@/components/alerts/issue-names";
+import { getSkuActiveIssueKeys } from "@/lib/mock-sku-rca";
 import {
   resolveInsightsDateBounds,
   type InsightsDateRange,
@@ -161,6 +162,7 @@ export function getSkuWeeklyIssuesView(
   entityId: string,
   dateRange: InsightsDateRange,
 ): SkuWeeklyIssuesView {
+  const activeKeySet = new Set(getSkuActiveIssueKeys(entityId));
   const offset = hashString(entityId) % 7;
   const bounds = resolveInsightsDateBounds(dateRange);
   const dayLabels = bounds
@@ -168,6 +170,15 @@ export function getSkuWeeklyIssuesView(
     : [...WEEKDAY_LABELS];
 
   const rows: SkuWeeklyIssueRow[] = SKU_INSIGHTS_ISSUE_KEYS.map((issueKey) => {
+    if (!activeKeySet.has(issueKey)) {
+      return {
+        issueKey,
+        name: ISSUE_NAMES[issueKey].chip,
+        days: Array(7).fill("clean") as SkuDayStatus[],
+        activeDayCount: 0,
+      };
+    }
+
     const base = WEEKLY_PATTERNS[issueKey] ?? Array(7).fill("clean");
     const days = rotatePattern(base, offset);
     const activeDayCount = days.filter((d) => d === "active").length;
