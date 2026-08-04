@@ -11,10 +11,10 @@ type SkuRcaFeedbackProps = {
 export function SkuRcaFeedback({ feedbackKey }: SkuRcaFeedbackProps) {
   return (
     <ContentFeedback
+      variant="subtle"
       feedbackKey={feedbackKey}
       surface="sku-rca"
-      title="Was this diagnosis useful?"
-      subtitle="Helps AllyAI improve RCA for this SKU"
+      title="Was this alert helpful?"
       positiveChips={[
         "Accurate diagnosis",
         "Clear next steps",

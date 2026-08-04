@@ -69,6 +69,7 @@
   --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
 
   /* Brand — Purple (Figma Purple/500 = #875BF7) */
+  --color-brand-25: #fdfaff;
   --color-brand-50: #faf5ff;
   --color-brand-100: #f3e8ff;
   --color-brand-200: #ddd6fe;

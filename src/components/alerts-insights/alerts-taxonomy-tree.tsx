@@ -1,7 +1,8 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Package } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
+import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { AlertsTaxonomyNode } from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass } from "@/lib/utils";
 
@@ -86,9 +87,11 @@ function TaxonomyRow({
           )}
         </button>
       ) : isSku ? (
-        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
-          <Package className="size-4 text-neutral-500" aria-hidden />
-        </span>
+        <SkuThumbnail
+          name={node.name}
+          size={32}
+          className="mt-0.5 rounded-md"
+        />
       ) : (
         <span className="size-4 shrink-0" aria-hidden />
       )}
@@ -152,19 +155,22 @@ function TaxonomyBranch({
         onToggle={() => onToggle(node.id)}
       />
 
-      {expanded &&
-        node.children.map((child) => (
-          <TaxonomyBranch
-            key={child.id}
-            node={child}
-            depth={depth + 1}
-            selectedId={selectedId}
-            selectedSkuId={selectedSkuId}
-            expandedIds={expandedIds}
-            onSelectNode={onSelectNode}
-            onToggle={onToggle}
-          />
-        ))}
+      {expanded && node.children.length > 0 && (
+        <ul className="flex flex-col gap-0.5">
+          {node.children.map((child) => (
+            <TaxonomyBranch
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              selectedId={selectedId}
+              selectedSkuId={selectedSkuId}
+              expandedIds={expandedIds}
+              onSelectNode={onSelectNode}
+              onToggle={onToggle}
+            />
+          ))}
+        </ul>
+      )}
     </li>
   );
 }

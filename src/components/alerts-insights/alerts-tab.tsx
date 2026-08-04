@@ -11,6 +11,7 @@ import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
 import { TaxonomyRcaPanel } from "@/components/alerts-insights/taxonomy-rca-panel";
 import {
   buildAlertsTaxonomyTree,
+  buildIssueTypeSidebarAlerts,
   DEFAULT_ALERTS_TIME_WINDOW,
   defaultTaxonomyExpandedIds,
   defaultTaxonomySelection,
@@ -33,10 +34,15 @@ export function AlertsTab({
   groupBy?: AlertsGroupBy;
   onGroupByChange?: (value: AlertsGroupBy) => void;
 }) {
-  const visibleIssues = useMemo(
+  const filteredIssues = useMemo(
     () =>
       filterIssueAlerts(issueAlerts, filters, DEFAULT_ALERTS_TIME_WINDOW),
     [filters],
+  );
+
+  const sidebarIssues = useMemo(
+    () => buildIssueTypeSidebarAlerts(filteredIssues),
+    [filteredIssues],
   );
 
   const taxonomyTree = useMemo(
@@ -50,10 +56,10 @@ export function AlertsTab({
   );
 
   const [expandedId, setExpandedId] = useState<string | null>(
-    visibleIssues[0]?.issueKey ?? null,
+    filteredIssues[0]?.issueKey ?? null,
   );
   const [selectedGroupId, setSelectedGroupId] = useState<string>(
-    visibleIssues[0]?.issueKey ?? "lostBuyBox",
+    filteredIssues[0]?.issueKey ?? "lostBuyBox",
   );
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
 
@@ -65,7 +71,8 @@ export function AlertsTab({
 
   useEffect(() => {
     if (groupBy === "issue") {
-      const first = visibleIssues[0]?.issueKey ?? null;
+      const first =
+        filteredIssues[0]?.issueKey ?? sidebarIssues[0]?.issueKey ?? null;
       setExpandedId(first);
       setSelectedGroupId(first ?? "");
       setSelectedSkuId(null);
@@ -82,15 +89,16 @@ export function AlertsTab({
     setTaxonomySelectedId(defaultTaxonomySelection(taxonomyTree));
     setTaxonomyExpandedIds(defaultTaxonomyExpandedIds(taxonomyTree));
     setSelectedSkuId(null);
-  }, [groupBy, filters, visibleIssues, taxonomyTree]);
+  }, [groupBy, filters, filteredIssues, sidebarIssues, taxonomyTree]);
 
   const selectedIssue = useMemo(() => {
     if (groupBy !== "issue") return undefined;
     return (
-      visibleIssues.find((i) => i.issueKey === selectedGroupId) ??
-      visibleIssues[0]
+      sidebarIssues.find((i) => i.issueKey === selectedGroupId) ??
+      sidebarIssues.find((i) => i.skuCount > 0) ??
+      sidebarIssues[0]
     );
-  }, [groupBy, selectedGroupId, visibleIssues]);
+  }, [groupBy, selectedGroupId, sidebarIssues]);
 
   const selectedTaxonomyNode = useMemo(() => {
     if (groupBy !== "category" || !taxonomyTree) return undefined;
@@ -147,7 +155,7 @@ export function AlertsTab({
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
               <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-2 text-2xs font-medium text-neutral-600">
-                {visibleIssues.length}
+                {filteredIssues.length}
               </span>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
@@ -177,12 +185,13 @@ export function AlertsTab({
 
             {groupBy === "issue" ? (
               <ul className="flex flex-1 flex-col gap-2">
-                {visibleIssues.length === 0 && (
+                {filteredIssues.length === 0 &&
+                  sidebarIssues.every((i) => i.skuCount === 0) && (
                   <li className="px-2 py-6 text-center text-xs text-muted-foreground">
                     No alerts match these filters. Try Clear.
                   </li>
                 )}
-                {visibleIssues.map((issue) => (
+                {sidebarIssues.map((issue) => (
                   <IssueGroupCard
                     key={issue.issueKey}
                     issue={issue}
@@ -230,6 +239,12 @@ export function AlertsTab({
       {selectedSku && selectedSkuIssue ? (
         <SkuDetailPanel
           sku={selectedSku}
+          aggregation={groupBy === "issue" ? "issue" : "taxonomy"}
+          issueKey={
+            groupBy === "issue"
+              ? selectedIssue?.issueKey
+              : selectedSkuIssue.issueKey
+          }
           onBackToAlert={() => setSelectedSkuId(null)}
         />
       ) : groupBy === "issue" && selectedIssue ? (
@@ -242,19 +257,11 @@ export function AlertsTab({
             aiSignal: selectedIssue.aiSignal,
             skus: selectedIssue.skus,
           }}
-          selectedSkuId={selectedSkuId}
-          onSelectSku={(skuId) => selectSku(selectedIssue.issueKey, skuId)}
         />
       ) : groupBy === "category" &&
         selectedTaxonomyNode &&
         selectedTaxonomyNode.level !== "sku" ? (
-        <TaxonomyRcaPanel
-          node={selectedTaxonomyNode}
-          selectedSkuId={selectedSkuId}
-          onSelectSku={(skuId) => {
-            setSelectedSkuId(skuId);
-          }}
-        />
+        <TaxonomyRcaPanel node={selectedTaxonomyNode} />
       ) : (
         <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
           No alert selected. Adjust filters or Clear to see all alerts.

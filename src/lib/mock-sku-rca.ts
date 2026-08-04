@@ -1,5 +1,6 @@
 import type { IssueKey } from "@/components/alerts/issue-names";
-import type { IssueSku } from "@/lib/mock-alerts-insights";
+import { ISSUE_NAMES } from "@/components/alerts/issue-names";
+import type { AllyAiPrompt, IssueSku } from "@/lib/mock-alerts-insights";
 
 export type RcaLiveStatus = "ok" | "warning" | "bad";
 
@@ -14,6 +15,13 @@ export type RcaIssueRow = {
   /** Short status label on the pill — e.g. Lost, Dropped, OK */
   statusLabel: string;
   impactDollars?: number;
+};
+
+/** Last-week issue row — how many days the issue was active in the period */
+export type RcaLastWeekIssue = {
+  issueKey: IssueKey;
+  daysPresent: number;
+  daysTotal: number;
 };
 
 export type RcaIssueGroup = {
@@ -48,6 +56,13 @@ export type SkuRcaData = {
   alertBanner?: string;
   issuesLastUpdated: string;
   issueGroups: RcaIssueGroup[];
+  /** Ranked by $ impact — drivers from the prior week */
+  lastWeekTopIssues: RcaLastWeekIssue[];
+  /** AllyAI summary for live issue checks */
+  liveIssuesSummary: string;
+  /** AllyAI summary for last-week issue trend */
+  lastWeekIssuesSummary: string;
+  suggestedPrompts: AllyAiPrompt[];
   analysis: RcaAnalysisBlock[];
   recommendations: string[];
 };
@@ -87,7 +102,7 @@ export const RCA_ISSUE_GROUP_ORDER: {
   },
   {
     id: "fulfilment",
-    label: "Fulfilment",
+    label: "Fulfillment",
     issueKeys: ["stockAvailability", "shippingSpeed"],
   },
   {
@@ -95,8 +110,8 @@ export const RCA_ISSUE_GROUP_ORDER: {
     label: "Search & Traffic",
     issueKeys: [
       "sponsoredSov",
-      "conversionDrop",
       "keywordRank",
+      "conversionDrop",
       "mediaSpend",
     ],
   },
@@ -109,60 +124,52 @@ const DEFAULT_ISSUE_STATE: Record<
   lostBuyBox: {
     liveStatus: "bad",
     statusLabel: "Lost",
-    impactDollars: -119_700,
+    impactDollars: -899.4,
   },
   promoBadge: {
     liveStatus: "bad",
     statusLabel: "Missing",
-    impactDollars: -42_100,
   },
   dealPageVisibility: {
-    liveStatus: "warning",
-    statusLabel: "Detected",
-    impactDollars: -18_300,
+    liveStatus: "bad",
+    statusLabel: "Missing",
   },
   coupon: {
+    liveStatus: "warning",
+    statusLabel: "No Coupon",
+  },
+  bestSellerRank: {
     liveStatus: "ok",
     statusLabel: "OK",
   },
-  bestSellerRank: {
-    liveStatus: "bad",
-    statusLabel: "Dropped",
-    impactDollars: -18_400,
-  },
   ratingReviews: {
-    liveStatus: "bad",
-    statusLabel: "Dropped",
-    impactDollars: -24_500,
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   stockAvailability: {
-    liveStatus: "bad",
-    statusLabel: "OOS",
-    impactDollars: -8_200,
+    liveStatus: "ok",
+    statusLabel: "OK",
+    impactDollars: -1_800,
   },
   shippingSpeed: {
     liveStatus: "warning",
     statusLabel: "Slow",
   },
   sponsoredSov: {
-    liveStatus: "bad",
-    statusLabel: "Dropped",
-    impactDollars: -28_400,
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   conversionDrop: {
-    liveStatus: "bad",
-    statusLabel: "Dropped",
-    impactDollars: -56_800,
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   keywordRank: {
-    liveStatus: "bad",
-    statusLabel: "Dropped",
-    impactDollars: -31_200,
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   mediaSpend: {
     liveStatus: "bad",
-    statusLabel: "Threshold Breached",
-    impactDollars: -42_300,
+    statusLabel: "No/Low spend on high value keywords",
   },
 };
 
@@ -199,27 +206,141 @@ function buildIssueGroupsForSku(skuId: string): RcaIssueGroup[] {
   return RCA_ISSUE_GROUP_ORDER.map((group) => ({
     id: group.id,
     label: group.label,
-    issues: group.issueKeys.map((issueKey) => {
-      if (activeKeys.has(issueKey)) {
-        const base = DEFAULT_ISSUE_STATE[issueKey];
-        return {
-          issueKey,
-          ...base,
-          liveStatus: "bad" as const,
-        };
-      }
-
-      return {
+    issues: group.issueKeys
+      .filter((issueKey) => activeKeys.has(issueKey))
+      .map((issueKey) => ({
         issueKey,
-        liveStatus: "ok" as const,
-        statusLabel: "OK",
-      };
-    }),
-  }));
+        ...DEFAULT_ISSUE_STATE[issueKey],
+        liveStatus: "bad" as const,
+      })),
+  })).filter((group) => group.issues.length > 0);
+}
+
+/** Top last-week drivers — ranked by days present, stable per SKU. */
+function buildLastWeekTopIssuesForSku(skuId: string): RcaLastWeekIssue[] {
+  const hash = hashString(`${skuId}:last-week`);
+  const ranked = ALL_ISSUE_KEYS.map((issueKey) => ({
+    issueKey,
+    ...DEFAULT_ISSUE_STATE[issueKey],
+  }))
+    .filter((row) => row.impactDollars != null)
+    .sort((a, b) => {
+      const byImpact = (a.impactDollars ?? 0) - (b.impactDollars ?? 0);
+      if (byImpact !== 0) return byImpact;
+      return (
+        hashString(`${skuId}:${a.issueKey}`) -
+        hashString(`${skuId}:${b.issueKey}`)
+      );
+    });
+
+  const count = 3 + (hash % 2);
+  const daysTotal = 7;
+
+  return ranked.slice(0, count).map((row) => {
+    const dayHash = hashString(`${skuId}:${row.issueKey}:days`);
+    const daysPresent = Math.max(1, daysTotal - (dayHash % 4));
+
+    return {
+      issueKey: row.issueKey,
+      daysPresent,
+      daysTotal,
+    };
+  });
+}
+
+function issuePane(issueKey: IssueKey): string {
+  return ISSUE_NAMES[issueKey].pane;
+}
+
+function buildLiveIssuesSummary(
+  sku: IssueSku,
+  groups: RcaIssueGroup[],
+): string {
+  const live = groups
+    .flatMap((group) => group.issues)
+    .filter((issue) => isRedIssue(issue.liveStatus));
+
+  if (live.length === 0) {
+    return `No active issues on ${sku.name} right now — all monitored checks are passing.`;
+  }
+
+  const sorted = [...live].sort(
+    (a, b) => (a.impactDollars ?? 0) - (b.impactDollars ?? 0),
+  );
+  const primary = sorted[0];
+  const primaryName = issuePane(primary.issueKey);
+  const impact =
+    primary.impactDollars != null
+      ? ` (~${formatCompactDollars(primary.impactDollars)} at risk)`
+      : "";
+
+  const others = sorted
+    .slice(1, 3)
+    .map((issue) => issuePane(issue.issueKey));
+
+  if (others.length === 0) {
+    return `${primaryName} is the only live flag on ${sku.name}${impact}. ${primary.statusLabel !== "OK" ? `Status: ${primary.statusLabel}.` : ""} Address this first to limit further gap widening today.`.trim();
+  }
+
+  return `${primaryName} is the top live driver on ${sku.name}${impact}. Also active now: ${others.join(" and ")}${sorted.length > 3 ? ` (+${sorted.length - 3} more)` : ""}.`;
+}
+
+function buildLastWeekIssuesSummary(
+  sku: IssueSku,
+  issues: RcaLastWeekIssue[],
+): string {
+  if (issues.length === 0) {
+    return `No material issue patterns on ${sku.name} over the last 7 days.`;
+  }
+
+  const top = issues[0];
+  const topName = issuePane(top.issueKey);
+  const second = issues[1];
+
+  const persistent = issues.filter(
+    (issue) => issue.daysPresent >= issue.daysTotal - 1,
+  );
+
+  if (persistent.length >= 2) {
+    const names = persistent
+      .slice(0, 2)
+      .map((issue) => issuePane(issue.issueKey))
+      .join(" and ");
+    return `Over the last 7 days, ${topName} led exposure (${top.daysPresent}/${top.daysTotal} days active). ${names} also persisted most of the week — the pattern suggests linked root causes rather than one-off noise.`;
+  }
+
+  if (second) {
+    return `Last week's trend was led by ${topName} (${top.daysPresent}/${top.daysTotal} days active), then ${issuePane(second.issueKey)} (${second.daysPresent}/${second.daysTotal} days). Momentum improved mid-week but neither issue fully cleared.`;
+  }
+
+  return `${topName} dominated last week's issue trend on ${sku.name}, active ${top.daysPresent} of ${top.daysTotal} days.`;
+}
+
+function buildSkuSuggestedPrompts(sku: IssueSku): AllyAiPrompt[] {
+  return [
+    {
+      id: "trends-7d",
+      label: "See trends for Last 7 days",
+      prompt: `Show issue trends for ${sku.name} over the last 7 days and highlight what changed.`,
+    },
+    {
+      id: "summarize-issues",
+      label: `Summarize all issues on ${sku.name}`,
+      prompt: `Summarize all active and recent issues on ${sku.name}, ranked by revenue impact.`,
+    },
+    {
+      id: "changes-24h",
+      label: "What changed in the last 24 hours?",
+      prompt: `What changed on ${sku.name} in the last 24 hours across buy box, promos, traffic, and conversion?`,
+    },
+  ];
 }
 
 /** Build RCA payload for a selected alert SKU (mock narrative for layout). */
 export function getSkuRcaData(sku: IssueSku): SkuRcaData {
+  const issueGroups = buildIssueGroupsForSku(sku.id);
+  const lastWeekTopIssues = buildLastWeekTopIssuesForSku(sku.id);
+
   return {
     category: "Kitchen Appliances",
     modelId: sku.id.toUpperCase(),
@@ -253,7 +374,11 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
       },
     ],
     issuesLastUpdated: "Last updated 11:35 AM today (2h ago)",
-    issueGroups: buildIssueGroupsForSku(sku.id),
+    issueGroups,
+    lastWeekTopIssues,
+    liveIssuesSummary: buildLiveIssuesSummary(sku, issueGroups),
+    lastWeekIssuesSummary: buildLastWeekIssuesSummary(sku, lastWeekTopIssues),
+    suggestedPrompts: buildSkuSuggestedPrompts(sku),
     analysis: [
       {
         heading: "Primary cause — Lost Buy Box (May 3–9)",

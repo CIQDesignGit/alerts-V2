@@ -48,7 +48,7 @@ export type AlertsFilters = {
  */
 export type AlertsTimeWindow = "24h" | "7d" | "30d";
 
-export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "24h";
+export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "7d";
 
 /** Fixed "now" for the prototype so Lost At dates stay stable across machines */
 export const ALERTS_MOCK_NOW = new Date("2026-01-16T18:00:00");
@@ -452,65 +452,76 @@ export function buildAlertAllyInsightBullets(
   skuCount: number,
   aiSignal?: string,
 ): AllyInsightBullet[] {
-  const sorted = [...skus].sort((a, b) => a.gapDollars - b.gapDollars);
-  const topSkus = sorted.slice(0, 5);
+  const metrics = buildAlertMetricTiles(skus, gapDollars);
+  const categories = [...new Set(skus.map((s) => s.category))];
+  const categoryCount = categories.length;
+  const total = skus.length;
+  const { newCount, newPct } = metrics.recency;
 
-  const sellerRollup = new Map<string, { skuCount: number; gap: number }>();
-  for (const sku of skus) {
-    const seller = sku.bbOwner ?? sku.seller;
-    const row = sellerRollup.get(seller) ?? { skuCount: 0, gap: 0 };
-    row.skuCount += 1;
-    row.gap += Math.abs(sku.gapDollars);
-    sellerRollup.set(seller, row);
-  }
-  const topSeller = [...sellerRollup.entries()].sort(
-    (a, b) => b[1].gap - a[1].gap,
-  )[0];
+  const totalDollars =
+    skus.reduce((sum, sku) => sum + Math.abs(sku.gapDollars), 0) ||
+    Math.abs(gapDollars);
+  const brandRows = rollupConcentration(skus, (sku) => sku.brand, totalDollars, 3);
+  const categoryRows = rollupConcentration(
+    skus,
+    (sku) => sku.category,
+    totalDollars,
+    3,
+  );
+  const topBrand = brandRows[0];
+  const topCategory = categoryRows[0];
 
   const bullets: AllyInsightBullet[] = [
     {
-      id: "summary",
+      id: "scope",
       segments: [
-        { kind: "text", text: `${title} is active on ` },
-        { kind: "strong", text: `${skuCount} SKUs` },
-        { kind: "text", text: " right now, putting " },
-        { kind: "money", amount: gapDollars, variant: "emphasis" },
-        { kind: "text", text: " of weekly revenue at risk." },
+        {
+          kind: "text",
+          text: `${skuCount} SKUs are flagged for ${title.toLowerCase()} right now across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"}.`,
+        },
       ],
     },
   ];
 
-  if (topSkus.length > 0) {
-    const segments: AllyInsightSegment[] = [
-      { kind: "text", text: "Top contributors: " },
-    ];
-    topSkus.forEach((sku, index) => {
-      if (index > 0) segments.push({ kind: "text", text: ", " });
-      segments.push({ kind: "strong", text: sku.name });
-      segments.push({ kind: "text", text: " (" });
-      segments.push({
-        kind: "money",
-        amount: sku.gapDollars,
-        variant: "inline",
-      });
-      segments.push({ kind: "text", text: ")" });
-    });
-    segments.push({ kind: "text", text: "." });
-    bullets.push({ id: "contributors", segments });
-  }
-
-  if (topSeller) {
-    const [sellerName, stats] = topSeller;
+  if (total > 0 && newCount > 0) {
     bullets.push({
-      id: "seller",
+      id: "recency",
       segments: [
-        { kind: "strong", text: sellerName },
+        { kind: "text", text: "Emerging break: " },
+        {
+          kind: "strong",
+          text: `${newCount} of ${total} instances (${newPct}%)`,
+        },
         {
           kind: "text",
-          text: ` has been the biggest offender in the last 24 hours — winning Buy Box on ${stats.skuCount} of our hero SKUs at $20–30 below MAP. Suspected MAP violation.`,
+          text: " appeared in the last 3 days, so containment matters more than backlog clean-up.",
         },
       ],
     });
+  } else if (total > 0) {
+    bullets.push({
+      id: "recency",
+      segments: [
+        {
+          kind: "text",
+          text: "These flags are mostly carried over — backlog clean-up may matter more than urgent containment.",
+        },
+      ],
+    });
+  }
+
+  if (topBrand && topCategory) {
+    const segments: AllyInsightSegment[] = [
+      { kind: "text", text: "Flags cluster under " },
+      { kind: "strong", text: `${topBrand.name} (${topBrand.pct}%)` },
+      { kind: "text", text: " and " },
+      { kind: "strong", text: `${topCategory.name} (${topCategory.pct}%)` },
+      {
+        kind: "text",
+        text: ` — point this upstream at that team's process rather than raising ${skuCount} individual tickets.`,
+      },
+    ];
+    bullets.push({ id: "concentration", segments });
   } else if (aiSignal) {
     bullets.push({
       id: "context",
@@ -528,6 +539,8 @@ export type AllyAiPrompt = {
   label: string;
   /** Full prompt sent to Ally when selected */
   prompt: string;
+  /** Primary chips (e.g. Run full RCA) use brand styling; default chips are neutral */
+  variant?: "primary" | "default";
 };
 
 /** @deprecated Use AllyAiPrompt */
@@ -600,12 +613,25 @@ export type TaxonomyRcaTopIssue = {
 };
 
 /** Level-scoped RCA view when grouping Alerts by taxonomy */
+export type TaxonomyPerformanceKpi = {
+  id: string;
+  title: string;
+  value: string;
+  tone: "negative" | "positive" | "neutral";
+  subtitle: string;
+};
+
 export type TaxonomyRcaView = {
   levelLabel: string;
   entityName: string;
   alertCount: number;
   skuCount: number;
   gapDollars: number;
+  performanceKpis: TaxonomyPerformanceKpi[];
+  /** AllyAI narrative — current week (WTD) */
+  thisWeekSummary: string;
+  /** AllyAI narrative — prior week trend */
+  lastWeekSummary: string;
   narratives: AllyInsightBullet[];
   topIssues: TaxonomyRcaTopIssue[];
   skus: CategorySku[];
@@ -622,6 +648,21 @@ export type ConcentrationRow = {
   skuCount: number;
   dollars: number;
   pct: number;
+};
+
+/** Summary tiles above issue-level Ally insights */
+export type AlertMetricTilesData = {
+  recency: {
+    newCount: number;
+    recurringCount: number;
+    newPct: number;
+    subtitle: string;
+  };
+  concentration: {
+    title: string;
+    value: string;
+    subtitle: string;
+  };
 };
 
 export type AlertStrategicInsights = {
@@ -863,12 +904,132 @@ export function getAlertStrategicInsights(
   };
 }
 
+const NEW_ISSUE_DAYS = 3;
+
+/** Two headline metrics for issue-level alert panels */
+export function buildAlertMetricTiles(
+  skus: IssueSku[],
+  gapDollars: number,
+): AlertMetricTilesData {
+  let newCount = 0;
+  let recurringCount = 0;
+
+  for (const sku of skus) {
+    const lost = sku.lostAt ? parseLostAt(sku.lostAt) : null;
+    if (!lost) {
+      recurringCount += 1;
+      continue;
+    }
+    const daysAgo =
+      (ALERTS_MOCK_NOW.getTime() - lost.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysAgo <= NEW_ISSUE_DAYS) {
+      newCount += 1;
+    } else {
+      recurringCount += 1;
+    }
+  }
+
+  const newPct =
+    skus.length > 0 ? Math.round((newCount / skus.length) * 100) : 0;
+
+  let recencySubtitle = "No timing data on affected SKUs yet.";
+  if (skus.length > 0) {
+    if (newPct >= 50) {
+      recencySubtitle = `${newPct}% surfaced in the last 3 days — emerging problem`;
+    } else if (newCount > 0) {
+      recencySubtitle = `${newPct}% surfaced in the last 3 days — mix of new and carried-over flags`;
+    } else {
+      recencySubtitle =
+        "All flags are carried over — backlog clean-up may matter more";
+    }
+  }
+
+  const totalDollars =
+    skus.reduce((sum, sku) => sum + Math.abs(sku.gapDollars), 0) ||
+    Math.abs(gapDollars);
+
+  const brandRows = rollupConcentration(skus, (sku) => sku.brand, totalDollars, 3);
+  const categoryRows = rollupConcentration(
+    skus,
+    (sku) => sku.category,
+    totalDollars,
+    3,
+  );
+
+  const topBrand = brandRows[0];
+  const topCategory = categoryRows[0];
+  const secondCategory = categoryRows[1];
+
+  const concentrationValue = topBrand ? `${topBrand.name} ${topBrand.pct}%` : "—";
+
+  let concentrationSubtitle = "No brand or category mix yet.";
+  if (topCategory && categoryRows.length > 1 && secondCategory) {
+    concentrationSubtitle = `${topCategory.name} is the densest category (${topCategory.pct}%)`;
+  } else if (topCategory) {
+    concentrationSubtitle = `${topCategory.name} is the only category flagged`;
+  }
+
+  return {
+    recency: {
+      newCount,
+      recurringCount,
+      newPct,
+      subtitle: recencySubtitle,
+    },
+    concentration: {
+      title: "Brand / category concentration",
+      value: concentrationValue,
+      subtitle: concentrationSubtitle,
+    },
+  };
+}
+
 export function issueLabel(issueKey: IssueKey) {
   return ISSUE_NAMES[issueKey].filter;
 }
 
 export function issueGroup(issueKey: IssueKey): IssueGroup {
   return ISSUE_NAMES[issueKey].group;
+}
+
+/** Fixed order for the issue-type left sidebar — always show all 12 types. */
+export const ISSUE_TYPE_SIDEBAR_ORDER: IssueKey[] = [
+  "lostBuyBox",
+  "promoBadge",
+  "dealPageVisibility",
+  "coupon",
+  "bestSellerRank",
+  "ratingReviews",
+  "stockAvailability",
+  "shippingSpeed",
+  "sponsoredSov",
+  "keywordRank",
+  "conversionDrop",
+  "mediaSpend",
+];
+
+function emptyIssueAlert(issueKey: IssueKey): IssueAlert {
+  return {
+    issueKey,
+    skuCount: 0,
+    gapDollars: 0,
+    severity: "low",
+    skus: [],
+  };
+}
+
+/**
+ * Merge filtered alerts with placeholders so the issue-type sidebar
+ * always lists all 12 canonical issue types (0 SKUs when none match).
+ */
+export function buildIssueTypeSidebarAlerts(
+  filtered: IssueAlert[],
+): IssueAlert[] {
+  const byKey = new Map(filtered.map((issue) => [issue.issueKey, issue]));
+
+  return ISSUE_TYPE_SIDEBAR_ORDER.map(
+    (issueKey) => byKey.get(issueKey) ?? emptyIssueAlert(issueKey),
+  );
 }
 
 /** Extra datapoints for Overview Active Alert cards (from SKUs + AI signal) */
@@ -1124,6 +1285,66 @@ const issueAlertsUnsorted: IssueAlert[] = [
     ],
   },
   {
+    issueKey: "promoBadge",
+    skuCount: 5,
+    gapDollars: -145_000,
+    severity: "high",
+    aiSignal:
+      "5 Shark and Ninja SKUs lost the Amazon promo badge this week. Conversion dropped 8–12% on affected ASINs while price held.",
+    skus: [
+      {
+        id: "pb1",
+        name: "Shark Stratos Cordless",
+        asin: "B0PRM001",
+        seller: "Amazon.com",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -38_000,
+        lostAt: "Jan 16 07:55",
+      },
+      {
+        id: "pb2",
+        name: "Shark Detect Pro Auto-Empty",
+        asin: "B0PRM002",
+        seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care Robotics",
+        gapDollars: -32_000,
+        lostAt: "Jan 16 07:55",
+      },
+      {
+        id: "pb3",
+        name: "Ninja Foodi DualZone",
+        asin: "B0PRM003",
+        seller: "KitchenMart_US",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -28_000,
+        lostAt: "Jan 15 20:30",
+      },
+      {
+        id: "pb4",
+        name: "Shark FlexStyle HD440",
+        asin: "B0PRM004",
+        seller: "BeautyDealz",
+        brand: "Shark",
+        category: "Hair Care",
+        gapDollars: -25_000,
+        lostAt: "Jan 15 14:12",
+      },
+      {
+        id: "pb5",
+        name: "Ninja NeverStick Cookware Set",
+        asin: "B0PRM005",
+        seller: "Amazon.com",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -22_000,
+        lostAt: "Jan 11 09:40",
+      },
+    ],
+  },
+  {
     issueKey: "dealPageVisibility",
     skuCount: 8,
     gapDollars: -180_000,
@@ -1199,7 +1420,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "Ninja",
         category: "Kitchen Appliances",
         gapDollars: -12_000,
-        lostAt: "Dec 19 16:10",
+        lostAt: "Jan 11 16:10",
       },
       {
         id: "d8",
@@ -1209,7 +1430,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "Ninja",
         category: "Kitchen Appliances",
         gapDollars: -8_000,
-        lostAt: "Jan 5 11:25",
+        lostAt: "Jan 10 11:25",
       },
     ],
   },
@@ -1259,7 +1480,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PowerA",
         category: "Controllers",
         gapDollars: -10_000,
-        lostAt: "Dec 20 08:30",
+        lostAt: "Jan 11 08:30",
       },
       {
         id: "st5",
@@ -1269,7 +1490,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PowerA",
         category: "Controllers",
         gapDollars: -6_000,
-        lostAt: "Jan 3 14:20",
+        lostAt: "Jan 10 14:20",
       },
     ],
   },
@@ -1319,7 +1540,67 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "Shark",
         category: "Home Comfort",
         gapDollars: -6_000,
-        lostAt: "Jan 1 10:05",
+        lostAt: "Jan 11 10:05",
+      },
+    ],
+  },
+  {
+    issueKey: "sponsoredSov",
+    skuCount: 5,
+    gapDollars: -68_000,
+    severity: "mid",
+    aiSignal:
+      "Sponsored Share of Voice dropped below 40% on 5 priority keywords. Competitors increased bids while our campaigns were paused.",
+    skus: [
+      {
+        id: "sov1",
+        name: "Shark IQ AV970",
+        asin: "B0SOV001",
+        seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care Robotics",
+        gapDollars: -20_000,
+        lostAt: "Jan 16 09:00",
+      },
+      {
+        id: "sov2",
+        name: "Shark Stratos Upright",
+        asin: "B0SOV002",
+        seller: "Amazon.com",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -16_000,
+        lostAt: "Jan 16 09:00",
+      },
+      {
+        id: "sov3",
+        name: "PowerA Enhanced Wired Controller",
+        asin: "B0SOV003",
+        seller: "GameGear_Pro",
+        brand: "PowerA",
+        category: "Controllers",
+        gapDollars: -14_000,
+        lostAt: "Jan 15 17:25",
+      },
+      {
+        id: "sov4",
+        name: "Ninja Foodi PossibleCooker",
+        asin: "B0SOV004",
+        seller: "KitchenDeals_US",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -10_000,
+        lostAt: "Jan 15 12:40",
+      },
+      {
+        id: "sov5",
+        name: "Shark FlexStyle HD440",
+        asin: "B0SOV005",
+        seller: "BeautyDealz",
+        brand: "Shark",
+        category: "Hair Care",
+        gapDollars: -8_000,
+        lostAt: "Jan 11 08:15",
       },
     ],
   },
@@ -1361,6 +1642,132 @@ const issueAlertsUnsorted: IssueAlert[] = [
         gapDollars: -5_000,
         lostAt: "Jan 15 14:55",
       },
+      {
+        id: "kw4",
+        name: "Shark Stratos Cordless",
+        asin: "B0KW004",
+        seller: "DealHub_US",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -4_500,
+        lostAt: "Jan 15 11:20",
+      },
+      {
+        id: "kw5",
+        name: "Ninja NeverStick Cookware Set",
+        asin: "B0KW005",
+        seller: "Amazon.com",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -3_000,
+        lostAt: "Jan 14 18:05",
+      },
+      {
+        id: "kw6",
+        name: "Shark Detect Pro Auto-Empty",
+        asin: "B0KW006",
+        seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care Robotics",
+        gapDollars: -2_500,
+        lostAt: "Jan 13 09:30",
+      },
+    ],
+  },
+  {
+    issueKey: "coupon",
+    skuCount: 4,
+    gapDollars: -52_000,
+    severity: "mid",
+    aiSignal:
+      "Competitor coupons detected on 4 high-traffic SKUs. Subscribe & Save and dollar-off offers are undercutting list price.",
+    skus: [
+      {
+        id: "cp1",
+        name: "Shark IQ AV970",
+        asin: "B0CPN001",
+        seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care Robotics",
+        gapDollars: -18_000,
+        bbOwner: "VacuumKing_US",
+        theirPrice: 279,
+        ourPrice: 319,
+        lostAt: "Jan 16 10:15",
+      },
+      {
+        id: "cp2",
+        name: "Shark Stratos Upright",
+        asin: "B0CPN002",
+        seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -14_000,
+        bbOwner: "VacuumKing_US",
+        theirPrice: 259,
+        ourPrice: 279,
+        lostAt: "Jan 16 08:29",
+      },
+      {
+        id: "cp3",
+        name: "Ninja Foodi PossibleCooker",
+        asin: "B0CPN003",
+        seller: "KitchenDeals_US",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -12_000,
+        lostAt: "Jan 15 16:45",
+      },
+      {
+        id: "cp4",
+        name: "Shark HydroVac WD200",
+        asin: "B0CPN004",
+        seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -8_000,
+        lostAt: "Jan 11 11:29",
+      },
+    ],
+  },
+  {
+    issueKey: "bestSellerRank",
+    skuCount: 3,
+    gapDollars: -36_000,
+    severity: "mid",
+    aiSignal:
+      "3 SKUs fell out of top-100 Best Seller Rank in their subcategories. Floor care robotics and kitchen appliances are most affected.",
+    skus: [
+      {
+        id: "bsr1",
+        name: "Shark AI Ultra Robot RV2502",
+        asin: "B0BSR001",
+        seller: "CIQ_Retail",
+        brand: "Shark",
+        category: "Floor Care Robotics",
+        gapDollars: -16_000,
+        lostAt: "Jan 16 06:20",
+      },
+      {
+        id: "bsr2",
+        name: "Ninja Foodi DualZone",
+        asin: "B0BSR002",
+        seller: "KitchenMart_US",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -12_000,
+        lostAt: "Jan 15 22:08",
+      },
+      {
+        id: "bsr3",
+        name: "Shark Navigator Lift-Away",
+        asin: "B0BSR003",
+        seller: "Amazon.com",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -8_000,
+        lostAt: "Jan 11 15:33",
+      },
     ],
   },
   {
@@ -1399,7 +1806,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "Shark",
         category: "Floor Care",
         gapDollars: -4_000,
-        lostAt: "Jan 2 16:40",
+        lostAt: "Jan 11 16:40",
       },
     ],
   },
@@ -1429,7 +1836,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "Shark",
         category: "Floor Care Robotics",
         gapDollars: -5_000,
-        lostAt: "Jan 15 13:10",
+        lostAt: "Jan 11 13:10",
       },
     ],
   },
@@ -1469,7 +1876,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PowerA",
         category: "Controllers",
         gapDollars: -1_500,
-        lostAt: "Dec 18 12:00",
+        lostAt: "Jan 11 12:00",
       },
       {
         id: "ms4",
@@ -1479,7 +1886,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PowerA",
         category: "Controllers",
         gapDollars: -1_000,
-        lostAt: "Jan 4 09:45",
+        lostAt: "Jan 10 09:45",
       },
     ],
   },
@@ -1698,6 +2105,65 @@ function buildTaxonomyInsightPrompts(
   return prompts.slice(0, 3);
 }
 
+function buildTaxonomyThisWeekSummary(
+  node: AlertsTaxonomyNode,
+  topIssues: TaxonomyRcaTopIssue[],
+): string {
+  const entity = node.name;
+
+  if (topIssues.length === 0) {
+    return `No active alert pressure on ${entity} this week — checks are largely healthy and performance is tracking close to plan.`;
+  }
+
+  const primary = topIssues[0];
+  const secondary = topIssues[1];
+  const atRisk = formatGapDollars(node.gapDollars);
+
+  let summary = `This week, ${primary.name} is the top active issue for ${entity} — ${primary.skuCount} SKU${primary.skuCount === 1 ? "" : "s"} flagged with ${atRisk} at risk.`;
+
+  if (secondary) {
+    summary += ` ${secondary.name} is also elevated across ${secondary.skuCount} SKU${secondary.skuCount === 1 ? "" : "s"}.`;
+  }
+
+  if (node.level === "overall") {
+    summary += " Shark and Ninja brands account for most of the live exposure.";
+  } else if (node.level === "brand") {
+    summary += " Floor Care and Kitchen categories are driving most of the WTD gap.";
+  }
+
+  return summary;
+}
+
+function buildTaxonomyLastWeekSummary(
+  node: AlertsTaxonomyNode,
+  topIssues: TaxonomyRcaTopIssue[],
+  topSellers: [string, number][],
+): string {
+  const entity = node.name;
+
+  if (topIssues.length === 0) {
+    return `Last week was quiet for ${entity} — no sustained issue patterns across the period.`;
+  }
+
+  const primary = topIssues[0];
+  const secondary = topIssues[1];
+  const primaryGap = formatGapDollars(-Math.abs(primary.gapDollars));
+
+  let summary = `Last week, ${primary.name} drove most of the gap for ${entity} — ${primaryGap} across ${primary.skuCount} SKU${primary.skuCount === 1 ? "" : "s"}.`;
+
+  if (secondary) {
+    summary += ` ${secondary.name} followed at ${formatGapDollars(-Math.abs(secondary.gapDollars))}.`;
+  }
+
+  if (topSellers.length >= 2) {
+    summary += ` Sellers ${topSellers[0][0]} and ${topSellers[1][0]} contributed heavily to the impact.`;
+  }
+
+  summary += " Several of these issues are still open this week.";
+
+  return summary;
+}
+
 function buildTaxonomyIssuePrompts(
   entity: string,
   topIssues: TaxonomyRcaTopIssue[],
@@ -1723,6 +2189,60 @@ function buildTaxonomyIssuePrompts(
   ];
 
   return topIssues.slice(0, 3).map((issue, index) => templates[index](issue));
+}
+
+/** Performance tiles for taxonomy RCA — scaled from portfolio anchors in the design reference */
+function buildTaxonomyPerformanceKpis(
+  node: AlertsTaxonomyNode,
+): TaxonomyPerformanceKpi[] {
+  const portfolioGapRef = Math.abs(portfolioGap.gapDollars);
+  const scale =
+    node.level === "overall"
+      ? 1
+      : Math.min(1, Math.max(0.004, Math.abs(node.gapDollars) / portfolioGapRef));
+
+  const planDollars = 23_100_000 * scale;
+  const lastWeekGap = -12_300_000 * scale;
+  const lastWeekAchieved = 11_800_000 * scale;
+  const lastWeekAttainment = 51.0;
+
+  const wtdSales = 5_000_000 * scale;
+  const weekElapsedPct = 49.2;
+
+  const projectedGap = 3_200_000 * scale;
+  const projectedSales = 26_400_000 * scale;
+  const eowAttainment = 114.0;
+
+  const formatSignedMoney = (value: number) => {
+    const base = formatMoneyCompact(Math.abs(value));
+    if (value > 0) return `+${base}`;
+    if (value < 0) return `−${base}`;
+    return base;
+  };
+
+  return [
+    {
+      id: "last-week",
+      title: "Last Week (Jul 19–25)",
+      value: formatSignedMoney(lastWeekGap),
+      tone: "negative",
+      subtitle: `${formatMoneyCompact(lastWeekAchieved)} of ${formatMoneyCompact(planDollars)} plan · ${lastWeekAttainment.toFixed(1)}% attainment`,
+    },
+    {
+      id: "wtd",
+      title: "WTD (Jul 26–29)",
+      value: formatMoneyCompact(wtdSales),
+      tone: "neutral",
+      subtitle: `in sales · ${weekElapsedPct.toFixed(1)}% of week elapsed`,
+    },
+    {
+      id: "eow",
+      title: "Projected EOW (Jul 26–Aug 1)",
+      value: `${formatSignedMoney(projectedGap)} vs plan`,
+      tone: "positive",
+      subtitle: `${formatMoneyCompact(planDollars)} plan · ${formatMoneyCompact(projectedSales)} projected · ${eowAttainment.toFixed(1)}%`,
+    },
+  ];
 }
 
 /** Build portfolio / brand / category RCA copy from taxonomy node SKUs */
@@ -1833,7 +2353,7 @@ export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView 
       segments: [
         {
           kind: "text",
-          text: "If unresolved in the next 48h, the top 3 issues below are projected to compound to ",
+          text: "If unresolved in the next 48h, the top 3 active issues are projected to compound to ",
         },
         { kind: "money", amount: -projectedCompound, variant: "emphasis" },
         { kind: "text", text: " in impact by end of week." },
@@ -1859,6 +2379,9 @@ export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView 
     alertCount,
     skuCount: node.skuCount,
     gapDollars: node.gapDollars,
+    performanceKpis: buildTaxonomyPerformanceKpis(node),
+    thisWeekSummary: buildTaxonomyThisWeekSummary(node, topIssues),
+    lastWeekSummary: buildTaxonomyLastWeekSummary(node, topIssues, topSellers),
     narratives: narratives.slice(0, 3),
     topIssues,
     skus,

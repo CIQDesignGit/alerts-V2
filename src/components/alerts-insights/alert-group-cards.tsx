@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 
+import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { IssueKey } from "@/components/alerts/issue-names";
 import {
@@ -28,10 +29,23 @@ function groupCardShellClass(selected: boolean, deEmphasized: boolean) {
 
 function groupCardButtonClass(selected: boolean) {
   return cn(
-    "flex w-full items-start gap-2 px-3 py-3 text-left outline-none",
+    "flex w-full items-start gap-2.5 px-3 py-3 text-left outline-none",
     "hover:bg-neutral-50/80",
     "focus-visible:bg-brand-50/80 focus-visible:ring-2 focus-visible:ring-brand-200/60 focus-visible:ring-inset",
     selected && "bg-transparent hover:bg-brand-100/40",
+  );
+}
+
+function IssueTypeIcon({ issueKey }: { issueKey: IssueKey }) {
+  const Icon = ISSUE_ICONS[issueKey];
+
+  return (
+    <span
+      className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-neutral-100/80"
+      aria-hidden
+    >
+      <Icon className="size-4 text-neutral-600" strokeWidth={1.75} />
+    </span>
   );
 }
 
@@ -81,7 +95,7 @@ export function IssueGroupCard({
         className={groupCardButtonClass(groupSelected)}
         onClick={onCardClick}
       >
-        <ExpandIcon open={open} selected={groupSelected} />
+        <IssueTypeIcon issueKey={issue.issueKey} />
         <div className="min-w-0 flex-1">
           <p
             className={cn(
@@ -95,6 +109,7 @@ export function IssueGroupCard({
             {issue.skuCount} SKUs · {issueGroup(issue.issueKey)}
           </p>
         </div>
+        <ExpandIcon open={open} selected={groupSelected} />
       </button>
 
       {open && issue.skus.length > 0 && (
@@ -104,6 +119,12 @@ export function IssueGroupCard({
           onSelectSku={onSelectSku}
           moreCount={Math.max(issue.skuCount - issue.skus.length, 0)}
         />
+      )}
+
+      {open && issue.skus.length === 0 && (
+        <p className="border-t border-border bg-neutral-50/80 px-3 py-2.5 text-xs text-muted-foreground">
+          No SKUs affected for this issue.
+        </p>
       )}
     </li>
   );
@@ -147,7 +168,6 @@ export function CategoryGroupCard({
         className={groupCardButtonClass(groupSelected)}
         onClick={onCardClick}
       >
-        <ExpandIcon open={open} selected={groupSelected} />
         <div className="min-w-0 flex-1">
           <p
             className={cn(
@@ -162,6 +182,7 @@ export function CategoryGroupCard({
             {issueChips.length > 2 ? ` +${issueChips.length - 2}` : ""}
           </p>
         </div>
+        <ExpandIcon open={open} selected={groupSelected} />
       </button>
 
       {open && category.skus.length > 0 && (
@@ -187,7 +208,7 @@ function ExpandIcon({
   return (
     <Icon
       className={cn(
-        "mt-0.5 size-4 shrink-0",
+        "size-4 shrink-0 self-center",
         selected ? "text-brand-700" : "text-muted-foreground",
       )}
       aria-hidden

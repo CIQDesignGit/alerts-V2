@@ -17,7 +17,7 @@ import { InsightsHistoricalPanel } from "@/components/alerts-insights/insights-h
 import { InsightsLevelHeader } from "@/components/alerts-insights/insights-level-header";
 import { InsightsLivePanel } from "@/components/alerts-insights/insights-live-panel";
 import { InsightsSkuListPanel } from "@/components/alerts-insights/insights-sku-list-panel";
-import { AllyChatFooter } from "@/components/shared/ally-chat-footer";
+import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import {
   DEFAULT_INSIGHTS_COMPARISON,
   DEFAULT_INSIGHTS_DATE_RANGE,
@@ -264,7 +264,7 @@ export function InsightsTab({
         <div
           className={cn(
             "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6",
-            chatExpanded ? "pb-36" : "pb-16",
+            allyChatScrollPaddingClass(chatExpanded),
           )}
         >
           {mode === "live" ? (

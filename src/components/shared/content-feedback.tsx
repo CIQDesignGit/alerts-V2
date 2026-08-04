@@ -35,6 +35,8 @@ type ContentFeedbackProps = {
   subtitle?: string;
   positiveChips?: readonly string[];
   negativeChips?: readonly string[];
+  /** Inline row — question + bordered thumb buttons (no card chrome) */
+  variant?: "default" | "subtle";
   className?: string;
 };
 
@@ -50,6 +52,7 @@ export function ContentFeedback({
   subtitle = "Helps AllyAI improve insights for your team",
   positiveChips = DEFAULT_POSITIVE_CHIPS,
   negativeChips = DEFAULT_NEGATIVE_CHIPS,
+  variant = "default",
   className,
 }: ContentFeedbackProps) {
   const [vote, setVote] = useState<FeedbackVote | null>(null);
@@ -102,24 +105,39 @@ export function ContentFeedback({
     setSubmitted(true);
   }
 
+  const isSubtle = variant === "subtle";
+
   return (
     <section
       className={cn(
-        "rounded-xl border border-border bg-neutral-50/60 p-4",
+        isSubtle
+          ? "py-0.5"
+          : "rounded-xl border border-border bg-neutral-50/60 p-4",
         className,
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-foreground">
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-3",
+          isSubtle ? "ml-auto w-fit" : "justify-between",
+        )}
+      >
+        <div className={cn(isSubtle ? "w-fit shrink-0" : undefined)}>
+          <p
+            className={cn(
+              isSubtle
+                ? "w-fit text-sm text-muted-foreground"
+                : "text-sm font-semibold text-foreground",
+            )}
+          >
             {submitted ? "Thanks for the feedback" : title}
           </p>
-          {!submitted && (
+          {!submitted && !isSubtle && (
             <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             aria-label="Thumbs up — useful"
@@ -127,13 +145,22 @@ export function ContentFeedback({
             disabled={submitted}
             onClick={() => onVote("up")}
             className={cn(
-              "flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-neutral-100 hover:text-foreground disabled:opacity-60",
+              "flex size-9 items-center justify-center text-muted-foreground transition-colors disabled:opacity-60",
               controlFocusClass,
-              vote === "up" &&
-                "bg-success-100 text-success-700 hover:bg-success-100",
+              isSubtle
+                ? cn(
+                    "size-8 rounded-md hover:bg-neutral-100 hover:text-foreground",
+                    vote === "up" &&
+                      "bg-success-100 text-success-700 hover:bg-success-100",
+                  )
+                : cn(
+                    "size-8 rounded-md hover:bg-neutral-100 hover:text-foreground",
+                    vote === "up" &&
+                      "bg-success-100 text-success-700 hover:bg-success-100",
+                  ),
             )}
           >
-            <ThumbsUp className="size-4" />
+            <ThumbsUp className="size-4" strokeWidth={1.75} />
           </button>
           <button
             type="button"
@@ -142,19 +169,33 @@ export function ContentFeedback({
             disabled={submitted}
             onClick={() => onVote("down")}
             className={cn(
-              "flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-neutral-100 hover:text-foreground disabled:opacity-60",
+              "flex size-9 items-center justify-center text-muted-foreground transition-colors disabled:opacity-60",
               controlFocusClass,
-              vote === "down" &&
-                "bg-error-100 text-error-700 hover:bg-error-100",
+              isSubtle
+                ? cn(
+                    "size-8 rounded-md hover:bg-neutral-100 hover:text-foreground",
+                    vote === "down" &&
+                      "bg-error-100 text-error-700 hover:bg-error-100",
+                  )
+                : cn(
+                    "size-8 rounded-md hover:bg-neutral-100 hover:text-foreground",
+                    vote === "down" &&
+                      "bg-error-100 text-error-700 hover:bg-error-100",
+                  ),
             )}
           >
-            <ThumbsDown className="size-4" />
+            <ThumbsDown className="size-4" strokeWidth={1.75} />
           </button>
         </div>
       </div>
 
       {vote && !submitted && (
-        <div className="mt-3 space-y-3 border-t border-border pt-3">
+        <div
+          className={cn(
+            "mt-3 space-y-3",
+            !isSubtle && "border-t border-border pt-3",
+          )}
+        >
           <div>
             <p className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
               {vote === "up" ? "What worked?" : "What missed?"}

@@ -4,6 +4,7 @@ type SkuThumbnailProps = {
   name: string;
   /** Width & height in pixels — default 40 for list/table rows */
   size?: number;
+  className?: string;
 };
 
 /**
@@ -41,7 +42,7 @@ function sizeClass(size: number) {
 }
 
 /** Placeholder product image until real SKU art is wired up */
-export function SkuThumbnail({ name, size = 40 }: SkuThumbnailProps) {
+export function SkuThumbnail({ name, size = 40, className }: SkuThumbnailProps) {
   return (
     <span
       role="img"
@@ -50,6 +51,7 @@ export function SkuThumbnail({ name, size = 40 }: SkuThumbnailProps) {
         "inline-block shrink-0 rounded-sm border border-neutral-200/50",
         sizeClass(size),
         pastelClassForName(name),
+        className,
       )}
     />
   );

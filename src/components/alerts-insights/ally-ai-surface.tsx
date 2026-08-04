@@ -1,16 +1,11 @@
 import type { ReactNode } from "react";
 
-import { Sparkles } from "lucide-react";
-
 import type {
   AllyInsightBullet,
   AllyInsightSegment,
-  AllyAiPrompt,
 } from "@/lib/mock-alerts-insights";
 import { formatAtRisk, formatGapDollars } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
-
-import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
 
 type AllyAiSurfaceProps = {
   children: ReactNode;
@@ -20,7 +15,7 @@ type AllyAiSurfaceProps = {
 
 /**
  * Shared AllyAI card chrome — soft brand gradient shell.
- * Pair with AllyAiHeader for the avatar + label row.
+ * Pair with AllyAiHeader for the title row.
  */
 export function AllyAiSurface({
   children,
@@ -40,23 +35,16 @@ export function AllyAiSurface({
 }
 
 type AllyAiHeaderProps = {
-  /** Title next to the Ally avatar */
+  /** Title next to the Ally label */
   label: string;
   /** Optional line under the title (e.g. date range) */
   subtitle?: string;
 };
 
-/** Ally avatar + title (optional subtitle on the right) — use inside AllyAiSurface. */
+/** Title row for AllyAI surfaces — text only (no avatar in summaries). */
 export function AllyAiHeader({ label, subtitle }: AllyAiHeaderProps) {
   return (
     <div className="flex w-full items-center gap-2">
-      <span className="flex size-7 shrink-0 overflow-hidden rounded-lg bg-white">
-        <img
-          src="/ally-avatar.png"
-          alt=""
-          className="size-full object-cover"
-        />
-      </span>
       <p className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800">
         {label}
       </p>
@@ -98,53 +86,46 @@ export function InsightSegmentText({ segment }: { segment: AllyInsightSegment })
 
 type AllyInsightContentProps = {
   bullets: AllyInsightBullet[];
-  prompts?: AllyAiPrompt[];
-  onPromptSelect?: (prompt: AllyAiPrompt) => void;
+  /** Card heading — matches taxonomy RCA insight blocks */
+  title?: string;
   className?: string;
 };
 
-/** Bulleted Ally Insight block — sparkles label + purple dots (alert aggregate). */
+/** Numbered insight card — prompts render outside via SuggestedAiPrompts. */
 export function AllyInsightContent({
   bullets,
-  prompts,
-  onPromptSelect,
+  title = "Ally Insight",
   className,
 }: AllyInsightContentProps) {
   if (bullets.length === 0) return null;
 
   return (
-    <AllyAiSurface className={cn("shrink-0", className)} contentClassName="p-4 md:p-5">
-      <div className="flex items-center gap-1.5">
-        <Sparkles className="size-4 text-brand-600" aria-hidden />
-        <p className="text-2xs font-semibold tracking-widest text-brand-600 uppercase">
-          Ally Insight
-        </p>
-      </div>
+    <AllyAiSurface className={cn("shrink-0", className)} contentClassName="p-4">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
 
-      <ul className="mt-3 flex flex-col gap-2.5">
-        {bullets.map((bullet) => (
-          <li
-            key={bullet.id}
-            className="flex gap-2.5 text-sm leading-relaxed text-neutral-800"
-          >
+      <ol
+        className="mt-3 flex flex-col gap-3"
+        aria-label={title}
+      >
+        {bullets.map((bullet, index) => (
+          <li key={bullet.id} className="flex gap-3">
             <span
-              className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-500"
+              className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700"
               aria-hidden
-            />
-            <span>
-              {bullet.segments.map((segment, index) => (
-                <InsightSegmentText key={`${bullet.id}-${index}`} segment={segment} />
-              ))}
+            >
+              {index + 1}
             </span>
+            <p className="min-w-0 flex-1 text-sm leading-relaxed text-neutral-800">
+              {bullet.segments.map((segment, segmentIndex) => (
+                <InsightSegmentText
+                  key={`${bullet.id}-${segmentIndex}`}
+                  segment={segment}
+                />
+              ))}
+            </p>
           </li>
         ))}
-      </ul>
-
-      {prompts && prompts.length > 0 && (
-        <div className="mt-4 border-t border-brand-200/50 pt-4">
-          <SuggestedAiPrompts prompts={prompts} onSelect={onPromptSelect} />
-        </div>
-      )}
+      </ol>
     </AllyAiSurface>
   );
 }

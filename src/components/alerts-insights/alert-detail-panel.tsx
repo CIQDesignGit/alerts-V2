@@ -2,16 +2,19 @@
 
 import { useMemo, useState } from "react";
 
-import { AffectedSkusTable } from "@/components/alerts-insights/affected-skus-table";
 import { AllyInsightContent } from "@/components/alerts-insights/ally-ai-surface";
-import { AllyChatFooter } from "@/components/shared/ally-chat-footer";
+import { AlertMetricTiles } from "@/components/alerts-insights/alert-metric-tiles";
+import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
+import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import { ContentFeedback } from "@/components/shared/content-feedback";
 import {
   buildAlertAllyInsightBullets,
   buildAlertAllyInsightPrompts,
+  buildAlertMetricTiles,
   type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
+import { cn } from "@/lib/utils";
 
 /** Shared right-pane aggregate for issue- or category-grouped alerts */
 export type AlertGroupDetail = {
@@ -26,15 +29,9 @@ export type AlertGroupDetail = {
 
 type AlertDetailPanelProps = {
   group: AlertGroupDetail;
-  selectedSkuId: string | null;
-  onSelectSku: (skuId: string) => void;
 };
 
-export function AlertDetailPanel({
-  group,
-  selectedSkuId,
-  onSelectSku,
-}: AlertDetailPanelProps) {
+export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
   const [chatExpanded, setChatExpanded] = useState(false);
   const [promptSeed, setPromptSeed] = useState<
     { id: string; text: string } | undefined
@@ -63,6 +60,11 @@ export function AlertDetailPanel({
     [group.title, group.skus, group.gapDollars, group.skuCount],
   );
 
+  const metricTiles = useMemo(
+    () => buildAlertMetricTiles(group.skus, group.gapDollars),
+    [group.skus, group.gapDollars],
+  );
+
   function onPromptSelect(prompt: AllyAiPrompt) {
     setPromptSeed({ id: prompt.id, text: prompt.prompt });
   }
@@ -78,30 +80,29 @@ export function AlertDetailPanel({
       </header>
 
       <div
-        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6"
-        style={{ paddingBottom: chatExpanded ? "7.5rem" : "4.5rem" }}
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6",
+          allyChatScrollPaddingClass(chatExpanded),
+        )}
       >
-        <AllyInsightContent
-          bullets={allyInsightBullets}
-          prompts={insightPrompts}
-          onPromptSelect={onPromptSelect}
-        />
-
-        <ContentFeedback
-          feedbackKey={group.feedbackKey}
-          surface="ally-insight"
-          contextLabel={group.title}
-          title="Was this Ally Insight useful?"
-          subtitle="Helps AllyAI improve alert summaries for your team"
-        />
-
-        <AffectedSkusTable
-          skus={group.skus}
-          totalSkuCount={group.skuCount}
-          totalGapDollars={group.gapDollars}
-          selectedSkuId={selectedSkuId}
-          onSelectSku={onSelectSku}
-        />
+        <section className="shrink-0 space-y-3">
+          <AlertMetricTiles metrics={metricTiles} />
+          <AllyInsightContent
+            bullets={allyInsightBullets}
+            title={`Key insights for ${group.title}`}
+          />
+          <ContentFeedback
+            variant="subtle"
+            feedbackKey={group.feedbackKey}
+            surface="ally-insight"
+            contextLabel={group.title}
+            title="Was this alert helpful?"
+          />
+          <SuggestedAiPrompts
+            prompts={insightPrompts}
+            onSelect={onPromptSelect}
+          />
+        </section>
       </div>
 
       <AllyChatFooter
