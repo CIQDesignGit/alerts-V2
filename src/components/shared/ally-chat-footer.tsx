@@ -1,9 +1,8 @@
 "use client";
 
-import { Send, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Send } from "lucide-react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type AllyChatFooterProps = {
@@ -15,6 +14,8 @@ type AllyChatFooterProps = {
   inputPlaceholder: string;
   /** Pre-fill the input and expand when a suggested prompt is selected */
   seedPrompt?: { id: string; text: string };
+  /** Called when the user sends a message (Send button or Enter) */
+  onSend?: (text: string) => void;
 };
 
 /** Short, input-style placeholder — "Ask AllyAI about X" → "Ask Ally about X…" */
@@ -47,7 +48,7 @@ function SendButton({
       onClick={onClick}
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 transition-colors",
-        "hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40",
+        "hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-40",
         size === "md" ? "size-9" : "size-8",
       )}
     >
@@ -67,6 +68,7 @@ export function AllyChatFooter({
   collapsedLabel,
   inputPlaceholder,
   seedPrompt,
+  onSend,
 }: AllyChatFooterProps) {
   const [draft, setDraft] = useState("");
 
@@ -75,6 +77,21 @@ export function AllyChatFooter({
     setDraft(seedPrompt.text);
     onExpandedChange(true);
   }, [seedPrompt?.id, seedPrompt?.text, onExpandedChange]);
+
+  function submit() {
+    const text = draft.trim();
+    if (!text) return;
+    onSend?.(text);
+    setDraft("");
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    // Enter sends; Shift+Enter adds a new line
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submit();
+    }
+  }
 
   const placeholder = formatCollapsedPlaceholder(collapsedLabel);
 
@@ -140,6 +157,7 @@ export function AllyChatFooter({
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onKeyDown}
             rows={2}
             autoFocus
             placeholder={inputPlaceholder}
@@ -149,18 +167,12 @@ export function AllyChatFooter({
             )}
           />
 
-          <div className="mb-0.5 flex shrink-0 items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Collapse chat"
-              className="text-muted-foreground"
-              onClick={() => onExpandedChange(false)}
-            >
-              <X className="size-3.5" />
-            </Button>
-            <SendButton disabled={!draft.trim()} size="sm" />
+          <div className="mb-0.5 flex shrink-0 items-center">
+            <SendButton
+              disabled={!draft.trim()}
+              size="sm"
+              onClick={submit}
+            />
           </div>
         </div>
       </div>

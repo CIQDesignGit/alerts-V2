@@ -7,6 +7,7 @@ type SkuRcaChatFooterProps = {
   onExpandedChange: (expanded: boolean) => void;
   skuName: string;
   seedPrompt?: { id: string; text: string };
+  onSend?: (text: string) => void;
 };
 
 export function SkuRcaChatFooter({
@@ -14,12 +15,14 @@ export function SkuRcaChatFooter({
   onExpandedChange,
   skuName,
   seedPrompt,
+  onSend,
 }: SkuRcaChatFooterProps) {
   return (
     <AllyChatFooter
       expanded={expanded}
       onExpandedChange={onExpandedChange}
       seedPrompt={seedPrompt}
+      onSend={onSend}
       collapsedLabel={`Ask AllyAI about ${skuName}…`}
       inputPlaceholder="Ask a follow-up about this diagnosis…"
     />

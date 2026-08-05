@@ -581,7 +581,6 @@ export function buildAlertAllyInsightPrompts(
   )[0];
 
   const prompts: AllyAiPrompt[] = [
-    FULL_RCA_LAST_WEEK_PROMPT,
     {
       id: "rank-skus",
       label: `Which SKUs drive most of the ${title} gap?`,

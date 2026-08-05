@@ -3,14 +3,16 @@
 import { useMemo, useState, type ReactNode, type UIEvent } from "react";
 
 import type { IssueKey } from "@/components/alerts/issue-names";
+import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SkuRcaChatFooter } from "@/components/sku-rca/sku-rca-chat-footer";
 import {
   SkuRcaHeader,
   SKU_RCA_CONTENT_WIDTH,
 } from "@/components/sku-rca/sku-rca-header";
 import { SkuRcaSuggestedPrompts } from "@/components/sku-rca/sku-rca-suggested-prompts";
+import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
 import { allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
-import type { AllyAiPrompt, IssueSku } from "@/lib/mock-alerts-insights";
+import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { getIssueSkuPrompts } from "@/lib/mock-issue-sku-detail";
 import { getSkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
@@ -38,17 +40,17 @@ export function IssueSkuDetailShell({
     [issueKey, sku],
   );
   const [collapsed, setCollapsed] = useState(false);
-  const [chatExpanded, setChatExpanded] = useState(false);
-  const [promptSeed, setPromptSeed] = useState<
-    { id: string; text: string } | undefined
-  >();
+  const {
+    messages,
+    promptSeed,
+    chatExpanded,
+    setChatExpanded,
+    onPromptSelect,
+    sendMessage,
+  } = useSkuAllyThread(sku);
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
-  }
-
-  function onPromptSelect(prompt: AllyAiPrompt) {
-    setPromptSeed({ id: prompt.id, text: prompt.prompt });
   }
 
   return (
@@ -74,6 +76,8 @@ export function IssueSkuDetailShell({
             prompts={suggestedPrompts}
             onSelect={onPromptSelect}
           />
+
+          <SkuAllyChatThread messages={messages} />
         </div>
       </div>
 
@@ -82,6 +86,7 @@ export function IssueSkuDetailShell({
         onExpandedChange={setChatExpanded}
         skuName={headerData.name}
         seedPrompt={promptSeed}
+        onSend={sendMessage}
       />
     </div>
   );

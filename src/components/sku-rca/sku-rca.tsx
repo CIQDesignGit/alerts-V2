@@ -2,12 +2,14 @@
 
 import { useMemo, useState, type UIEvent } from "react";
 
+import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SkuRcaChatFooter } from "@/components/sku-rca/sku-rca-chat-footer";
 import {
   SkuRcaHeader,
   SKU_RCA_CONTENT_WIDTH,
 } from "@/components/sku-rca/sku-rca-header";
 import { SkuRcaLivePanel } from "@/components/sku-rca/sku-rca-live-panel";
+import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
 import { allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { getSkuRcaData } from "@/lib/mock-sku-rca";
@@ -27,17 +29,17 @@ const COLLAPSE_AT = 24;
 export function SkuRca({ sku, onClose }: SkuRcaProps) {
   const data = useMemo(() => getSkuRcaData(sku), [sku]);
   const [collapsed, setCollapsed] = useState(false);
-  const [chatExpanded, setChatExpanded] = useState(false);
-  const [promptSeed, setPromptSeed] = useState<
-    { id: string; text: string } | undefined
-  >();
+  const {
+    messages,
+    promptSeed,
+    chatExpanded,
+    setChatExpanded,
+    onPromptSelect,
+    sendMessage,
+  } = useSkuAllyThread(sku);
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
-  }
-
-  function onPromptSelect(prompt: { id: string; prompt: string }) {
-    setPromptSeed({ id: prompt.id, text: prompt.prompt });
   }
 
   return (
@@ -57,6 +59,8 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
             sku={sku}
             onPromptSelect={onPromptSelect}
           />
+
+          <SkuAllyChatThread messages={messages} />
         </div>
       </div>
 
@@ -65,6 +69,7 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
         onExpandedChange={setChatExpanded}
         skuName={data.name}
         seedPrompt={promptSeed}
+        onSend={sendMessage}
       />
     </div>
   );

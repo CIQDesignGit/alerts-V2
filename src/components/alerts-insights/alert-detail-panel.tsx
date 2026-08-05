@@ -1,18 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { AllyInsightContent } from "@/components/alerts-insights/ally-ai-surface";
 import { AlertMetricTiles } from "@/components/alerts-insights/alert-metric-tiles";
 import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
-import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
+import {
+  AllyChatFooter,
+  allyChatScrollPaddingClass,
+} from "@/components/shared/ally-chat-footer";
 import { ContentFeedback } from "@/components/shared/content-feedback";
+import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
+import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
 import {
   buildAlertAllyInsightBullets,
   buildAlertAllyInsightPrompts,
   buildAlertMetricTiles,
-  type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
@@ -32,11 +36,35 @@ type AlertDetailPanelProps = {
   group: AlertGroupDetail;
 };
 
+/** Top contributor SKU — used as the sample identity for the full RCA mock. */
+function topGapSku(skus: IssueSku[]): IssueSku | undefined {
+  if (skus.length === 0) return undefined;
+  return [...skus].sort((a, b) => a.gapDollars - b.gapDollars)[0];
+}
+
 export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
-  const [chatExpanded, setChatExpanded] = useState(false);
-  const [promptSeed, setPromptSeed] = useState<
-    { id: string; text: string } | undefined
-  >();
+  const reportSku = useMemo(
+    () =>
+      topGapSku(group.skus) ?? {
+        id: group.feedbackKey,
+        name: group.title,
+        asin: "—",
+        seller: "—",
+        gapDollars: group.gapDollars,
+        brand: group.title,
+        category: group.title,
+      },
+    [group],
+  );
+
+  const {
+    messages,
+    promptSeed,
+    chatExpanded,
+    setChatExpanded,
+    onPromptSelect,
+    sendMessage,
+  } = useSkuAllyThread(reportSku);
 
   const allyInsightBullets = useMemo(
     () =>
@@ -65,10 +93,6 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
     () => buildAlertMetricTiles(group.skus, group.gapDollars),
     [group.skus, group.gapDollars],
   );
-
-  function onPromptSelect(prompt: AllyAiPrompt) {
-    setPromptSeed({ id: prompt.id, text: prompt.prompt });
-  }
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
@@ -105,6 +129,8 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
             prompts={insightPrompts}
             onSelect={onPromptSelect}
           />
+
+          <SkuAllyChatThread messages={messages} />
         </div>
       </div>
 
@@ -112,6 +138,7 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
         expanded={chatExpanded}
         onExpandedChange={setChatExpanded}
         seedPrompt={promptSeed}
+        onSend={sendMessage}
         collapsedLabel={`Ask AllyAI about ${group.title}…`}
         inputPlaceholder={`Ask about ${group.title}, affected SKUs, or next steps…`}
       />
