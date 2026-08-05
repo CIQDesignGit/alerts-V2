@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, Clock, Search, X } from "lucide-react";
 
 import {
   formatAtRisk,
   formatGapDollars,
+  ALERTS_LAST_CRAWL_LABEL,
   getBrandFilterOptions,
   getCategoryFilterOptions,
   getSkuFilterOptions,
   summarizeFilterOptions,
   type AlertsFilters,
+  type AlertsGroupBy,
   type FilterDimensionOption,
 } from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
@@ -18,6 +20,7 @@ import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
 type AlertsFiltersBarProps = {
   filters: AlertsFilters;
   onChange: (next: AlertsFilters) => void;
+  groupBy: AlertsGroupBy;
 };
 
 type OpenMenu = "brand" | "category" | "sku" | "search" | null;
@@ -25,6 +28,7 @@ type OpenMenu = "brand" | "category" | "sku" | "search" | null;
 export function AlertsFiltersBar({
   filters,
   onChange,
+  groupBy,
 }: AlertsFiltersBarProps) {
   const [open, setOpen] = useState<OpenMenu>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -66,7 +70,7 @@ export function AlertsFiltersBar({
   return (
     <div
       ref={rootRef}
-      className="flex min-w-0 flex-1 items-center justify-start gap-4"
+      className="flex min-w-0 flex-1 items-center justify-between gap-4"
     >
       <div
         role="group"
@@ -199,6 +203,18 @@ export function AlertsFiltersBar({
           </button>
         )}
       </div>
+
+      {groupBy === "issue" && (
+        <p className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="size-3.5 shrink-0" aria-hidden />
+          <span>
+            Last crawl{" "}
+            <span className="font-medium text-foreground">
+              {ALERTS_LAST_CRAWL_LABEL}
+            </span>
+          </span>
+        </p>
+      )}
     </div>
   );
 }
@@ -296,7 +312,7 @@ function FilterDimensionControl({
           id={panelId}
           role="listbox"
           aria-label={label}
-          className="absolute top-9 right-0 z-30 w-85 overflow-hidden rounded-lg border border-border bg-background shadow-lg"
+          className="absolute top-9 left-0 z-30 w-85 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border bg-background shadow-lg"
         >
           <div className="border-b border-border px-3 py-3">
             <div className="flex items-start justify-between gap-3">

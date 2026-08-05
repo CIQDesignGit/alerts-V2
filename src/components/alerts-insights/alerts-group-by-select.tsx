@@ -52,7 +52,8 @@ export function AlertsGroupBySelect({
         aria-haspopup="listbox"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background px-2 text-xs hover:bg-neutral-100",
+          "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs hover:bg-neutral-100",
+          open && "bg-neutral-100",
           controlFocusClass,
         )}
       >

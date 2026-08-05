@@ -9,6 +9,7 @@ import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/
 import { ContentFeedback } from "@/components/shared/content-feedback";
 import {
   buildTaxonomyRcaView,
+  FULL_RCA_LAST_WEEK_PROMPT,
   type AlertsTaxonomyNode,
   type AllyAiPrompt,
 } from "@/lib/mock-alerts-insights";
@@ -21,16 +22,8 @@ type TaxonomyRcaPanelProps = {
 export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
   const view = useMemo(() => buildTaxonomyRcaView(node), [node]);
   const insightPrompts = useMemo(
-    () => [
-      {
-        id: "full-rca",
-        label: `Run full RCA of ${view.entityName}`,
-        prompt: `Run a full root cause analysis for ${view.entityName}. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.`,
-        variant: "primary" as const,
-      },
-      ...view.insightPrompts,
-    ],
-    [view.entityName, view.insightPrompts],
+    () => [FULL_RCA_LAST_WEEK_PROMPT, ...view.insightPrompts],
+    [view.insightPrompts],
   );
   const [chatExpanded, setChatExpanded] = useState(false);
   const [promptSeed, setPromptSeed] = useState<

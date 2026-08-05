@@ -46,7 +46,7 @@ function SendButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-brand-25 text-brand-600 transition-colors",
+        "flex shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 transition-colors",
         "hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40",
         size === "md" ? "size-9" : "size-8",
       )}

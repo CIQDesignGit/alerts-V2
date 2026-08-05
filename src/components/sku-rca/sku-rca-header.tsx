@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
+import { ScrapeHistoryButton } from "@/components/sku-rca/scrape-history-modal";
 import {
   GapBadge,
   PdpPageLink,
@@ -19,12 +20,15 @@ type SkuRcaHeaderProps = {
   data: SkuRcaData;
   collapsed: boolean;
   onClose: () => void;
+  /** Issue-type aggregation SKU pages show scrape history in the header */
+  showScrapeHistory?: boolean;
 };
 
 export function SkuRcaHeader({
   data,
   collapsed,
   onClose,
+  showScrapeHistory = false,
 }: SkuRcaHeaderProps) {
   const pdpUrl = `https://www.amazon.com/dp/${data.asin}`;
 
@@ -57,6 +61,12 @@ export function SkuRcaHeader({
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
                 <PdpSnapshotsButton />
                 <PdpPageLink href={pdpUrl} />
+                {showScrapeHistory && (
+                  <ScrapeHistoryButton
+                    asin={data.asin}
+                    skuName={data.name}
+                  />
+                )}
                 <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
               </div>
             </div>
@@ -86,8 +96,15 @@ export function SkuRcaHeader({
             {data.name}
           </p>
           <div className="flex shrink-0 items-center gap-2">
-            <PdpSnapshotsButton />
-            <PdpPageLink href={pdpUrl} />
+            <PdpSnapshotsButton compact />
+            <PdpPageLink href={pdpUrl} compact />
+            {showScrapeHistory && (
+              <ScrapeHistoryButton
+                asin={data.asin}
+                skuName={data.name}
+                compact
+              />
+            )}
           </div>
         </div>
       </div>

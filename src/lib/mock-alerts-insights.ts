@@ -53,6 +53,9 @@ export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "7d";
 /** Fixed "now" for the prototype so Lost At dates stay stable across machines */
 export const ALERTS_MOCK_NOW = new Date("2026-01-16T18:00:00");
 
+/** Last retailer scrape — shown in the Alerts filter bar */
+export const ALERTS_LAST_CRAWL_LABEL = "4:00 PM today (2h ago)";
+
 const TIME_WINDOW_HOURS: Record<AlertsTimeWindow, number> = {
   "24h": 24,
   "7d": 7 * 24,
@@ -73,6 +76,15 @@ export function alertsTimeWindowPhrase(window: AlertsTimeWindow): string {
   if (window === "24h") return "last 24 hours";
   if (window === "7d") return "last 7 days";
   return "last 30 days";
+}
+
+/** Badge above issue-type Alerts list — e.g. "Based on previous 24 hours data" */
+export function alertsIssueListDataLabel(
+  window: AlertsTimeWindow = DEFAULT_ALERTS_TIME_WINDOW,
+): string {
+  if (window === "24h") return "Based on previous 24 hours data";
+  if (window === "7d") return "Based on previous 7 days data";
+  return "Based on previous 30 days data";
 }
 
 /** Turn "Jan 15 14:32" into a real Date (year taken from ALERTS_MOCK_NOW). */
@@ -545,6 +557,15 @@ export type AllyAiPrompt = {
 
 /** @deprecated Use AllyAiPrompt */
 export type TaxonomyRcaPrompt = AllyAiPrompt;
+
+/** Primary “run full RCA” chip — shared across taxonomy / aggregate Ally surfaces */
+export const FULL_RCA_LAST_WEEK_PROMPT: AllyAiPrompt = {
+  id: "full-rca",
+  label: "Run full RCA for Last Week",
+  prompt:
+    "Run a full root cause analysis for last week. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.",
+  variant: "primary",
+};
 
 /** Contextual follow-up prompts beneath issue-level Ally Insight */
 export function buildAlertAllyInsightPrompts(

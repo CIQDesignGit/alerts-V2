@@ -6,6 +6,10 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertDetailPanel } from "@/components/alerts-insights/alert-detail-panel";
 import { IssueGroupCard } from "@/components/alerts-insights/alert-group-cards";
 import { AlertsGroupBySelect } from "@/components/alerts-insights/alerts-group-by-select";
+import {
+  AlertsIssueListCaption,
+  AlertsIssueListExportButton,
+} from "@/components/alerts-insights/alerts-issue-list-toolbar";
 import { AlertsTaxonomyTree } from "@/components/alerts-insights/alerts-taxonomy-tree";
 import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
 import { TaxonomyRcaPanel } from "@/components/alerts-insights/taxonomy-rca-panel";
@@ -151,32 +155,38 @@ export function AlertsTab({
     <div className="flex min-h-0 flex-1">
       {sidebarOpen ? (
         <aside className="flex w-92 shrink-0 flex-col border-r border-border bg-neutral-50">
-          <div className="flex items-center justify-between gap-3 border-b border-border bg-background px-4 py-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-2 text-2xs font-medium text-neutral-600">
-                {filteredIssues.length}
-              </span>
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              {onGroupByChange && (
-                <AlertsGroupBySelect
-                  value={groupBy}
-                  onChange={onGroupByChange}
-                />
-              )}
-              <button
-                type="button"
-                aria-label="Close alerts panel"
-                onClick={() => setSidebarOpen(false)}
-                className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-neutral-100 hover:text-foreground"
-              >
-                <PanelLeftClose className="size-4" aria-hidden />
-              </button>
+          <div className="border-b border-border bg-background px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-2 text-2xs font-medium text-neutral-600">
+                  {filteredIssues.length}
+                </span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {onGroupByChange && (
+                  <AlertsGroupBySelect
+                    value={groupBy}
+                    onChange={onGroupByChange}
+                  />
+                )}
+                {groupBy === "issue" && <AlertsIssueListExportButton />}
+                <button
+                  type="button"
+                  aria-label="Close alerts panel"
+                  onClick={() => setSidebarOpen(false)}
+                  className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-neutral-100 hover:text-foreground"
+                >
+                  <PanelLeftClose className="size-4" aria-hidden />
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+            {groupBy === "issue" && (
+              <AlertsIssueListCaption className="px-1" />
+            )}
             {groupBy === "category" && !taxonomyTree && (
               <p className="px-2 py-6 text-center text-xs text-muted-foreground">
                 No taxonomy nodes match these filters. Try Clear.

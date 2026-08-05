@@ -38,7 +38,7 @@ function MetricCell({
       <p className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="mt-1.5 text-lg font-medium tabular-nums tracking-tight text-foreground">
+      <p className="mt-1.5 text-xl font-medium tabular-nums tracking-tight text-foreground">
         {value}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>

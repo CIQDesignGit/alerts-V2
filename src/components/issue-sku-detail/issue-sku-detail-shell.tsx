@@ -36,7 +36,12 @@ export function IssueSkuDetailShell({
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
-      <SkuRcaHeader data={headerData} collapsed={collapsed} onClose={onClose} />
+      <SkuRcaHeader
+        data={headerData}
+        collapsed={collapsed}
+        onClose={onClose}
+        showScrapeHistory
+      />
 
       <div
         onScroll={onBodyScroll}

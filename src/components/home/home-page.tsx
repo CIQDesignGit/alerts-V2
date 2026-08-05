@@ -20,6 +20,7 @@ export function HomePage() {
       <AlertsPageHeader
         filters={filters}
         onFiltersChange={setFilters}
+        groupBy={alertsGroupBy}
       />
 
       <AlertsTab
