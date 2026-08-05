@@ -1,7 +1,14 @@
 "use client";
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 
 import { AlertDetailPanel } from "@/components/alerts-insights/alert-detail-panel";
 import { IssueGroupCard } from "@/components/alerts-insights/alert-group-cards";
@@ -44,9 +51,20 @@ export function AlertsTab({
     [filters],
   );
 
+  // Search / Brand / Category / SKU filters: hide issue types with 0 matches
+  const hasActiveFilters = Boolean(
+    filters.brand ||
+      filters.category ||
+      filters.skuId ||
+      filters.skuQuery.trim(),
+  );
+
   const sidebarIssues = useMemo(
-    () => buildIssueTypeSidebarAlerts(filteredIssues),
-    [filteredIssues],
+    () =>
+      buildIssueTypeSidebarAlerts(filteredIssues, {
+        includeEmpty: !hasActiveFilters,
+      }),
+    [filteredIssues, hasActiveFilters],
   );
 
   const taxonomyTree = useMemo(
@@ -72,6 +90,11 @@ export function AlertsTab({
     () => new Set(["overall"]),
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Keep the clicked accordion glued to the same place on screen when another
+  // open card above it collapses (otherwise the list jumps).
+  const sidebarScrollRef = useRef<HTMLDivElement>(null);
+  const expandAnchorTopRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (groupBy === "issue") {
@@ -120,11 +143,32 @@ export function AlertsTab({
     return selectedSkuIssue.skus.find((s) => s.id === selectedSkuId) ?? null;
   }, [selectedSkuId, selectedSkuIssue]);
 
-  function onGroupCardClick(id: string) {
+  function onGroupCardClick(id: string, event: MouseEvent<HTMLElement>) {
+    const card = event.currentTarget.closest("li");
+    if (card) {
+      expandAnchorTopRef.current = card.getBoundingClientRect().top;
+    }
     setSelectedGroupId(id);
     setSelectedSkuId(null);
     setExpandedId((current) => (current === id ? null : id));
   }
+
+  useLayoutEffect(() => {
+    const prevTop = expandAnchorTopRef.current;
+    if (prevTop == null) return;
+    expandAnchorTopRef.current = null;
+
+    const scroller = sidebarScrollRef.current;
+    if (!scroller || !selectedGroupId) return;
+
+    const card = scroller.querySelector(
+      `[data-issue-key="${selectedGroupId}"]`,
+    );
+    if (!(card instanceof HTMLElement)) return;
+
+    const nextTop = card.getBoundingClientRect().top;
+    scroller.scrollTop += nextTop - prevTop;
+  }, [expandedId, selectedGroupId]);
 
   function selectSku(groupId: string, skuId: string) {
     setSelectedGroupId(groupId);
@@ -183,7 +227,10 @@ export function AlertsTab({
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+          <div
+            ref={sidebarScrollRef}
+            className="flex flex-1 flex-col gap-2 overflow-y-auto p-3"
+          >
             {groupBy === "issue" && (
               <AlertsIssueListCaption className="px-1" />
             )}
@@ -195,8 +242,7 @@ export function AlertsTab({
 
             {groupBy === "issue" ? (
               <ul className="flex flex-1 flex-col gap-2">
-                {filteredIssues.length === 0 &&
-                  sidebarIssues.every((i) => i.skuCount === 0) && (
+                {sidebarIssues.length === 0 && (
                   <li className="px-2 py-6 text-center text-xs text-muted-foreground">
                     No alerts match these filters. Try Clear.
                   </li>
@@ -211,7 +257,9 @@ export function AlertsTab({
                     }
                     selectedSkuId={selectedSkuId}
                     filter=""
-                    onCardClick={() => onGroupCardClick(issue.issueKey)}
+                    onCardClick={(event) =>
+                      onGroupCardClick(issue.issueKey, event)
+                    }
                     onSelectSku={(skuId) => selectSku(issue.issueKey, skuId)}
                   />
                 ))}

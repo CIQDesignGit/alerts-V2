@@ -7,6 +7,7 @@ import { AlertMetricTiles } from "@/components/alerts-insights/alert-metric-tile
 import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
 import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import { ContentFeedback } from "@/components/shared/content-feedback";
+import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
 import {
   buildAlertAllyInsightBullets,
   buildAlertAllyInsightPrompts,
@@ -73,19 +74,21 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
       <header className="relative shrink-0 border-b border-border bg-background">
         <div className="px-6 py-3">
-          <h2 className="min-w-0 truncate text-lg font-bold leading-snug text-foreground">
-            {group.title}
-          </h2>
+          <div className={SKU_RCA_CONTENT_WIDTH}>
+            <h2 className="min-w-0 truncate text-lg font-bold leading-snug text-foreground">
+              {group.title}
+            </h2>
+          </div>
         </div>
       </header>
 
       <div
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6",
+          "flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6",
           allyChatScrollPaddingClass(chatExpanded),
         )}
       >
-        <section className="shrink-0 space-y-3">
+        <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-5")}>
           <AlertMetricTiles metrics={metricTiles} />
           <AllyInsightContent
             bullets={allyInsightBullets}
@@ -102,7 +105,7 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
             prompts={insightPrompts}
             onSelect={onPromptSelect}
           />
-        </section>
+        </div>
       </div>
 
       <AllyChatFooter

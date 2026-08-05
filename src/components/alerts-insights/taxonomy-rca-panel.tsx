@@ -7,6 +7,7 @@ import { TaxonomyPeriodSummaries } from "@/components/alerts-insights/taxonomy-p
 import { RcaKpiTiles } from "@/components/shared/rca-kpi-tiles";
 import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import { ContentFeedback } from "@/components/shared/content-feedback";
+import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
 import {
   buildTaxonomyRcaView,
   FULL_RCA_LAST_WEEK_PROMPT,
@@ -38,51 +39,53 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
       <div
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6",
+          "flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6",
           allyChatScrollPaddingClass(chatExpanded),
         )}
       >
-        <header className="shrink-0 space-y-1">
-          <p className="text-2xs font-semibold tracking-widest text-muted-foreground uppercase">
-            {view.levelLabel}
-          </p>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            {view.entityName}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {view.alertCount}
-            </span>{" "}
-            active alerts
-            <span className="mx-1.5 text-neutral-300" aria-hidden>
-              ·
-            </span>
-            <span className="font-medium text-foreground">
-              {view.skuCount}
-            </span>{" "}
-            SKUs affected
-          </p>
-        </header>
+        <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-6")}>
+          <header className="shrink-0 space-y-1">
+            <p className="text-2xs font-semibold tracking-widest text-muted-foreground uppercase">
+              {view.levelLabel}
+            </p>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              {view.entityName}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {view.alertCount}
+              </span>{" "}
+              active alerts
+              <span className="mx-1.5 text-neutral-300" aria-hidden>
+                ·
+              </span>
+              <span className="font-medium text-foreground">
+                {view.skuCount}
+              </span>{" "}
+              SKUs affected
+            </p>
+          </header>
 
-        <RcaKpiTiles kpis={view.performanceKpis} />
+          <RcaKpiTiles kpis={view.performanceKpis} />
 
-        <section className="shrink-0 space-y-3">
-          <TaxonomyPeriodSummaries
-            thisWeekSummary={view.thisWeekSummary}
-            lastWeekSummary={view.lastWeekSummary}
-          />
-          <ContentFeedback
-            variant="subtle"
-            feedbackKey={node.id}
-            surface="taxonomy-rca"
-            contextLabel={view.entityName}
-            title="Was this alert helpful?"
-          />
-          <SuggestedAiPrompts
-            prompts={insightPrompts}
-            onSelect={onPromptSelect}
-          />
-        </section>
+          <section className="shrink-0 space-y-3">
+            <TaxonomyPeriodSummaries
+              thisWeekSummary={view.thisWeekSummary}
+              lastWeekSummary={view.lastWeekSummary}
+            />
+            <ContentFeedback
+              variant="subtle"
+              feedbackKey={node.id}
+              surface="taxonomy-rca"
+              contextLabel={view.entityName}
+              title="Was this alert helpful?"
+            />
+            <SuggestedAiPrompts
+              prompts={insightPrompts}
+              onSelect={onPromptSelect}
+            />
+          </section>
+        </div>
       </div>
 
       <AllyChatFooter

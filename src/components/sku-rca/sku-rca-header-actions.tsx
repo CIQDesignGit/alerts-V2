@@ -32,15 +32,21 @@ export function PdpPageLink({
       href={href}
       target="_blank"
       rel="noreferrer"
+      aria-label="Open PDP on Amazon"
       className={cn(
         buttonVariants({ variant: "outline", size: "sm" }),
         "h-7 gap-1.5 rounded-lg border-neutral-200 bg-background px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-50",
-        compact && "px-2",
+        // Minimized header: square Amazon-only control
+        compact && "size-7 shrink-0 gap-0 px-0",
       )}
     >
-      <AmazonMark />
-      {!compact && <span>PDP Page</span>}
-      <ExternalLink className="size-3.5 text-neutral-500" />
+      <AmazonMark className={compact ? "size-3.5" : undefined} />
+      {!compact && (
+        <>
+          <span>PDP Page</span>
+          <ExternalLink className="size-3.5 text-neutral-500" />
+        </>
+      )}
     </a>
   );
 }
@@ -50,9 +56,10 @@ export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
     <Button
       type="button"
       size="sm"
+      aria-label="PDP Snapshots"
       className={cn(
         "h-7 gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-xs font-semibold text-brand-700 shadow-none hover:bg-brand-100",
-        compact && "px-2",
+        compact && "size-7 shrink-0 gap-0 px-0",
       )}
     >
       <History className="size-3.5 text-brand-600" />

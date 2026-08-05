@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
+import type { MouseEvent } from "react";
 
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
@@ -17,13 +18,12 @@ import { cn } from "@/lib/utils";
  * Selected card look for the Alerts master list.
  * Light brand tint — no left rail, no heavy purple outline.
  */
-function groupCardShellClass(selected: boolean, deEmphasized: boolean) {
+function groupCardShellClass(selected: boolean) {
   return cn(
     "shrink-0 overflow-hidden rounded-lg border transition-[background-color,box-shadow,border-color]",
     selected
       ? "border-brand-200 bg-brand-50 shadow-sm"
       : "border-border bg-background shadow-xs",
-    deEmphasized && !selected && "opacity-70",
   );
 }
 
@@ -76,17 +76,15 @@ export function IssueGroupCard({
   groupSelected: boolean;
   selectedSkuId: string | null;
   filter: string;
-  onCardClick: () => void;
+  onCardClick: (event: MouseEvent<HTMLButtonElement>) => void;
   onSelectSku: (skuId: string) => void;
 }) {
   const filteredSkus = issue.skus.filter((sku) => matchesSkuFilter(sku, filter));
 
   return (
     <li
-      className={groupCardShellClass(
-        groupSelected,
-        issue.severity === "low",
-      )}
+      data-issue-key={issue.issueKey}
+      className={groupCardShellClass(groupSelected)}
     >
       <button
         type="button"
@@ -155,12 +153,7 @@ export function CategoryGroupCard({
   ];
 
   return (
-    <li
-      className={groupCardShellClass(
-        groupSelected,
-        category.severity === "low",
-      )}
-    >
+    <li className={groupCardShellClass(groupSelected)}>
       <button
         type="button"
         aria-expanded={open}

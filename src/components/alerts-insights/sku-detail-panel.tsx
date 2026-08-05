@@ -18,8 +18,8 @@ type SkuDetailPanelProps = {
 
 /**
  * SKU detail routes by left-panel aggregation:
- * - taxonomy → AllyAI RCA diagnosis (SkuRca)
- * - issue → issue-specific SKU page when implemented
+ * - taxonomy → full multi-issue AllyAI RCA (SkuRca)
+ * - issue → issue-specific SKU page when implemented for that issueKey
  */
 export function SkuDetailPanel({
   sku,
@@ -34,7 +34,7 @@ export function SkuDetailPanel({
   ) {
     return (
       <IssueSkuDetailPanel
-        key={`${issueKey}:${sku.id}`}
+        key={`issue:${issueKey}:${sku.id}`}
         sku={sku}
         issueKey={issueKey}
         onClose={onBackToAlert}
@@ -42,5 +42,12 @@ export function SkuDetailPanel({
     );
   }
 
-  return <SkuRca key={sku.id} sku={sku} onClose={onBackToAlert} />;
+  // Taxonomy SKU (or issue types not yet implemented) — full SkuRca view
+  return (
+    <SkuRca
+      key={`taxonomy:${sku.id}`}
+      sku={sku}
+      onClose={onBackToAlert}
+    />
+  );
 }

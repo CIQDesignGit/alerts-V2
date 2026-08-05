@@ -84,7 +84,6 @@ export function SkuRcaHeader({
         )}
         aria-hidden={!collapsed}
       >
-        <CloseButton onClose={onClose} className="absolute top-2 right-4 z-10" />
         <div
           className={cn(
             SKU_RCA_CONTENT_WIDTH,
@@ -95,7 +94,7 @@ export function SkuRcaHeader({
           <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
             {data.name}
           </p>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
             <PdpSnapshotsButton compact />
             <PdpPageLink href={pdpUrl} compact />
             {showScrapeHistory && (
@@ -105,6 +104,10 @@ export function SkuRcaHeader({
                 compact
               />
             )}
+            <CloseButton
+              onClose={onClose}
+              className="size-7 shrink-0 rounded-lg border border-neutral-200 bg-background hover:bg-neutral-50"
+            />
           </div>
         </div>
       </div>

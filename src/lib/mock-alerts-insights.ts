@@ -1040,13 +1040,24 @@ function emptyIssueAlert(issueKey: IssueKey): IssueAlert {
 }
 
 /**
- * Merge filtered alerts with placeholders so the issue-type sidebar
- * always lists all 12 canonical issue types (0 SKUs when none match).
+ * Order filtered alerts for the issue-type sidebar.
+ * Unfiltered: pads with empty placeholders so all 12 canonical types show.
+ * Filtered (brand / category / SKU / search): only issues with matching SKUs.
  */
 export function buildIssueTypeSidebarAlerts(
   filtered: IssueAlert[],
+  options?: { includeEmpty?: boolean },
 ): IssueAlert[] {
+  const includeEmpty = options?.includeEmpty ?? true;
   const byKey = new Map(filtered.map((issue) => [issue.issueKey, issue]));
+
+  if (!includeEmpty) {
+    // Keep canonical sidebar order, drop types with no SKUs left after filter
+    return ISSUE_TYPE_SIDEBAR_ORDER.flatMap((issueKey) => {
+      const issue = byKey.get(issueKey);
+      return issue && issue.skuCount > 0 ? [issue] : [];
+    });
+  }
 
   return ISSUE_TYPE_SIDEBAR_ORDER.map(
     (issueKey) => byKey.get(issueKey) ?? emptyIssueAlert(issueKey),

@@ -34,9 +34,10 @@ export function ScrapeHistoryButton({
         size="sm"
         variant="outline"
         onClick={() => setOpen(true)}
+        aria-label="7-day scrape history"
         className={cn(
           "h-7 gap-1.5 rounded-lg border-neutral-200 bg-background px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-50",
-          compact && "px-2",
+          compact && "size-7 shrink-0 gap-0 px-0",
         )}
       >
         <CalendarDays className="size-3.5 text-neutral-500" />
