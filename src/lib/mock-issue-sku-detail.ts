@@ -1,7 +1,11 @@
 import type { IssueKey } from "@/components/alerts/issue-names";
 import { ISSUE_NAMES } from "@/components/alerts/issue-names";
-import type { AllyAiPrompt, IssueSku } from "@/lib/mock-alerts-insights";
-import { formatGapDollars } from "@/lib/mock-alerts-insights";
+import {
+  FULL_RCA_LAST_WEEK_PROMPT,
+  formatGapDollars,
+  type AllyAiPrompt,
+  type IssueSku,
+} from "@/lib/mock-alerts-insights";
 
 export type BuyBoxComparisonRow = {
   id: string;
@@ -239,6 +243,7 @@ export function getIssueSkuPrompts(
   const gap = gapLabel(sku);
 
   return [
+    FULL_RCA_LAST_WEEK_PROMPT,
     {
       id: `${issueKey}-why`,
       label: `Why is ${sku.name} flagged for ${issueName}?`,

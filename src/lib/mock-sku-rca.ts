@@ -3,7 +3,11 @@ import {
   ISSUE_NAMES,
   ISSUE_UNHEALTHY_STATUS_LABEL,
 } from "@/components/alerts/issue-names";
-import type { AllyAiPrompt, IssueSku } from "@/lib/mock-alerts-insights";
+import {
+  FULL_RCA_LAST_WEEK_PROMPT,
+  type AllyAiPrompt,
+  type IssueSku,
+} from "@/lib/mock-alerts-insights";
 
 export type RcaLiveStatus = "ok" | "warning" | "bad";
 
@@ -339,6 +343,7 @@ function buildLastWeekIssuesSummary(
 
 function buildSkuSuggestedPrompts(sku: IssueSku): AllyAiPrompt[] {
   return [
+    FULL_RCA_LAST_WEEK_PROMPT,
     {
       id: "trends-7d",
       label: "See trends for Last 7 days",
