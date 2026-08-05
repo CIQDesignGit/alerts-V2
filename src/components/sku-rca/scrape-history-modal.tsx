@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   getScrapeHistoryData,
   type ScrapeHistoryData,
-  type ScrapeZipcodeDayRow,
 } from "@/lib/mock-scrape-history";
 import { cn } from "@/lib/utils";
 
@@ -104,8 +103,7 @@ function ScrapeHistoryModal({
               7-day scrape history · {data.skuName}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Whether each issue was detected on that day (4 scrapes per day),
-              plus the ZIP markets crawled over the last 7 days.
+              Whether each issue was detected on that day (4 scrapes per day).
             </p>
           </div>
           <Button
@@ -120,9 +118,8 @@ function ScrapeHistoryModal({
           </Button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
           <ScrapeHistoryTable data={data} />
-          <ZipcodesTable rows={data.zipcodeDays} />
         </div>
       </div>
     </div>,
@@ -238,67 +235,5 @@ function ScrapeCell({ detected }: { detected: boolean }) {
     >
       <Check className="size-3.5 text-success-600" aria-hidden />
     </span>
-  );
-}
-
-function ZipcodesTable({ rows }: { rows: ScrapeZipcodeDayRow[] }) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-border bg-background">
-      <div className="border-b border-border bg-neutral-50/80 px-3 py-2">
-        <p className="text-[11px] font-semibold tracking-wide text-neutral-600 uppercase">
-          7-day zipcodes used{" "}
-          <span className="font-normal normal-case text-muted-foreground">
-            (randomized per scrape window · placeholder)
-          </span>
-        </p>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-border bg-neutral-50/50">
-              <th className="px-4 py-2 text-left text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
-                Day
-              </th>
-              <th className="px-4 py-2 text-left text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
-                Scrapes
-              </th>
-              <th className="px-4 py-2 text-left text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
-                Zipcodes used (by city)
-              </th>
-              <th className="px-4 py-2 text-left text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
-                Raw zips
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.dayLabel}
-                className="border-b border-border last:border-b-0"
-              >
-                <td className="px-4 py-2 text-xs font-semibold leading-tight text-foreground">
-                  {row.dayLabel}
-                </td>
-                <td className="px-4 py-2 font-mono text-xs text-neutral-600">
-                  {row.scrapeCount} scrapes
-                </td>
-                <td className="px-4 py-2 text-xs leading-snug text-neutral-700">
-                  {row.cities.map((city, index) => (
-                    <span key={city.city}>
-                      {index > 0 && ", "}
-                      {city.city}{" "}
-                      <span className="text-neutral-400">×{city.count}</span>
-                    </span>
-                  ))}
-                </td>
-                <td className="px-4 py-2 font-mono text-xs text-neutral-600">
-                  {row.rawZips.join(", ")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }
