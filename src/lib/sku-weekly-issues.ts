@@ -63,6 +63,7 @@ const WEEKLY_PATTERNS: Record<IssueKey, SkuDayStatus[]> = {
     "clean",
   ],
   coupon: ["clean", "clean", "clean", "clean", "clean", "clean", "clean"],
+  creditOffer: ["clean", "clean", "clean", "clean", "clean", "clean", "clean"],
   bestSellerRank: [
     "clean",
     "active",
@@ -108,11 +109,15 @@ const WEEKLY_PATTERNS: Record<IssueKey, SkuDayStatus[]> = {
 const STATUS_LABELS: Partial<Record<IssueKey, string>> = {
   lostBuyBox: "Lost",
   promoBadge: "Missing",
-  dealPageVisibility: "Not visible",
+  dealPageVisibility: "Missing",
   bestSellerRank: "Dropped",
-  ratingReviews: "Declining",
+  ratingReviews: "Dropped",
   stockAvailability: "OOS",
   shippingSpeed: "Slow",
+  sponsoredSov: "Dropped",
+  keywordRank: "Dropped",
+  mediaSpend: "No/ Low spend on high value keywords",
+  conversionDrop: "Dropped",
 };
 
 const SINCE_LABELS = [

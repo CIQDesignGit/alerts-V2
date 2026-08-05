@@ -32,6 +32,12 @@ export const ISSUE_NAMES = {
     pane: "Coupon",
     group: "Marketing" as IssueGroup,
   },
+  creditOffer: {
+    filter: "Credit Offer",
+    chip: "Offer",
+    pane: "Credit Offer",
+    group: "Marketing" as IssueGroup,
+  },
   bestSellerRank: {
     filter: "Best Seller Rank",
     chip: "Best Seller Rank",
@@ -83,3 +89,23 @@ export const ISSUE_NAMES = {
 } as const;
 
 export type IssueKey = keyof typeof ISSUE_NAMES;
+
+/**
+ * Unhealthy-state pill copy for live issue rows.
+ * Coupon has no defined label in the product sheet — omit the pill when empty.
+ */
+export const ISSUE_UNHEALTHY_STATUS_LABEL: Record<IssueKey, string | null> = {
+  lostBuyBox: "Lost",
+  promoBadge: "Missing",
+  dealPageVisibility: "Missing",
+  coupon: null,
+  creditOffer: null,
+  bestSellerRank: "Dropped",
+  ratingReviews: "Dropped",
+  stockAvailability: "OOS",
+  shippingSpeed: "Slow",
+  sponsoredSov: "Dropped",
+  keywordRank: "Dropped",
+  mediaSpend: "No/ Low spend on high value keywords",
+  conversionDrop: "Dropped",
+};

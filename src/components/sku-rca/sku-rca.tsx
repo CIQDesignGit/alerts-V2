@@ -52,7 +52,11 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
         )}
       >
         <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-8")}>
-          <SkuRcaLivePanel data={data} onPromptSelect={onPromptSelect} />
+          <SkuRcaLivePanel
+            data={data}
+            sku={sku}
+            onPromptSelect={onPromptSelect}
+          />
         </div>
       </div>
 

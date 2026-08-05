@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { SkuRcaIssueAiSummary } from "@/components/sku-rca/sku-rca-issue-ai-summary";
 import { SkuRcaIssueRow } from "@/components/sku-rca/sku-rca-issue-row";
+import type { IssueSku } from "@/lib/mock-alerts-insights";
 import {
   isRedIssue,
   type RcaIssueGroup,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/mock-sku-rca";
 
 type SkuRcaIssuesProps = {
+  sku: IssueSku;
   groups: RcaIssueGroup[];
   lastWeekTopIssues: RcaLastWeekIssue[];
   lastUpdated: string;
@@ -30,6 +32,7 @@ function LiveSignalDot() {
 }
 
 export function SkuRcaIssues({
+  sku,
   groups,
   lastWeekTopIssues,
   lastUpdated,
@@ -91,6 +94,7 @@ export function SkuRcaIssues({
                 <SkuRcaIssueRow
                   key={rowId}
                   issue={issue}
+                  sku={sku}
                   open={openIds.has(rowId)}
                   onToggle={() => toggle(rowId)}
                 />

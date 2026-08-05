@@ -39,6 +39,22 @@ export type CouponSkuDetail = {
   rows: CouponTimelineRow[];
 };
 
+/** Credit Offer — same timeline shape as Coupon, cashback amounts instead of coupon value */
+export type CreditOfferTimelineRow = {
+  id: string;
+  relativeTime: string;
+  absoluteTime: string;
+  offerDetected: boolean;
+  /** e.g. "$10 cashback", "$5 statement credit" */
+  offerAmounts: string[];
+  buyBoxWinner: string;
+};
+
+export type CreditOfferSkuDetail = {
+  alertMessage: string;
+  rows: CreditOfferTimelineRow[];
+};
+
 export type PromoBadgeCheckRow = {
   id: string;
   label: string;
@@ -337,6 +353,55 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
         absoluteTime: "5:29 AM",
         couponDetected: true,
         couponValues: [`Apply ${10 + (seed % 10)}% coupon`],
+        buyBoxWinner: "Hotwired (3P)",
+      },
+    ],
+  };
+}
+
+/** Credit Offer — same as Coupon timeline, but cashback / credit amounts. */
+export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
+  const brand = sku.brand || "Shark";
+  const competitor = sku.bbOwner ?? "Dyson";
+  const seed = skuSeed(sku);
+  const cashback = 5 + (seed % 6) * 5; // $5, $10, … $30
+
+  return {
+    alertMessage: `Credit offer activity on ${sku.name} is lowering effective price vs Buy Box — ${gapLabel(sku)} at risk.`,
+    rows: [
+      {
+        id: "t-3h",
+        relativeTime: "3 hours ago",
+        absoluteTime: "2:29 PM",
+        offerDetected: true,
+        offerAmounts: [
+          `$${cashback} cashback`,
+          `$${Math.max(5, cashback - 5)} statement credit with store card`,
+        ],
+        buyBoxWinner: `${brand} (You)`,
+      },
+      {
+        id: "t-6h",
+        relativeTime: "6 hours ago",
+        absoluteTime: "11:29 AM",
+        offerDetected: true,
+        offerAmounts: [`$${cashback} cashback`],
+        buyBoxWinner: `${competitor} (3P)`,
+      },
+      {
+        id: "t-9h",
+        relativeTime: "9 hours ago",
+        absoluteTime: "8:29 AM",
+        offerDetected: false,
+        offerAmounts: [],
+        buyBoxWinner: `${brand} (You)`,
+      },
+      {
+        id: "t-12h",
+        relativeTime: "12 hours ago",
+        absoluteTime: "5:29 AM",
+        offerDetected: true,
+        offerAmounts: [`$${10 + (seed % 4) * 5} Amazon credit`],
         buyBoxWinner: "Hotwired (3P)",
       },
     ],
@@ -800,6 +865,7 @@ export function getConversionDropSkuDetail(
 export const ISSUE_SKU_DETAIL_KEYS = new Set<IssueKey>([
   "lostBuyBox",
   "coupon",
+  "creditOffer",
   "promoBadge",
   "dealPageVisibility",
   "bestSellerRank",

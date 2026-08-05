@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   AlertCircle,
   Award,
+  Banknote,
   Box,
   DollarSign,
   Funnel,
@@ -23,6 +24,7 @@ export const ISSUE_ICONS: Record<IssueKey, LucideIcon> = {
   promoBadge: Megaphone,
   dealPageVisibility: ShoppingBag,
   coupon: Tag,
+  creditOffer: Banknote,
   bestSellerRank: Award,
   ratingReviews: Star,
   stockAvailability: Box,

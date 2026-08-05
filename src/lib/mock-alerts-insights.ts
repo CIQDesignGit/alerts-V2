@@ -78,15 +78,6 @@ export function alertsTimeWindowPhrase(window: AlertsTimeWindow): string {
   return "last 30 days";
 }
 
-/** Badge above issue-type Alerts list — e.g. "Based on previous 24 hours data" */
-export function alertsIssueListDataLabel(
-  window: AlertsTimeWindow = DEFAULT_ALERTS_TIME_WINDOW,
-): string {
-  if (window === "24h") return "Based on previous 24 hours data";
-  if (window === "7d") return "Based on previous 7 days data";
-  return "Based on previous 30 days data";
-}
-
 /** Turn "Jan 15 14:32" into a real Date (year taken from ALERTS_MOCK_NOW). */
 export function parseLostAt(lostAt: string): Date | null {
   const match = lostAt.match(
@@ -561,7 +552,7 @@ export type TaxonomyRcaPrompt = AllyAiPrompt;
 /** Primary “run full RCA” chip — shared across taxonomy / aggregate Ally surfaces */
 export const FULL_RCA_LAST_WEEK_PROMPT: AllyAiPrompt = {
   id: "full-rca",
-  label: "Run full RCA for Last Week",
+  label: "Run full RCA for the last week",
   prompt:
     "Run a full root cause analysis for last week. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.",
   variant: "primary",
@@ -590,6 +581,7 @@ export function buildAlertAllyInsightPrompts(
   )[0];
 
   const prompts: AllyAiPrompt[] = [
+    FULL_RCA_LAST_WEEK_PROMPT,
     {
       id: "rank-skus",
       label: `Which SKUs drive most of the ${title} gap?`,
@@ -1013,12 +1005,13 @@ export function issueGroup(issueKey: IssueKey): IssueGroup {
   return ISSUE_NAMES[issueKey].group;
 }
 
-/** Fixed order for the issue-type left sidebar — always show all 12 types. */
+/** Fixed order for the issue-type left sidebar — always show all canonical types. */
 export const ISSUE_TYPE_SIDEBAR_ORDER: IssueKey[] = [
   "lostBuyBox",
   "promoBadge",
   "dealPageVisibility",
   "coupon",
+  "creditOffer",
   "bestSellerRank",
   "ratingReviews",
   "stockAvailability",
@@ -1041,7 +1034,7 @@ function emptyIssueAlert(issueKey: IssueKey): IssueAlert {
 
 /**
  * Order filtered alerts for the issue-type sidebar.
- * Unfiltered: pads with empty placeholders so all 12 canonical types show.
+ * Unfiltered: pads with empty placeholders so all canonical types show.
  * Filtered (brand / category / SKU / search): only issues with matching SKUs.
  */
 export function buildIssueTypeSidebarAlerts(
@@ -1759,6 +1752,52 @@ const issueAlertsUnsorted: IssueAlert[] = [
         category: "Floor Care",
         gapDollars: -8_000,
         lostAt: "Jan 11 11:29",
+      },
+    ],
+  },
+  {
+    issueKey: "creditOffer",
+    skuCount: 3,
+    gapDollars: -41_000,
+    severity: "mid",
+    aiSignal:
+      "Credit offers (cashback / statement credit) detected on 3 SKUs. Third-party cashback amounts are undercutting effective price.",
+    skus: [
+      {
+        id: "cr1",
+        name: "Shark PowerDetect Cordless",
+        asin: "B0CRD001",
+        seller: "DealHub_US",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -16_000,
+        bbOwner: "DealHub_US",
+        theirPrice: 289,
+        ourPrice: 329,
+        lostAt: "Jan 16 09:40",
+      },
+      {
+        id: "cr2",
+        name: "Ninja Creami Deluxe",
+        asin: "B0CRD002",
+        seller: "KitchenDeals_US",
+        brand: "Ninja",
+        category: "Kitchen Appliances",
+        gapDollars: -14_000,
+        lostAt: "Jan 15 14:20",
+      },
+      {
+        id: "cr3",
+        name: "Shark Wandvac System",
+        asin: "B0CRD003",
+        seller: "VacuumKing_US",
+        brand: "Shark",
+        category: "Floor Care",
+        gapDollars: -11_000,
+        bbOwner: "VacuumKing_US",
+        theirPrice: 149,
+        ourPrice: 179,
+        lostAt: "Jan 14 11:05",
       },
     ],
   },

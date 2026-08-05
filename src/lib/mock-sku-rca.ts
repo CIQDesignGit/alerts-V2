@@ -1,5 +1,8 @@
 import type { IssueKey } from "@/components/alerts/issue-names";
-import { ISSUE_NAMES } from "@/components/alerts/issue-names";
+import {
+  ISSUE_NAMES,
+  ISSUE_UNHEALTHY_STATUS_LABEL,
+} from "@/components/alerts/issue-names";
 import type { AllyAiPrompt, IssueSku } from "@/lib/mock-alerts-insights";
 
 export type RcaLiveStatus = "ok" | "warning" | "bad";
@@ -93,7 +96,13 @@ export const RCA_ISSUE_GROUP_ORDER: {
   {
     id: "pdp-promos",
     label: "PDP & Promos",
-    issueKeys: ["lostBuyBox", "promoBadge", "dealPageVisibility", "coupon"],
+    issueKeys: [
+      "lostBuyBox",
+      "promoBadge",
+      "dealPageVisibility",
+      "coupon",
+      "creditOffer",
+    ],
   },
   {
     id: "reputation",
@@ -117,26 +126,31 @@ export const RCA_ISSUE_GROUP_ORDER: {
   },
 ];
 
+/** Healthy default for inactive checklist rows — live list never shows these. */
 const DEFAULT_ISSUE_STATE: Record<
   IssueKey,
   Omit<RcaIssueRow, "issueKey">
 > = {
   lostBuyBox: {
-    liveStatus: "bad",
-    statusLabel: "Lost",
+    liveStatus: "ok",
+    statusLabel: "OK",
     impactDollars: -899.4,
   },
   promoBadge: {
-    liveStatus: "bad",
-    statusLabel: "Missing",
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   dealPageVisibility: {
-    liveStatus: "bad",
-    statusLabel: "Missing",
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   coupon: {
-    liveStatus: "warning",
-    statusLabel: "No Coupon",
+    liveStatus: "ok",
+    statusLabel: "OK",
+  },
+  creditOffer: {
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   bestSellerRank: {
     liveStatus: "ok",
@@ -152,8 +166,8 @@ const DEFAULT_ISSUE_STATE: Record<
     impactDollars: -1_800,
   },
   shippingSpeed: {
-    liveStatus: "warning",
-    statusLabel: "Slow",
+    liveStatus: "ok",
+    statusLabel: "OK",
   },
   sponsoredSov: {
     liveStatus: "ok",
@@ -168,8 +182,9 @@ const DEFAULT_ISSUE_STATE: Record<
     statusLabel: "OK",
   },
   mediaSpend: {
-    liveStatus: "bad",
-    statusLabel: "No/Low spend on high value keywords",
+    liveStatus: "ok",
+    statusLabel: "OK",
+    impactDollars: -12_400,
   },
 };
 
@@ -208,11 +223,17 @@ function buildIssueGroupsForSku(skuId: string): RcaIssueGroup[] {
     label: group.label,
     issues: group.issueKeys
       .filter((issueKey) => activeKeys.has(issueKey))
-      .map((issueKey) => ({
-        issueKey,
-        ...DEFAULT_ISSUE_STATE[issueKey],
-        liveStatus: "bad" as const,
-      })),
+      .map((issueKey) => {
+        const defaults = DEFAULT_ISSUE_STATE[issueKey];
+        const unhealthyLabel = ISSUE_UNHEALTHY_STATUS_LABEL[issueKey];
+        return {
+          issueKey,
+          ...defaults,
+          liveStatus: "bad" as const,
+          // Live rows only include unhealthy issues — use sheet labels, not “OK”
+          statusLabel: unhealthyLabel ?? "Active",
+        };
+      }),
   })).filter((group) => group.issues.length > 0);
 }
 

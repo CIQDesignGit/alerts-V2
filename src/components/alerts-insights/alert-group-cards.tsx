@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
@@ -13,6 +13,9 @@ import {
   type IssueAlert,
 } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
+
+/** How many SKUs show in an expanded group before “View all” */
+const VISIBLE_SKU_LIMIT = 5;
 
 /**
  * Selected card look for the Alerts master list.
@@ -229,10 +232,33 @@ function SkuList({
   moreCount?: number;
   showIssueChip?: boolean;
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const hasHidden = skus.length > VISIBLE_SKU_LIMIT;
+  const hiddenCount = Math.max(skus.length - VISIBLE_SKU_LIMIT, 0);
+  // Stable id list — avoids collapsing when parent re-creates the array each render
+  const skuIdsKey = skus.map((sku) => sku.id).join(",");
+
+  // New filter / different SKUs → collapse back to the first 5
+  useEffect(() => {
+    setShowAll(false);
+  }, [skuIdsKey]);
+
+  // If the selected SKU is past the first 5, open the full list so it stays visible
+  useEffect(() => {
+    if (!selectedSkuId || skus.length <= VISIBLE_SKU_LIMIT) return;
+    const selectedIndex = skus.findIndex((sku) => sku.id === selectedSkuId);
+    if (selectedIndex >= VISIBLE_SKU_LIMIT) {
+      setShowAll(true);
+    }
+  }, [selectedSkuId, skuIdsKey, skus]);
+
+  const visibleSkus =
+    showAll || !hasHidden ? skus : skus.slice(0, VISIBLE_SKU_LIMIT);
+
   return (
     <div className="border-t border-border bg-neutral-50/80">
       <ul className="flex flex-col gap-1 p-1">
-        {skus.map((sku) => {
+        {visibleSkus.map((sku) => {
           const active = selectedSkuId === sku.id;
           return (
             <li key={sku.id}>
@@ -266,7 +292,25 @@ function SkuList({
           );
         })}
       </ul>
-      {moreCount > 0 && (
+      {hasHidden && (
+        <button
+          type="button"
+          onClick={() => setShowAll((open) => !open)}
+          className="w-full border-t border-border px-3 py-2 text-left text-xs font-medium text-primary hover:underline"
+        >
+          {showAll ? (
+            "Show less"
+          ) : (
+            <>
+              View all
+              <span className="ml-1 text-2xs font-normal text-muted-foreground">
+                ({hiddenCount} more)
+              </span>
+            </>
+          )}
+        </button>
+      )}
+      {moreCount > 0 && showAll && (
         <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground italic">
           + {moreCount} more SKUs
         </p>

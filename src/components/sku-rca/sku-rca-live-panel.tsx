@@ -6,17 +6,19 @@ import { SkuRcaFeedback } from "@/components/sku-rca/sku-rca-feedback";
 import { SkuRcaIssues } from "@/components/sku-rca/sku-rca-issues";
 import { SkuRcaRecommendations } from "@/components/sku-rca/sku-rca-recommendations";
 import { SkuRcaSuggestedPrompts } from "@/components/sku-rca/sku-rca-suggested-prompts";
-import type { AllyAiPrompt } from "@/lib/mock-alerts-insights";
+import type { AllyAiPrompt, IssueSku } from "@/lib/mock-alerts-insights";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
 
 type SkuRcaLivePanelProps = {
   data: SkuRcaData;
+  sku: IssueSku;
   onPromptSelect?: (prompt: AllyAiPrompt) => void;
 };
 
 /** Taxonomy SKU diagnosis — KPI tiles, issues, feedback, then suggested prompts. */
 export function SkuRcaLivePanel({
   data,
+  sku,
   onPromptSelect,
 }: SkuRcaLivePanelProps) {
   return (
@@ -24,6 +26,7 @@ export function SkuRcaLivePanel({
       <RcaKpiTiles kpis={data.kpis} />
 
       <SkuRcaIssues
+        sku={sku}
         groups={data.issueGroups}
         lastWeekTopIssues={data.lastWeekTopIssues}
         lastUpdated={data.issuesLastUpdated}

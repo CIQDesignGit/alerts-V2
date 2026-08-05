@@ -4,6 +4,8 @@ import { ChevronDown } from "lucide-react";
 
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { ISSUE_NAMES } from "@/components/alerts/issue-names";
+import { IssueSkuDetailBody } from "@/components/issue-sku-detail/issue-sku-detail-body";
+import type { IssueSku } from "@/lib/mock-alerts-insights";
 import {
   formatCompactDollars,
   type RcaIssueRow,
@@ -16,6 +18,7 @@ type SkuRcaIssueRowProps =
   | {
       variant?: "live";
       issue: RcaIssueRow;
+      sku: IssueSku;
       open: boolean;
       onToggle: () => void;
     }
@@ -35,24 +38,29 @@ export function SkuRcaIssueRow(props: SkuRcaIssueRowProps) {
   return (
     <SkuRcaLiveIssueRow
       issue={props.issue}
+      sku={props.sku}
       open={props.open}
       onToggle={props.onToggle}
     />
   );
 }
 
-/** Live issue — expandable accordion row. */
+/** Live issue — expandable accordion with the issue-type detail body. */
 function SkuRcaLiveIssueRow({
   issue,
+  sku,
   open,
   onToggle,
 }: {
   issue: RcaIssueRow;
+  sku: IssueSku;
   open: boolean;
   onToggle: () => void;
 }) {
   const Icon = ISSUE_ICONS[issue.issueKey];
   const label = ISSUE_NAMES[issue.issueKey].pane;
+          // Hide pill when the product sheet has no unhealthy label (e.g. Coupon / Credit Offer)
+  const showStatusPill = issue.statusLabel !== "Active";
 
   return (
     <li className="border-t border-border first:border-t-0">
@@ -67,7 +75,9 @@ function SkuRcaLiveIssueRow({
         <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
           {label}
         </span>
-        <StatusPill label={issue.statusLabel} status={issue.liveStatus} />
+        {showStatusPill && (
+          <StatusPill label={issue.statusLabel} status={issue.liveStatus} />
+        )}
         {issue.impactDollars != null && (
           <ImpactBadge
             value={issue.impactDollars}
@@ -83,10 +93,9 @@ function SkuRcaLiveIssueRow({
       </button>
 
       {open && (
-        <div className="border-t border-border bg-neutral-50 px-3 py-3">
-          <p className="text-xs text-muted-foreground">
-            {label} detail — live status and recommended action (prototype).
-          </p>
+        <div className="border-t border-border bg-neutral-50/60 px-3 py-4">
+          {/* Same detail body as the issue-type SKU page for this alert */}
+          <IssueSkuDetailBody sku={sku} issueKey={issue.issueKey} />
         </div>
       )}
     </li>
@@ -158,7 +167,7 @@ function StatusPill({
   return (
     <span
       className={cn(
-        "max-w-[12rem] shrink-0 truncate rounded-md px-1.5 py-0.5 text-2xs font-semibold",
+        "max-w-72 shrink-0 truncate rounded-md px-1.5 py-0.5 text-2xs font-semibold",
         status === "bad" && "bg-error-100 text-error-700",
         status === "warning" && "bg-warning-100 text-warning-700",
         status === "ok" && "bg-success-100 text-success-700",

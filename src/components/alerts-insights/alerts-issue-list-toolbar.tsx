@@ -3,10 +3,12 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { alertsIssueListDataLabel } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
 
-/** Muted caption — data window for the issue-type list (tertiary, not a control) */
+/**
+ * Muted caption under the issue-type list —
+ * explains ranking + which data window the list uses.
+ */
 export function AlertsIssueListCaption({
   className,
 }: {
@@ -19,7 +21,8 @@ export function AlertsIssueListCaption({
         className,
       )}
     >
-      {alertsIssueListDataLabel("24h")}
+      Ranked by OPS · based on previous{" "}
+      <span className="font-semibold text-foreground">24 hours</span> data
     </p>
   );
 }
