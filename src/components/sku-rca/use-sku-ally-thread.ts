@@ -55,7 +55,7 @@ export function useSkuAllyThread(sku: IssueSku) {
           id: `ally-${stamp}`,
           role: "assistant",
           kind: "text",
-          text: "Got it — I’m reviewing this alert. Ask a follow-up from the suggested questions above.",
+          text: "Got it — I’m reviewing this alert. Ask a follow-up from Explore more above.",
         },
       ]);
     },

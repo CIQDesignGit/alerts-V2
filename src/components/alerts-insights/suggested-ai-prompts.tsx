@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import type { AllyAiPrompt } from "@/lib/mock-alerts-insights";
 
 /** Shared section label for AllyAI prompt chips across Alerts + RCA surfaces */
-export const SUGGESTED_PROMPTS_HEADING = "Suggested questions";
+export const SUGGESTED_PROMPTS_HEADING = "Explore more";
 
 type SuggestedAiPromptsProps = {
   prompts: AllyAiPrompt[];
