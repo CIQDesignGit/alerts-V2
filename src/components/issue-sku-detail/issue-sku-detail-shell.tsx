@@ -38,7 +38,8 @@ export function IssueSkuDetailShell({
     [issueKey, sku],
   );
   const [collapsed, setCollapsed] = useState(false);
-  const { messages, onPromptSelect } = useSkuAllyThread(sku);
+  // Pass issueKey so the “changed in 7 days” chip can open the right trend card
+  const { messages, onPromptSelect } = useSkuAllyThread(sku, { issueKey });
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);

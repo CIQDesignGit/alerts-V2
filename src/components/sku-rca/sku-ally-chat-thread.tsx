@@ -4,7 +4,9 @@ import { Sparkles } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { FullRcaReport } from "@/components/sku-rca/full-rca-report";
+import { LastWeekTrendCard } from "@/components/sku-rca/last-week-trend-card";
 import type { FullRcaReportData } from "@/lib/mock-full-rca-report";
+import type { LastWeekTrendData } from "@/lib/mock-last-week-trend";
 
 export type SkuAllyChatMessage =
   | { id: string; role: "user"; text: string }
@@ -13,6 +15,12 @@ export type SkuAllyChatMessage =
       role: "assistant";
       kind: "full-rca";
       report: FullRcaReportData;
+    }
+  | {
+      id: string;
+      role: "assistant";
+      kind: "last-week-trend";
+      trend: LastWeekTrendData;
     }
   | { id: string; role: "assistant"; kind: "text"; text: string };
 
@@ -52,6 +60,8 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
               </div>
             ) : message.kind === "full-rca" ? (
               <FullRcaReport report={message.report} />
+            ) : message.kind === "last-week-trend" ? (
+              <LastWeekTrendCard trend={message.trend} />
             ) : (
               <div className="flex justify-start">
                 <p className="max-w-[90%] rounded-2xl border border-border bg-neutral-50 px-3.5 py-2.5 text-sm text-foreground">

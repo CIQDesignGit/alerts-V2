@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from "react";
 
+import type { IssueKey } from "@/components/alerts/issue-names";
+import { ISSUE_NAMES } from "@/components/alerts/issue-names";
 import type { SkuAllyChatMessage } from "@/components/sku-rca/sku-ally-chat-thread";
 import {
   FULL_RCA_LAST_WEEK_PROMPT,
@@ -9,12 +11,26 @@ import {
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
 import { getFullRcaReport } from "@/lib/mock-full-rca-report";
+import {
+  getLastWeekTrend,
+  hasLastWeekTrendCard,
+  isLastSevenDayTrendPrompt,
+  resolveTrendIssueFromPrompt,
+} from "@/lib/mock-last-week-trend";
+
+type UseSkuAllyThreadOptions = {
+  /** When set (issue SKU pages), trend replies can target that issue */
+  issueKey?: IssueKey;
+};
 
 /**
  * AllyAI chat thread for SKU, issue-aggregate, and taxonomy RCA surfaces.
  * Suggested chips send straight into the thread (no floating composer).
  */
-export function useSkuAllyThread(sku: IssueSku) {
+export function useSkuAllyThread(
+  sku: IssueSku,
+  { issueKey }: UseSkuAllyThreadOptions = {},
+) {
   const [messages, setMessages] = useState<SkuAllyChatMessage[]>([]);
 
   /** Push a user message + Ally reply into the thread */
@@ -48,6 +64,44 @@ export function useSkuAllyThread(sku: IssueSku) {
         return;
       }
 
+      // “How has {Issue} changed in 7 days?” → last-week trend card (when designed)
+      if (isLastSevenDayTrendPrompt(trimmed)) {
+        const trendIssue = resolveTrendIssueFromPrompt(trimmed, issueKey);
+        const trend =
+          trendIssue && hasLastWeekTrendCard(trendIssue)
+            ? getLastWeekTrend(trendIssue, sku)
+            : null;
+
+        if (trend) {
+          setMessages((prev) => [
+            ...prev,
+            userMessage,
+            {
+              id: `trend-${stamp}`,
+              role: "assistant",
+              kind: "last-week-trend",
+              trend,
+            },
+          ]);
+          return;
+        }
+
+        const issueLabel = trendIssue
+          ? ISSUE_NAMES[trendIssue].filter
+          : "this issue";
+        setMessages((prev) => [
+          ...prev,
+          userMessage,
+          {
+            id: `ally-${stamp}`,
+            role: "assistant",
+            kind: "text",
+            text: `I don’t have a last-7-day trend card for ${issueLabel} yet. Try Lost Buy Box or Promo Badge, or ask another Explore more prompt.`,
+          },
+        ]);
+        return;
+      }
+
       setMessages((prev) => [
         ...prev,
         userMessage,
@@ -59,7 +113,7 @@ export function useSkuAllyThread(sku: IssueSku) {
         },
       ]);
     },
-    [sku],
+    [issueKey, sku],
   );
 
   const onPromptSelect = useCallback(
