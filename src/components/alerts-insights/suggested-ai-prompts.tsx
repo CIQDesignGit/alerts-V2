@@ -14,7 +14,7 @@ type SuggestedAiPromptsProps = {
   heading?: string;
 };
 
-/** Clickable AllyAI prompt chips — seed the chat composer when selected. */
+/** Clickable AllyAI prompt chips — send into the in-page thread when selected. */
 export function SuggestedAiPrompts({
   prompts,
   onSelect,

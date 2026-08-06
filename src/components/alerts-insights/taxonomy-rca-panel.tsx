@@ -5,10 +5,6 @@ import { useMemo } from "react";
 import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
 import { TaxonomyPeriodSummaries } from "@/components/alerts-insights/taxonomy-period-summaries";
 import { RcaKpiTiles } from "@/components/shared/rca-kpi-tiles";
-import {
-  AllyChatFooter,
-  allyChatScrollPaddingClass,
-} from "@/components/shared/ally-chat-footer";
 import { ContentFeedback } from "@/components/shared/content-feedback";
 import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
@@ -47,23 +43,11 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
     );
   }, [node]);
 
-  const {
-    messages,
-    promptSeed,
-    chatExpanded,
-    setChatExpanded,
-    onPromptSelect,
-    sendMessage,
-  } = useSkuAllyThread(reportSku);
+  const { messages, onPromptSelect } = useSkuAllyThread(reportSku);
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
-      <div
-        className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6",
-          allyChatScrollPaddingClass(chatExpanded),
-        )}
-      >
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6">
         <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-6")}>
           <header className="shrink-0 space-y-1">
             <p className="text-2xs font-semibold tracking-widest text-muted-foreground uppercase">
@@ -110,15 +94,6 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
           <SkuAllyChatThread messages={messages} />
         </div>
       </div>
-
-      <AllyChatFooter
-        expanded={chatExpanded}
-        onExpandedChange={setChatExpanded}
-        seedPrompt={promptSeed}
-        onSend={sendMessage}
-        collapsedLabel={`Ask AllyAI about ${view.entityName}…`}
-        inputPlaceholder={`Ask about ${view.entityName} alerts, root causes, or next steps…`}
-      />
     </div>
   );
 }

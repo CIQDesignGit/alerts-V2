@@ -17,7 +17,6 @@ import { InsightsHistoricalPanel } from "@/components/alerts-insights/insights-h
 import { InsightsLevelHeader } from "@/components/alerts-insights/insights-level-header";
 import { InsightsLivePanel } from "@/components/alerts-insights/insights-live-panel";
 import { InsightsSkuListPanel } from "@/components/alerts-insights/insights-sku-list-panel";
-import { AllyChatFooter, allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import {
   DEFAULT_INSIGHTS_COMPARISON,
   DEFAULT_INSIGHTS_DATE_RANGE,
@@ -31,7 +30,6 @@ import {
   type AlertsFilters,
 } from "@/lib/mock-alerts-insights";
 import { usePersistedWidgets } from "@/lib/use-persisted-widgets";
-import { cn } from "@/lib/utils";
 
 /** SKU match for Brand/Category/SKU bar (same rules as Alerts search). */
 function matchesSkuFilters(
@@ -95,7 +93,6 @@ export function InsightsTab({
     useState<InsightsComparisonPeriod>(DEFAULT_INSIGHTS_COMPARISON);
   const [trendsComparison, setTrendsComparison] =
     useState<InsightsComparisonPeriod>(DEFAULT_INSIGHTS_COMPARISON);
-  const [chatExpanded, setChatExpanded] = useState(false);
   // When set, left rail shows SKU list for this parent instead of the tree
   const [skuListParentId, setSkuListParentId] = useState<string | null>(() => {
     if (!initialSkuId) return null;
@@ -261,12 +258,7 @@ export function InsightsTab({
           onModeChange={setMode}
         />
 
-        <div
-          className={cn(
-            "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6",
-            allyChatScrollPaddingClass(chatExpanded),
-          )}
-        >
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6">
           {mode === "live" ? (
             <InsightsLivePanel
               selected={selected}
@@ -292,21 +284,6 @@ export function InsightsTab({
             />
           )}
         </div>
-
-        <AllyChatFooter
-          expanded={chatExpanded}
-          onExpandedChange={setChatExpanded}
-          collapsedLabel={
-            mode === "live"
-              ? `Ask AllyAI about ${selected.name}…`
-              : `Ask AllyAI about ${selected.name} trends…`
-          }
-          inputPlaceholder={
-            mode === "live"
-              ? "Ask about metrics for this period…"
-              : "Ask about issue trends, or describe a widget to add…"
-          }
-        />
       </div>
     </div>
   );

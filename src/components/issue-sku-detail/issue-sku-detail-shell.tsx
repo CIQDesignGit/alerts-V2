@@ -4,14 +4,12 @@ import { useMemo, useState, type ReactNode, type UIEvent } from "react";
 
 import type { IssueKey } from "@/components/alerts/issue-names";
 import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
-import { SkuRcaChatFooter } from "@/components/sku-rca/sku-rca-chat-footer";
 import {
   SkuRcaHeader,
   SKU_RCA_CONTENT_WIDTH,
 } from "@/components/sku-rca/sku-rca-header";
 import { SkuRcaSuggestedPrompts } from "@/components/sku-rca/sku-rca-suggested-prompts";
 import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
-import { allyChatScrollPaddingClass } from "@/components/shared/ally-chat-footer";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { getIssueSkuPrompts } from "@/lib/mock-issue-sku-detail";
 import { getSkuRcaData } from "@/lib/mock-sku-rca";
@@ -26,7 +24,7 @@ type IssueSkuDetailShellProps = {
   children: ReactNode;
 };
 
-/** Shared chrome for issue-aggregation SKU pages — header + body + prompts + chat. */
+/** Shared chrome for issue-aggregation SKU pages — header + body + prompts + thread. */
 export function IssueSkuDetailShell({
   sku,
   issueKey,
@@ -40,14 +38,7 @@ export function IssueSkuDetailShell({
     [issueKey, sku],
   );
   const [collapsed, setCollapsed] = useState(false);
-  const {
-    messages,
-    promptSeed,
-    chatExpanded,
-    setChatExpanded,
-    onPromptSelect,
-    sendMessage,
-  } = useSkuAllyThread(sku);
+  const { messages, onPromptSelect } = useSkuAllyThread(sku);
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
@@ -64,10 +55,7 @@ export function IssueSkuDetailShell({
 
       <div
         onScroll={onBodyScroll}
-        className={cn(
-          "min-h-0 flex-1 overflow-y-auto px-6 py-6",
-          allyChatScrollPaddingClass(chatExpanded),
-        )}
+        className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
       >
         <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-6")}>
           {children}
@@ -80,14 +68,6 @@ export function IssueSkuDetailShell({
           <SkuAllyChatThread messages={messages} />
         </div>
       </div>
-
-      <SkuRcaChatFooter
-        expanded={chatExpanded}
-        onExpandedChange={setChatExpanded}
-        skuName={headerData.name}
-        seedPrompt={promptSeed}
-        onSend={sendMessage}
-      />
     </div>
   );
 }

@@ -10,18 +10,12 @@ import {
 } from "@/lib/mock-alerts-insights";
 import { getFullRcaReport } from "@/lib/mock-full-rca-report";
 
-type PromptSelectResult = "seed" | "sent";
-
 /**
  * AllyAI chat thread for SKU, issue-aggregate, and taxonomy RCA surfaces.
- * The “Run full RCA” chip auto-sends; other chips just fill the chat input.
+ * Suggested chips send straight into the thread (no floating composer).
  */
 export function useSkuAllyThread(sku: IssueSku) {
   const [messages, setMessages] = useState<SkuAllyChatMessage[]>([]);
-  const [promptSeed, setPromptSeed] = useState<
-    { id: string; text: string } | undefined
-  >();
-  const [chatExpanded, setChatExpanded] = useState(false);
 
   /** Push a user message + Ally reply into the thread */
   const sendMessage = useCallback(
@@ -51,7 +45,6 @@ export function useSkuAllyThread(sku: IssueSku) {
             report: getFullRcaReport(sku),
           },
         ]);
-        setChatExpanded(false);
         return;
       }
 
@@ -62,7 +55,7 @@ export function useSkuAllyThread(sku: IssueSku) {
           id: `ally-${stamp}`,
           role: "assistant",
           kind: "text",
-          text: "Got it — I’m reviewing this alert. Ask a follow-up, or try “Run full RCA for the last week” for the full weekly breakdown.",
+          text: "Got it — I’m reviewing this alert. Ask a follow-up from the suggested questions above.",
         },
       ]);
     },
@@ -70,27 +63,14 @@ export function useSkuAllyThread(sku: IssueSku) {
   );
 
   const onPromptSelect = useCallback(
-    (prompt: AllyAiPrompt): PromptSelectResult => {
-      // Full RCA chip → show the rich report in the thread right away
-      if (prompt.id === FULL_RCA_LAST_WEEK_PROMPT.id) {
-        sendMessage(prompt.prompt);
-        return "sent";
-      }
-
-      // Other chips still just pre-fill the composer
-      setPromptSeed({ id: `${prompt.id}-${Date.now()}`, text: prompt.prompt });
-      setChatExpanded(true);
-      return "seed";
+    (prompt: AllyAiPrompt) => {
+      sendMessage(prompt.prompt);
     },
     [sendMessage],
   );
 
   return {
     messages,
-    promptSeed,
-    chatExpanded,
-    setChatExpanded,
     onPromptSelect,
-    sendMessage,
   };
 }

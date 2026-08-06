@@ -241,6 +241,11 @@ export function getIssueSkuPrompts(
 
   return [
     {
+      id: `${issueKey}-trend`,
+      label: `How has ${issueName} changed in 7 days?`,
+      prompt: `Summarize how ${issueName} evolved for ${sku.name} over the last 7 days and what changed most recently.`,
+    },
+    {
       id: `${issueKey}-why`,
       label: `Why is ${sku.name} flagged for ${issueName}?`,
       prompt: `Explain why ${sku.name} (${sku.asin}) is flagged for ${issueName} and what is driving the ${gap} gap.`,
@@ -249,11 +254,6 @@ export function getIssueSkuPrompts(
       id: `${issueKey}-fix`,
       label: `Fastest fix for ${issueName} on this SKU?`,
       prompt: `Recommend the highest-ROI 24-hour fix for ${issueName} on ${sku.name}.`,
-    },
-    {
-      id: `${issueKey}-trend`,
-      label: `How has ${issueName} changed in 7 days?`,
-      prompt: `Summarize how ${issueName} evolved for ${sku.name} over the last 7 days and what changed most recently.`,
     },
   ];
 }

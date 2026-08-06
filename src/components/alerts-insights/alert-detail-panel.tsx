@@ -5,10 +5,6 @@ import { useMemo } from "react";
 import { AllyInsightContent } from "@/components/alerts-insights/ally-ai-surface";
 import { AlertMetricTiles } from "@/components/alerts-insights/alert-metric-tiles";
 import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
-import {
-  AllyChatFooter,
-  allyChatScrollPaddingClass,
-} from "@/components/shared/ally-chat-footer";
 import { ContentFeedback } from "@/components/shared/content-feedback";
 import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
@@ -57,14 +53,7 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
     [group],
   );
 
-  const {
-    messages,
-    promptSeed,
-    chatExpanded,
-    setChatExpanded,
-    onPromptSelect,
-    sendMessage,
-  } = useSkuAllyThread(reportSku);
+  const { messages, onPromptSelect } = useSkuAllyThread(reportSku);
 
   const allyInsightBullets = useMemo(
     () =>
@@ -106,12 +95,7 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
         </div>
       </header>
 
-      <div
-        className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6",
-          allyChatScrollPaddingClass(chatExpanded),
-        )}
-      >
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6">
         <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-5")}>
           <AlertMetricTiles metrics={metricTiles} />
           <AllyInsightContent
@@ -133,15 +117,6 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
           <SkuAllyChatThread messages={messages} />
         </div>
       </div>
-
-      <AllyChatFooter
-        expanded={chatExpanded}
-        onExpandedChange={setChatExpanded}
-        seedPrompt={promptSeed}
-        onSend={sendMessage}
-        collapsedLabel={`Ask AllyAI about ${group.title}…`}
-        inputPlaceholder={`Ask about ${group.title}, affected SKUs, or next steps…`}
-      />
     </div>
   );
 }

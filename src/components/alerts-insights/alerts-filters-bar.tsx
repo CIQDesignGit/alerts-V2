@@ -9,7 +9,6 @@ import {
   ALERTS_LAST_CRAWL_LABEL,
   getBrandFilterOptions,
   getCategoryFilterOptions,
-  getSkuFilterOptions,
   summarizeFilterOptions,
   type AlertsFilters,
   type AlertsGroupBy,
@@ -23,7 +22,7 @@ type AlertsFiltersBarProps = {
   groupBy: AlertsGroupBy;
 };
 
-type OpenMenu = "brand" | "category" | "sku" | "search" | null;
+type OpenMenu = "brand" | "category" | "search" | null;
 
 export function AlertsFiltersBar({
   filters,
@@ -46,16 +45,10 @@ export function AlertsFiltersBar({
     filters.brand,
     filters.skuQuery,
   );
-  const skuOptions = getSkuFilterOptions(
-    filters.brand,
-    filters.category,
-    filters.skuQuery,
-  );
   const selectedBrand = brandOptions.find((o) => o.name === filters.brand);
   const selectedCategory = categoryOptions.find(
     (o) => o.name === filters.category,
   );
-  const selectedSku = skuOptions.find((o) => o.id === filters.skuId);
   const hasActive =
     Boolean(filters.brand) ||
     Boolean(filters.category) ||
@@ -172,22 +165,6 @@ export function AlertsFiltersBar({
           onClear={() =>
             onChange({ ...filters, category: null, skuId: null })
           }
-        />
-
-        <FilterDimensionControl
-          label="All SKUs"
-          dimension="sku"
-          selected={selectedSku}
-          options={skuOptions}
-          open={open === "sku"}
-          onOpenChange={(next) => setOpen(next ? "sku" : null)}
-          listHeading="SKUs by $ gap"
-          badgeLabel="SKU"
-          onSelect={(option) => {
-            onChange({ ...filters, skuId: option.id });
-            setOpen(null);
-          }}
-          onClear={() => onChange({ ...filters, skuId: null })}
         />
 
         {hasActive && (
