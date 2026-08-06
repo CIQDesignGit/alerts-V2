@@ -12,6 +12,11 @@ export type FullRcaChangeTone = "negative" | "positive" | "neutral";
 export type FullRcaTableColumn = {
   key: string;
   label: string;
+  /**
+   * Optional second line under the label (muted).
+   * Used for week headers: primary date + “Week of”.
+   */
+  sublabel?: string;
   /** First column is the row label; others are numeric/compare */
   align?: "left" | "right";
 };
@@ -84,16 +89,16 @@ export type FullRcaReportData = {
 };
 
 const WEEK_COLS: FullRcaTableColumn[] = [
-  { key: "metric", label: "", align: "left" },
-  { key: "prev", label: "Week of Jul 19", align: "right" },
-  { key: "curr", label: "Week of Jul 26", align: "right" },
+  { key: "metric", label: "Metric", align: "left" },
+  { key: "prev", label: "Jul 19", sublabel: "Week of", align: "right" },
+  { key: "curr", label: "Jul 26", sublabel: "Week of", align: "right" },
   { key: "change", label: "Change", align: "right" },
 ];
 
 const EQUATION_COLS: FullRcaTableColumn[] = [
   { key: "metric", label: "Metric", align: "left" },
-  { key: "prev", label: "Week of Jul 19", align: "right" },
-  { key: "curr", label: "Week of Jul 26", align: "right" },
+  { key: "prev", label: "Jul 19", sublabel: "Week of", align: "right" },
+  { key: "curr", label: "Jul 26", sublabel: "Week of", align: "right" },
   { key: "change", label: "Change", align: "right" },
 ];
 

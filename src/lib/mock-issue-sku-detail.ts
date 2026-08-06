@@ -35,7 +35,6 @@ export type CouponTimelineRow = {
   absoluteTime: string;
   couponDetected: boolean;
   couponValues: string[];
-  buyBoxWinner: string;
 };
 
 export type CouponSkuDetail = {
@@ -51,7 +50,6 @@ export type CreditOfferTimelineRow = {
   offerDetected: boolean;
   /** e.g. "$10 cashback", "$5 statement credit" */
   offerAmounts: string[];
-  buyBoxWinner: string;
 };
 
 export type CreditOfferSkuDetail = {
@@ -315,10 +313,8 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
   };
 }
 
-/** Coupon — timeline of coupon detections and Buy Box winners (issue aggregation SKU view). */
+/** Coupon — timeline of coupon detections (issue aggregation SKU view). */
 export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
-  const brand = sku.brand || "Shark";
-  const competitor = sku.bbOwner ?? "Dyson";
   const seed = skuSeed(sku);
   const couponAmount = (2 + (seed % 5) + 0.95).toFixed(2);
 
@@ -334,7 +330,6 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
           `Apply $${couponAmount} coupon`,
           "Save 10%: Coupon available when you select Subscribe & Save",
         ],
-        buyBoxWinner: `${brand} (You)`,
       },
       {
         id: "t-6h",
@@ -342,7 +337,6 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
         absoluteTime: "11:29 AM",
         couponDetected: true,
         couponValues: [`Apply $${couponAmount} coupon`],
-        buyBoxWinner: `${competitor} (3P)`,
       },
       {
         id: "t-9h",
@@ -350,7 +344,6 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
         absoluteTime: "8:29 AM",
         couponDetected: false,
         couponValues: [],
-        buyBoxWinner: `${brand} (You)`,
       },
       {
         id: "t-12h",
@@ -358,7 +351,6 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
         absoluteTime: "5:29 AM",
         couponDetected: true,
         couponValues: [`Apply ${10 + (seed % 10)}% coupon`],
-        buyBoxWinner: "Hotwired (3P)",
       },
     ],
   };
@@ -366,8 +358,6 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
 
 /** Credit Offer — same as Coupon timeline, but cashback / credit amounts. */
 export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
-  const brand = sku.brand || "Shark";
-  const competitor = sku.bbOwner ?? "Dyson";
   const seed = skuSeed(sku);
   const cashback = 5 + (seed % 6) * 5; // $5, $10, … $30
 
@@ -383,7 +373,6 @@ export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
           `$${cashback} cashback`,
           `$${Math.max(5, cashback - 5)} statement credit with store card`,
         ],
-        buyBoxWinner: `${brand} (You)`,
       },
       {
         id: "t-6h",
@@ -391,7 +380,6 @@ export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
         absoluteTime: "11:29 AM",
         offerDetected: true,
         offerAmounts: [`$${cashback} cashback`],
-        buyBoxWinner: `${competitor} (3P)`,
       },
       {
         id: "t-9h",
@@ -399,7 +387,6 @@ export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
         absoluteTime: "8:29 AM",
         offerDetected: false,
         offerAmounts: [],
-        buyBoxWinner: `${brand} (You)`,
       },
       {
         id: "t-12h",
@@ -407,7 +394,6 @@ export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
         absoluteTime: "5:29 AM",
         offerDetected: true,
         offerAmounts: [`$${10 + (seed % 4) * 5} Amazon credit`],
-        buyBoxWinner: "Hotwired (3P)",
       },
     ],
   };

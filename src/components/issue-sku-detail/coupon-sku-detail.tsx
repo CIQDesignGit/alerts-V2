@@ -26,7 +26,6 @@ export function CouponSkuDetail({ sku }: CouponSkuDetailProps) {
                 <th className="px-4 py-3">Time</th>
                 <th className="px-4 py-3">Coupon Detected</th>
                 <th className="px-4 py-3">Coupon Value</th>
-                <th className="px-4 py-3">Buy Box Winner</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -69,9 +68,6 @@ export function CouponSkuDetail({ sku }: CouponSkuDetailProps) {
                     ) : (
                       <span className="text-sm text-muted-foreground">—</span>
                     )}
-                  </td>
-                  <td className="px-4 py-4 align-top text-sm text-foreground">
-                    {row.buyBoxWinner}
                   </td>
                 </tr>
               ))}

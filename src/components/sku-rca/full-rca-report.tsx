@@ -16,7 +16,9 @@ type FullRcaReportProps = {
 
 /**
  * AllyAI full-week RCA answer.
- * All major sections share one accordion row style; nested causes sit one level down.
+ *
+ * Supporting analysis = one section. Its accordion rows are inset underneath
+ * the title (common region + nesting), not a full-bleed peer block.
  */
 export function FullRcaReport({ report }: FullRcaReportProps) {
   const [openPlan, setOpenPlan] = useState(false);
@@ -50,22 +52,42 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
         </p>
       </header>
 
-      <div className="px-5 py-5">
-        <section className="mb-6">
-          <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Key Finding
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-800">
-            {report.keyFinding}
-          </p>
-        </section>
+      {/* Primary — key takeaway */}
+      <section className="border-b border-border bg-neutral-50/50 px-5 py-6">
+        <h3 className="text-sm font-semibold text-foreground">Key finding</h3>
+        <p className="mt-3 max-w-prose text-sm leading-relaxed text-neutral-800">
+          {report.keyFinding}
+        </p>
+      </section>
 
-        {/* Peer-level sections — same FullRcaAccordion chrome for every item */}
-        <div className="flex flex-col">
+      {/*
+        Supporting analysis = parent section.
+        Title lives in the padded frame; accordion list is nested inside it
+        (indented + bordered) so it reads as children, not siblings.
+      */}
+      <section
+        aria-labelledby="full-rca-supporting-heading"
+        className="bg-neutral-50/40 px-5 py-5"
+      >
+        <div className="mb-3">
+          <h3
+            id="full-rca-supporting-heading"
+            className="text-sm font-semibold text-foreground"
+          >
+            Supporting analysis
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Plan, drivers, trends, and next actions
+          </p>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-border bg-background">
           <FullRcaAccordion
             title="Plan vs Actual"
+            subtitle="Where this ASIN missed or beat plan"
             open={openPlan}
             onOpenChange={setOpenPlan}
+            flushContent
           >
             <FullRcaDataTable table={report.planVsActual} />
           </FullRcaAccordion>
@@ -75,13 +97,12 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
             subtitle="Week-over-Week Change: Traffic × Conversion × Price"
             open={openEquation}
             onOpenChange={setOpenEquation}
+            flushContent
           >
-            <div className="space-y-4">
-              <FullRcaDataTable table={report.ecommerceEquation.table} />
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {report.ecommerceEquation.summary}
-              </p>
-            </div>
+            <FullRcaDataTable table={report.ecommerceEquation.table} />
+            <p className="max-w-prose px-4 py-4 text-sm leading-relaxed text-muted-foreground">
+              {report.ecommerceEquation.summary}
+            </p>
           </FullRcaAccordion>
 
           <FullRcaAccordion
@@ -95,6 +116,7 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
 
           <FullRcaAccordion
             title="8-Week Revenue Context"
+            subtitle="Actual revenue vs plan across the last 8 weeks"
             open={openRevenue}
             onOpenChange={setOpenRevenue}
           >
@@ -110,7 +132,7 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
             <FullRcaRecommendationsList items={report.recommendations} />
           </FullRcaAccordion>
         </div>
-      </div>
+      </section>
     </article>
   );
 }

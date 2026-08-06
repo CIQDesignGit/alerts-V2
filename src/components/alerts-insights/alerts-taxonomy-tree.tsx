@@ -1,10 +1,14 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { AlertsTaxonomyNode } from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass } from "@/lib/utils";
+
+/** Same cap as Issue Type expanded SKU lists before “View all” */
+const VISIBLE_SKU_LIMIT = 5;
 
 type AlertsTaxonomyTreeProps = {
   root: AlertsTaxonomyNode;
@@ -144,6 +148,42 @@ function TaxonomyBranch({
       ? node.level === "sku" && node.skuId === selectedSkuId
       : selectedId === node.id;
 
+  // Brand / category children stay fully listed; only SKU leaves are capped
+  const childrenAreSkus =
+    node.children.length > 0 && node.children.every((c) => c.level === "sku");
+  const skuIdsKey = childrenAreSkus
+    ? node.children.map((c) => c.id).join(",")
+    : "";
+
+  const [showAllSkus, setShowAllSkus] = useState(false);
+  const hasHiddenSkus =
+    childrenAreSkus && node.children.length > VISIBLE_SKU_LIMIT;
+  const hiddenSkuCount = Math.max(
+    node.children.length - VISIBLE_SKU_LIMIT,
+    0,
+  );
+
+  // Collapse back to top 5 when the SKU set under this parent changes
+  useEffect(() => {
+    setShowAllSkus(false);
+  }, [skuIdsKey]);
+
+  // Keep a selected SKU past #5 visible by expanding the list
+  useEffect(() => {
+    if (!childrenAreSkus || !selectedSkuId || !hasHiddenSkus) return;
+    const selectedIndex = node.children.findIndex(
+      (child) => child.skuId === selectedSkuId,
+    );
+    if (selectedIndex >= VISIBLE_SKU_LIMIT) {
+      setShowAllSkus(true);
+    }
+  }, [childrenAreSkus, selectedSkuId, skuIdsKey, hasHiddenSkus, node.children]);
+
+  const visibleChildren =
+    childrenAreSkus && hasHiddenSkus && !showAllSkus
+      ? node.children.slice(0, VISIBLE_SKU_LIMIT)
+      : node.children;
+
   return (
     <li className="flex flex-col">
       <TaxonomyRow
@@ -157,7 +197,7 @@ function TaxonomyBranch({
 
       {expanded && node.children.length > 0 && (
         <ul className="flex flex-col gap-0.5">
-          {node.children.map((child) => (
+          {visibleChildren.map((child) => (
             <TaxonomyBranch
               key={child.id}
               node={child}
@@ -169,6 +209,29 @@ function TaxonomyBranch({
               onToggle={onToggle}
             />
           ))}
+          {hasHiddenSkus && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setShowAllSkus((open) => !open)}
+                className={cn(
+                  "w-full border-t border-border px-3 py-2 text-left text-xs font-medium text-primary hover:underline",
+                  depthPad(depth + 1),
+                )}
+              >
+                {showAllSkus ? (
+                  "Show less"
+                ) : (
+                  <>
+                    View all SKUs
+                    <span className="ml-1 text-2xs font-normal text-muted-foreground">
+                      ({hiddenSkuCount} more)
+                    </span>
+                  </>
+                )}
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </li>
