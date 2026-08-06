@@ -68,28 +68,12 @@ export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
   );
 }
 
-export function GapBadge({
-  dollars,
-  units,
-}: {
-  dollars: number;
-  units?: number;
-}) {
+export function GapBadge({ dollars }: { dollars: number }) {
   return (
     <span className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-error-25 px-3 text-xs">
       <span className="font-mono font-semibold text-error-600">
         {formatCompactDollars(dollars)}
       </span>
-      {units != null && (
-        <>
-          <span className="text-neutral-400" aria-hidden>
-            ·
-          </span>
-          <span className="font-medium text-neutral-500">
-            {units > 0 ? `+${units}` : units} units
-          </span>
-        </>
-      )}
     </span>
   );
 }

@@ -67,7 +67,7 @@ export function SkuRcaHeader({
                     skuName={data.name}
                   />
                 )}
-                <GapBadge dollars={data.gapDollars} units={data.gapUnits} />
+                <GapBadge dollars={data.gapDollars} />
               </div>
             </div>
           </div>
