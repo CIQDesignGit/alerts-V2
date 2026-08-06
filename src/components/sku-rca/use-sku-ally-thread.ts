@@ -96,7 +96,7 @@ export function useSkuAllyThread(
             id: `ally-${stamp}`,
             role: "assistant",
             kind: "text",
-            text: `I don’t have a last-7-day trend card for ${issueLabel} yet. Try Lost Buy Box or Promo Badge, or ask another Explore more prompt.`,
+            text: `I don’t have a last-7-day trend card for ${issueLabel} yet. Try another issue’s “changed in 7 days” prompt, or pick a different Explore more suggestion.`,
           },
         ]);
         return;
