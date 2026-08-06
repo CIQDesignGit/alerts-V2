@@ -1012,9 +1012,8 @@ export function buildAlertMetricTiles(
       newCount,
       recurringCount,
       newPct,
-      // Same style as the concentration card’s helper line
       subtitle:
-        "SKUs new in the latest crawl vs carried from earlier ones",
+        "SKUs appeared in latest crawl vs multiple crawls in last 24 hrs",
     },
     concentration: {
       title: "Brand / category concentration",

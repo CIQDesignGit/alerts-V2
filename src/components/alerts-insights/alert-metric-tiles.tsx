@@ -74,7 +74,9 @@ function MetricCell({
         {value}
       </p>
       {subtitle ? (
-        <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
+        <p className="mt-1 whitespace-pre-line text-xs text-muted-foreground">
+          {subtitle}
+        </p>
       ) : null}
     </article>
   );
