@@ -447,19 +447,17 @@ export type AllyInsightBullet = {
   segments: AllyInsightSegment[];
 };
 
-/** Bulleted Ally Insight copy for alert aggregate panels */
+/** Bulleted Ally Insight copy for issue-type roll-ups (L24h · last 4 crawls) */
 export function buildAlertAllyInsightBullets(
   title: string,
   skus: IssueSku[],
   gapDollars: number,
   skuCount: number,
-  aiSignal?: string,
+  _aiSignal?: string,
 ): AllyInsightBullet[] {
   const metrics = buildAlertMetricTiles(skus, gapDollars);
-  const categories = [...new Set(skus.map((s) => s.category))];
-  const categoryCount = categories.length;
-  const total = skus.length;
-  const { newCount, newPct } = metrics.recency;
+  const { newCount, recurringCount } = metrics.recency;
+  const issueLabelLower = title.toLowerCase();
 
   const totalDollars =
     skus.reduce((sum, sku) => sum + Math.abs(sku.gapDollars), 0) ||
@@ -480,55 +478,74 @@ export function buildAlertAllyInsightBullets(
       segments: [
         {
           kind: "text",
-          text: `${skuCount} SKUs are flagged for ${title.toLowerCase()} right now across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"}.`,
+          text: `${skuCount} SKUs are flagged for ${issueLabelLower} right now`,
         },
       ],
     },
   ];
 
-  if (total > 0 && newCount > 0) {
-    bullets.push({
-      id: "recency",
-      segments: [
-        { kind: "text", text: "Emerging break: " },
-        {
-          kind: "strong",
-          text: `${newCount} of ${total} instances (${newPct}%)`,
-        },
-        {
-          kind: "text",
-          text: " appeared in the last 3 days, so containment matters more than backlog clean-up.",
-        },
-      ],
-    });
-  } else if (total > 0) {
-    bullets.push({
-      id: "recency",
-      segments: [
-        {
-          kind: "text",
-          text: "These flags are mostly carried over — backlog clean-up may matter more than urgent containment.",
-        },
-      ],
-    });
+  if (skuCount > 0) {
+    // Crawl recency — same L24h framing as the metric tile above
+    if (newCount > 0 && recurringCount > 0) {
+      bullets.push({
+        id: "recency",
+        segments: [
+          {
+            kind: "text",
+            text: `Of those, ${recurringCount} have shown up across the last 4 crawls and ${newCount} ${newCount === 1 ? "is" : "are"} new in the latest crawl`,
+          },
+        ],
+      });
+    } else if (recurringCount > 0) {
+      bullets.push({
+        id: "recency",
+        segments: [
+          {
+            kind: "text",
+            text: `Of those, all ${recurringCount} have shown up across the last 4 crawls`,
+          },
+        ],
+      });
+    } else {
+      bullets.push({
+        id: "recency",
+        segments: [
+          {
+            kind: "text",
+            text: `Of those, all ${newCount} are new in the latest crawl`,
+          },
+        ],
+      });
+    }
   }
 
-  if (topBrand && topCategory) {
-    const segments: AllyInsightSegment[] = [
-      { kind: "text", text: "Flags cluster under " },
-      { kind: "strong", text: `${topBrand.name} (${topBrand.pct}%)` },
-      { kind: "text", text: " and " },
-      { kind: "strong", text: `${topCategory.name} (${topCategory.pct}%)` },
-      {
-        kind: "text",
-        text: ` — point this upstream at that team's process rather than raising ${skuCount} individual tickets.`,
-      },
-    ];
-    bullets.push({ id: "concentration", segments });
-  } else if (aiSignal) {
+  if (recurringCount > 0 && topBrand && topCategory) {
+    const brandIsSingle = brandRows.length === 1 || topBrand.pct >= 100;
     bullets.push({
-      id: "context",
-      segments: [{ kind: "text", text: aiSignal }],
+      id: "concentration",
+      segments: brandIsSingle
+        ? [
+            {
+              kind: "text",
+              text: `All ${recurringCount} persistent flags sit under ${topBrand.name}, concentrated in ${topCategory.name}`,
+            },
+          ]
+        : [
+            {
+              kind: "text",
+              text: `${recurringCount} persistent flags sit under ${topBrand.name} (${topBrand.pct}%), concentrated in ${topCategory.name}`,
+            },
+          ],
+    });
+  } else if (topBrand && topCategory) {
+    bullets.push({
+      id: "concentration",
+      segments: [
+        {
+          kind: "text",
+          text: `Flags sit under ${topBrand.name}, concentrated in ${topCategory.name}`,
+        },
+      ],
     });
   }
 
@@ -665,15 +682,20 @@ export type ConcentrationRow = {
 /** Summary tiles above issue-level Ally insights */
 export type AlertMetricTilesData = {
   recency: {
+    /** Card label — includes L24h crawl framing */
+    label: string;
     newCount: number;
     recurringCount: number;
     newPct: number;
-    subtitle: string;
+    /** Optional line under the value (omit when label already carries framing) */
+    subtitle?: string;
   };
   concentration: {
     title: string;
     value: string;
     subtitle: string;
+    /** Category (or brand) name to emphasize inside the subtitle */
+    subtitleEmphasis?: string;
   };
 };
 
@@ -916,9 +938,27 @@ export function getAlertStrategicInsights(
   };
 }
 
-const NEW_ISSUE_DAYS = 3;
+/**
+ * Issue roll-up insights are anchored on L24h for now.
+ * Assume 4 crawls across 24h (~every 6h). Last crawl matches
+ * ALERTS_LAST_CRAWL_LABEL ("4:00 PM today · 2h ago").
+ */
+const CRAWLS_PER_DAY = 4;
+const HOURS_PER_CRAWL = 24 / CRAWLS_PER_DAY;
+const HOURS_SINCE_LAST_CRAWL = 2;
 
-/** Two headline metrics for issue-level alert panels */
+/** True when the SKU first appeared in the latest crawl (not earlier ones). */
+function isNewInLatestCrawl(sku: IssueSku): boolean {
+  const lost = sku.lostAt ? parseLostAt(sku.lostAt) : null;
+  if (!lost) return false;
+  const lastCrawlMs =
+    ALERTS_MOCK_NOW.getTime() - HOURS_SINCE_LAST_CRAWL * 60 * 60 * 1000;
+  const previousCrawlMs = lastCrawlMs - HOURS_PER_CRAWL * 60 * 60 * 1000;
+  // New = first seen after the previous crawl, up through the latest scrape
+  return lost.getTime() > previousCrawlMs && lost.getTime() <= lastCrawlMs;
+}
+
+/** Two headline metrics for issue-level alert panels (L24h · last 4 crawls) */
 export function buildAlertMetricTiles(
   skus: IssueSku[],
   gapDollars: number,
@@ -927,34 +967,16 @@ export function buildAlertMetricTiles(
   let recurringCount = 0;
 
   for (const sku of skus) {
-    const lost = sku.lostAt ? parseLostAt(sku.lostAt) : null;
-    if (!lost) {
-      recurringCount += 1;
-      continue;
-    }
-    const daysAgo =
-      (ALERTS_MOCK_NOW.getTime() - lost.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysAgo <= NEW_ISSUE_DAYS) {
+    if (isNewInLatestCrawl(sku)) {
       newCount += 1;
     } else {
+      // Carried over across earlier crawls in the last 24h window
       recurringCount += 1;
     }
   }
 
   const newPct =
     skus.length > 0 ? Math.round((newCount / skus.length) * 100) : 0;
-
-  let recencySubtitle = "No timing data on affected SKUs yet.";
-  if (skus.length > 0) {
-    if (newPct >= 50) {
-      recencySubtitle = `${newPct}% surfaced in the last 3 days — emerging problem`;
-    } else if (newCount > 0) {
-      recencySubtitle = `${newPct}% surfaced in the last 3 days — mix of new and carried-over flags`;
-    } else {
-      recencySubtitle =
-        "All flags are carried over — backlog clean-up may matter more";
-    }
-  }
 
   const totalDollars =
     skus.reduce((sum, sku) => sum + Math.abs(sku.gapDollars), 0) ||
@@ -975,23 +997,30 @@ export function buildAlertMetricTiles(
   const concentrationValue = topBrand ? `${topBrand.name} ${topBrand.pct}%` : "—";
 
   let concentrationSubtitle = "No brand or category mix yet.";
+  let concentrationEmphasis: string | undefined;
   if (topCategory && categoryRows.length > 1 && secondCategory) {
-    concentrationSubtitle = `${topCategory.name} is the densest category (${topCategory.pct}%)`;
+    concentrationSubtitle = `${topCategory.name} is still the densest category (${topCategory.pct}%)`;
+    concentrationEmphasis = topCategory.name;
   } else if (topCategory) {
     concentrationSubtitle = `${topCategory.name} is the only category flagged`;
+    concentrationEmphasis = topCategory.name;
   }
 
   return {
     recency: {
+      label: "New vs carried over (last 4 crawls · 24h)",
       newCount,
       recurringCount,
       newPct,
-      subtitle: recencySubtitle,
+      // Same style as the concentration card’s helper line
+      subtitle:
+        "SKUs new in the latest crawl vs carried from earlier ones",
     },
     concentration: {
       title: "Brand / category concentration",
       value: concentrationValue,
       subtitle: concentrationSubtitle,
+      subtitleEmphasis: concentrationEmphasis,
     },
   };
 }
@@ -1236,8 +1265,8 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "VacuumKing_US",
         theirPrice: 289,
         ourPrice: 319,
-        // Fresh — visible in 24h (acute)
-        lostAt: "Jan 16 09:20",
+        // New in latest crawl (after previous 10:00 crawl, at/before 16:00 scrape)
+        lostAt: "Jan 16 15:40",
       },
       {
         id: "s2",
@@ -1251,6 +1280,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "VacuumKing_US",
         theirPrice: 248,
         ourPrice: 279,
+        // Seen in an earlier crawl today — counts as recurring
         lostAt: "Jan 16 09:20",
       },
       {
@@ -1277,15 +1307,14 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "DealHunterPro",
         theirPrice: 149,
         ourPrice: 169,
-        // Inside 7D — feeds the "Other" slice with Kitchen below
         lostAt: "Jan 13 11:40",
       },
       {
         id: "s5",
-        name: "Ninja Foodi DualZone",
+        name: "Shark Oven Air Fryer",
         asin: "B05JKL7890",
         seller: "KitchenMart_US",
-        brand: "Ninja",
+        brand: "Shark",
         category: "Kitchen Appliances",
         gapDollars: -27_000,
         bbOwner: "KitchenMart_US",
