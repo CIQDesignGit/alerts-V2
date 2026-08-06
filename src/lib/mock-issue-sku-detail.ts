@@ -1,7 +1,6 @@
 import type { IssueKey } from "@/components/alerts/issue-names";
 import { ISSUE_NAMES } from "@/components/alerts/issue-names";
 import {
-  FULL_RCA_LAST_WEEK_PROMPT,
   formatGapDollars,
   type AllyAiPrompt,
   type IssueSku,
@@ -241,7 +240,6 @@ export function getIssueSkuPrompts(
   const gap = gapLabel(sku);
 
   return [
-    FULL_RCA_LAST_WEEK_PROMPT,
     {
       id: `${issueKey}-why`,
       label: `Why is ${sku.name} flagged for ${issueName}?`,

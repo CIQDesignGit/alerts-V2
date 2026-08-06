@@ -7,7 +7,6 @@ import { ISSUE_NAMES } from "@/components/alerts/issue-names";
 import { IssueSkuDetailBody } from "@/components/issue-sku-detail/issue-sku-detail-body";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import {
-  formatCompactDollars,
   type RcaIssueRow,
   type RcaLastWeekIssue,
   type RcaLiveStatus,
@@ -77,12 +76,6 @@ function SkuRcaLiveIssueRow({
         </span>
         {showStatusPill && (
           <StatusPill label={issue.statusLabel} status={issue.liveStatus} />
-        )}
-        {issue.impactDollars != null && (
-          <ImpactBadge
-            value={issue.impactDollars}
-            status={issue.liveStatus}
-          />
         )}
         <ChevronDown
           className={cn(
@@ -175,28 +168,6 @@ function StatusPill({
       title={label}
     >
       {label}
-    </span>
-  );
-}
-
-function ImpactBadge({
-  value,
-  status,
-}: {
-  value: number;
-  status: RcaLiveStatus;
-}) {
-  return (
-    <span
-      title="Estimated revenue impacted"
-      className={cn(
-        "shrink-0 rounded-md px-2 py-0.5 font-mono text-2xs font-semibold",
-        status === "bad"
-          ? "bg-error-100 text-error-700"
-          : "bg-neutral-100 text-neutral-600",
-      )}
-    >
-      {formatCompactDollars(value)}
     </span>
   );
 }
