@@ -5,7 +5,6 @@ import { useMemo } from "react";
 
 import { getConversionDropSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
-import { cn } from "@/lib/utils";
 
 type ConversionDropSkuDetailProps = {
   sku: IssueSku;
@@ -32,18 +31,9 @@ export function ConversionDropSkuDetail({
               <Info className="size-3.5 text-neutral-400" aria-hidden />
             </div>
             <p className="mt-3 text-lg">
-              <span className="text-muted-foreground">{card.from}</span>
+              <span className="text-neutral-600">{card.from}</span>
               <span className="mx-1.5 text-muted-foreground">→</span>
-              <span
-                className={cn(
-                  "font-bold",
-                  card.tone === "warning"
-                    ? "text-warning-600"
-                    : "text-error-600",
-                )}
-              >
-                {card.to}
-              </span>
+              <span className="font-medium text-error-600">{card.to}</span>
               <span className="ml-2 text-sm text-muted-foreground">
                 {card.changeLabel}
               </span>

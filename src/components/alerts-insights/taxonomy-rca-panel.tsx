@@ -83,7 +83,7 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
               feedbackKey={node.id}
               surface="taxonomy-rca"
               contextLabel={view.entityName}
-              title="Was this alert helpful?"
+              title="Was this insight helpful?"
             />
             <SuggestedAiPrompts
               prompts={insightPrompts}

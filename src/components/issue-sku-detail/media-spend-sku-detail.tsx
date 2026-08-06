@@ -3,6 +3,12 @@
 import { ChevronsUp, ChevronUp, Info } from "lucide-react";
 import { useMemo } from "react";
 
+import {
+  IssueDetailTableHeader,
+  issueDetailTable,
+  issueTd,
+  issueTh,
+} from "@/components/issue-sku-detail/issue-detail-table";
 import { getMediaSpendSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
@@ -22,103 +28,123 @@ export function MediaSpendSkuDetail({ sku }: MediaSpendSkuDetailProps) {
   const detail = useMemo(() => getMediaSpendSkuDetail(sku), [sku]);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">
-          Top Contributing Keywords
-        </h3>
-        <p className="text-xs text-muted-foreground">{detail.periodLabel}</p>
-      </div>
+    <div className={issueDetailTable.frame}>
+      <IssueDetailTableHeader
+        title="Top Contributing Keywords"
+        meta={detail.periodLabel}
+      />
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-background">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead>
-            <tr className="border-b border-border bg-neutral-50 text-left text-2xs font-medium text-muted-foreground">
-              <th className="px-4 py-3">Keyword</th>
-              <th className="px-4 py-3">
-                <span className="inline-flex items-center gap-1">
-                  Importance
-                  <Info className="size-3" aria-hidden />
-                </span>
-              </th>
-              <th className="px-4 py-3 text-right">
-                <span className="inline-flex items-center gap-1">
-                  SFR
-                  <Info className="size-3" aria-hidden />
-                </span>
-              </th>
-              <th className="px-4 py-3 text-right">{detail.periodLabel}</th>
-              <th className="px-4 py-3 text-right">
-                {detail.previousPeriodLabel}
-              </th>
-              <th className="px-4 py-3 text-right">
-                Keyword Rank
-                <span className="mt-0.5 block font-normal normal-case">
-                  (Previous → Last 7 Days)
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {detail.rows.map((row) => {
-              const rankDelta = row.rankTo - row.rankFrom;
-              const improved = rankDelta < 0;
+      <div className={issueDetailTable.scroll}>
+        <table className={cn(issueDetailTable.table, "min-w-[720px]")}>
+            <thead>
+              <tr className={issueDetailTable.headRow}>
+                <th className={issueTh()}>
+                  <span className={issueDetailTable.thCell}>Keyword</span>
+                </th>
+                <th className={issueTh()}>
+                  <span className={cn(issueDetailTable.thCell, "gap-1")}>
+                    Importance
+                    <Info className="size-3" aria-hidden />
+                  </span>
+                </th>
+                <th className={issueTh("right")}>
+                  <span className={cn(issueDetailTable.thCellRight, "gap-1")}>
+                    SFR
+                    <Info className="size-3" aria-hidden />
+                  </span>
+                </th>
+                <th className={issueTh("right")}>
+                  <span className={issueDetailTable.thCellRight}>
+                    {detail.periodLabel}
+                  </span>
+                </th>
+                <th className={issueTh("right")}>
+                  <span className={issueDetailTable.thCellRight}>
+                    {detail.previousPeriodLabel}
+                  </span>
+                </th>
+                <th className={issueTh("right")}>
+                  <span className={issueDetailTable.thCellColRight}>
+                    <span>Keyword Rank</span>
+                    <span className="font-normal normal-case tracking-normal">
+                      (Previous → Last 7 Days)
+                    </span>
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {detail.rows.map((row) => {
+                const rankDelta = row.rankTo - row.rankFrom;
+                const improved = rankDelta < 0;
 
-              return (
-                <tr key={row.id}>
-                  <td className="px-4 py-3.5 font-medium text-foreground">
-                    {row.keyword}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 text-xs font-medium",
-                        row.importance === "High"
-                          ? "text-error-700"
-                          : "text-warning-700",
-                      )}
-                    >
-                      {row.importance === "High" ? (
-                        <ChevronsUp className="size-3.5" aria-hidden />
-                      ) : (
-                        <ChevronUp className="size-3.5" aria-hidden />
-                      )}
-                      {row.importance}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right text-foreground">
-                    {row.sfr.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3.5 text-right text-foreground">
-                    {formatMoney(row.last7Days)}
-                  </td>
-                  <td className="px-4 py-3.5 text-right font-semibold text-foreground">
-                    −{formatMoney(Math.abs(row.previousDelta))}
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <span className="text-muted-foreground">
-                      #{row.rankFrom}
-                    </span>
-                    <span className="mx-1 text-muted-foreground">→</span>
-                    <span className="font-semibold text-foreground">
-                      #{row.rankTo}
-                    </span>{" "}
-                    <span
-                      className={cn(
-                        "font-medium",
-                        improved ? "text-success-600" : "text-error-600",
-                      )}
-                    >
-                      ({improved ? "" : "+"}
-                      {rankDelta})
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                return (
+                  <tr key={row.id} className={issueDetailTable.row}>
+                    <td className={issueTd()}>
+                      <span className={issueDetailTable.cell}>{row.keyword}</span>
+                    </td>
+                    <td className={issueTd()}>
+                      <span
+                        className={cn(
+                          issueDetailTable.cell,
+                          "gap-1",
+                          row.importance === "High"
+                            ? "text-error-700"
+                            : "text-warning-700",
+                        )}
+                      >
+                        {row.importance === "High" ? (
+                          <ChevronsUp className="size-3.5" aria-hidden />
+                        ) : (
+                          <ChevronUp className="size-3.5" aria-hidden />
+                        )}
+                        {row.importance}
+                      </span>
+                    </td>
+                    <td className={issueTd("right")}>
+                      <span className={issueDetailTable.cellRight}>
+                        {row.sfr.toLocaleString()}
+                      </span>
+                    </td>
+                    <td className={issueTd("right")}>
+                      <span className={issueDetailTable.cellRight}>
+                        {formatMoney(row.last7Days)}
+                      </span>
+                    </td>
+                    <td className={issueTd("right")}>
+                      <span
+                        className={cn(
+                          issueDetailTable.cellRight,
+                          "font-semibold",
+                        )}
+                      >
+                        −{formatMoney(Math.abs(row.previousDelta))}
+                      </span>
+                    </td>
+                    <td className={issueTd("right")}>
+                      <span className={cn(issueDetailTable.cellRight, "gap-1")}>
+                        <span className="text-muted-foreground">
+                          #{row.rankFrom}
+                        </span>
+                        <span className="text-muted-foreground">→</span>
+                        <span className="font-semibold">#{row.rankTo}</span>
+                        <span
+                          className={cn(
+                            "font-medium",
+                            improved ? "text-success-600" : "text-error-600",
+                          )}
+                        >
+                          ({improved ? "" : "+"}
+                          {rankDelta})
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 
+import { IssueDetailTableHeader, issueDetailTable } from "@/components/issue-sku-detail/issue-detail-table";
 import type { RatingReviewsRow } from "@/lib/mock-issue-sku-detail";
 import { getRatingReviewsSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
@@ -27,22 +28,40 @@ export function RatingReviewsSkuDetail({
     <div className="flex flex-col gap-4">
       <p className="text-sm text-foreground">{detail.alertMessage}</p>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-background">
-        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-border bg-neutral-50/80">
-          <div className="px-4 py-3" />
-          <div className="border-l border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">
-              {detail.brandLabel}
-            </p>
+      <div className={issueDetailTable.frame}>
+        <IssueDetailTableHeader title="Rating & Reviews Comparison" />
+        <div className="px-3 py-3">
+          <div
+            className={cn(
+              "grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]",
+              issueDetailTable.headRow,
+            )}
+          >
+            <div className="px-2 py-1 align-top">
+              <span className={issueDetailTable.thCell} />
+            </div>
+            <div className="px-2 py-1 align-top">
+              <span
+                className={cn(
+                  issueDetailTable.thCell,
+                  "text-2xs font-medium tracking-wider text-muted-foreground uppercase",
+                )}
+              >
+                {detail.brandLabel}
+              </span>
+            </div>
+            <div className="px-2 py-1 align-top">
+              <span
+                className={cn(
+                  issueDetailTable.thCell,
+                  "text-2xs font-medium tracking-wider text-muted-foreground uppercase",
+                )}
+              >
+                {detail.competitorLabel}
+              </span>
+            </div>
           </div>
-          <div className="border-l border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">
-              {detail.competitorLabel}
-            </p>
-          </div>
-        </div>
 
-        <div className="divide-y divide-border">
           {detail.rows.map((row) => (
             <ComparisonRow key={row.id} row={row} />
           ))}
@@ -56,16 +75,27 @@ function ComparisonRow({ row }: { row: RatingReviewsRow }) {
   const Icon = ROW_ICONS[row.icon];
 
   return (
-    <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="flex items-center gap-2 px-4 py-3.5">
-        <Icon className="size-4 shrink-0 text-neutral-500" aria-hidden />
-        <span className="text-sm text-foreground">{row.label}</span>
+    <div
+      className={cn(
+        "grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]",
+        issueDetailTable.row,
+      )}
+    >
+      <div className="px-2 py-1">
+        <span className={cn(issueDetailTable.cell, "gap-2")}>
+          <Icon className="size-4 shrink-0 text-neutral-500" aria-hidden />
+          <span className="text-xs font-medium">{row.label}</span>
+        </span>
       </div>
-      <div className="border-l border-border px-4 py-3.5">
-        <CellValue row={row} side="brand" />
+      <div className="px-2 py-1">
+        <span className={issueDetailTable.cell}>
+          <CellValue row={row} side="brand" />
+        </span>
       </div>
-      <div className="border-l border-border px-4 py-3.5">
-        <CellValue row={row} side="competitor" />
+      <div className="px-2 py-1">
+        <span className={issueDetailTable.cell}>
+          <CellValue row={row} side="competitor" />
+        </span>
       </div>
     </div>
   );
@@ -83,15 +113,15 @@ function CellValue({
       side === "brand" ? row.brandRating : row.competitorRating;
     const label = side === "brand" ? row.brandValue : row.competitorValue;
     return (
-      <div className="flex items-center gap-2">
+      <span className="inline-flex items-center gap-2 text-xs font-medium">
         <StarRating rating={rating ?? 0} />
-        <span className="text-sm font-medium text-foreground">{label}</span>
-      </div>
+        {label}
+      </span>
     );
   }
 
   return (
-    <span className="text-sm text-foreground">
+    <span className="text-xs font-medium tabular-nums">
       {side === "brand" ? row.brandValue : row.competitorValue}
     </span>
   );

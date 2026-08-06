@@ -3,6 +3,12 @@
 import { Banknote, CheckCircle2, ExternalLink, XCircle } from "lucide-react";
 import { useMemo } from "react";
 
+import {
+  IssueDetailTableHeader,
+  issueDetailTable,
+  issueTd,
+  issueTh,
+} from "@/components/issue-sku-detail/issue-detail-table";
 import { getCreditOfferSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
@@ -19,56 +25,70 @@ export function CreditOfferSkuDetail({ sku }: CreditOfferSkuDetailProps) {
     <div className="flex flex-col gap-4">
       <p className="text-sm text-foreground">{detail.alertMessage}</p>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-background">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
+      <div className={issueDetailTable.frame}>
+        <IssueDetailTableHeader title="Credit Offer Detection Timeline" />
+        <div className={issueDetailTable.scroll}>
+          <table className={cn(issueDetailTable.table, "min-w-[640px]")}>
             <thead>
-              <tr className="border-b border-border bg-neutral-50/80 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-                <th className="px-4 py-3">Time</th>
-                <th className="px-4 py-3">Credit Offer Detected</th>
-                <th className="px-4 py-3">Offer Amount</th>
+              <tr className={issueDetailTable.headRow}>
+                <th className={issueTh()}>
+                  <span className={issueDetailTable.thCell}>Time</span>
+                </th>
+                <th className={issueTh()}>
+                  <span className={issueDetailTable.thCell}>
+                    Credit Offer Detected
+                  </span>
+                </th>
+                <th className={issueTh()}>
+                  <span className={issueDetailTable.thCell}>Offer Amount</span>
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {detail.rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="px-4 py-4 align-top">
-                    <div className="flex items-start gap-1.5">
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {row.relativeTime}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                <tr key={row.id} className={issueDetailTable.row}>
+                  <td className={issueTd()}>
+                    <span
+                      className={cn(
+                        issueDetailTable.cell,
+                        "items-start gap-1.5 py-1",
+                      )}
+                    >
+                      <span className="flex flex-col">
+                        <span>{row.relativeTime}</span>
+                        <span className="text-2xs font-normal text-muted-foreground">
                           {row.absoluteTime}
-                        </p>
-                      </div>
+                        </span>
+                      </span>
                       <ExternalLink
                         className="mt-0.5 size-3.5 shrink-0 text-neutral-400"
                         aria-hidden
                       />
-                    </div>
+                    </span>
                   </td>
-                  <td className="px-4 py-4 align-top">
-                    <OfferDetectedBadge detected={row.offerDetected} />
+                  <td className={issueTd()}>
+                    <span className={issueDetailTable.cell}>
+                      <OfferDetectedBadge detected={row.offerDetected} />
+                    </span>
                   </td>
-                  <td className="px-4 py-4 align-top">
-                    {row.offerAmounts.length > 0 ? (
-                      <ul className="space-y-2">
-                        {row.offerAmounts.map((value) => (
-                          <li key={value} className="flex items-start gap-2">
-                            <Banknote
-                              className="mt-0.5 size-3.5 shrink-0 text-warning-600"
-                              aria-hidden
-                            />
-                            <span className="text-sm text-foreground">
-                              {value}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
-                    )}
+                  <td className={issueTd()}>
+                    <span className={cn(issueDetailTable.cellCol, "py-1")}>
+                      {row.offerAmounts.length > 0 ? (
+                        <ul className="space-y-1.5">
+                          {row.offerAmounts.map((value) => (
+                            <li key={value} className="flex items-start gap-2">
+                              <Banknote
+                                className="mt-0.5 size-3.5 shrink-0 text-warning-600"
+                                aria-hidden
+                              />
+                              <span>{value}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -86,7 +106,7 @@ function OfferDetectedBadge({ detected }: { detected: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-sm font-medium",
+        "inline-flex items-center gap-1.5 font-medium",
         detected ? "text-success-700" : "text-neutral-500",
       )}
     >

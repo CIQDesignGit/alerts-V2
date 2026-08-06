@@ -209,8 +209,6 @@ export type ConversionMetricCard = {
   from: string;
   to: string;
   changeLabel: string;
-  /** to-value tone */
-  tone: "warning" | "negative";
 };
 
 export type ConversionDropSkuDetail = {
@@ -837,7 +835,6 @@ export function getConversionDropSkuDetail(
         from: `${fromConv}%`,
         to: `${toConv}%`,
         changeLabel: `(${delta}%)`,
-        tone: "warning",
       },
       {
         id: "glance",
@@ -845,7 +842,6 @@ export function getConversionDropSkuDetail(
         from: "12,480",
         to: "12,340",
         changeLabel: "(-1.1%)",
-        tone: "negative",
       },
     ],
   };

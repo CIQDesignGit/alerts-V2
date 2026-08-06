@@ -36,23 +36,19 @@ export function TaxonomyPeriodSummaries({
         <SkuRcaIssueAiSummary summary={thisWeekSummary} variant="live" />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-neutral-50/60">
-        <header className="border-b border-neutral-200/80 bg-neutral-100/50 px-4 py-2.5">
-          <div className="flex items-start gap-2.5">
+      <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
+          <div className="flex items-center gap-2.5">
             <CalendarRange
-              className="mt-0.5 size-4 shrink-0 text-neutral-500"
+              className="size-4 shrink-0 text-neutral-500"
               aria-hidden
             />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">
-                  Last week
-                </h3>
-                <span className="rounded-md bg-neutral-200/80 px-1.5 py-0.5 text-2xs font-medium text-neutral-600">
-                  Jul 19–25
-                </span>
-              </div>
-            </div>
+            <h3 className="text-sm font-semibold text-foreground">
+              Last week
+            </h3>
+            <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600 ring-1 ring-neutral-200/80">
+              Jul 19–25
+            </span>
           </div>
         </header>
         <SkuRcaIssueAiSummary

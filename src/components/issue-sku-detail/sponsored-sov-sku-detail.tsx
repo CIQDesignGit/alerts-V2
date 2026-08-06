@@ -4,10 +4,17 @@ import { ChevronRight, Info } from "lucide-react";
 import { useMemo } from "react";
 
 import {
+  IssueDetailTableHeader,
+  issueDetailTable,
+  issueTd,
+  issueTh,
+} from "@/components/issue-sku-detail/issue-detail-table";
+import {
   getSponsoredSovSkuDetail,
   type SovChange,
 } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
+import { cn } from "@/lib/utils";
 
 type SponsoredSovSkuDetailProps = {
   sku: IssueSku;
@@ -19,13 +26,13 @@ function formatPct(value: number): string {
 
 function SovDelta({ change }: { change: SovChange }) {
   return (
-    <span className="text-sm">
+    <span className={cn(issueDetailTable.cellRight, "gap-1")}>
       <span className="text-muted-foreground">{formatPct(change.from)}</span>
-      <span className="mx-1 text-muted-foreground">→</span>
+      <span className="text-muted-foreground">→</span>
       <span className="font-semibold text-error-600">
         {formatPct(change.to)}
       </span>
-      <span className="ml-1 text-error-600">({change.deltaPct}%)</span>
+      <span className="text-error-600">({change.deltaPct}%)</span>
     </span>
   );
 }
@@ -49,43 +56,51 @@ export function SponsoredSovSkuDetail({ sku }: SponsoredSovSkuDetailProps) {
         />
       </div>
 
-      <div>
-        <h3 className="mb-3 text-sm font-semibold text-foreground">
-          Top Contributing Keywords
-        </h3>
-        <div className="overflow-hidden rounded-xl border border-border bg-background">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-neutral-50 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-                <th className="px-4 py-3">Keyword</th>
-                <th className="px-4 py-3 text-right">SP SoV (from → to)</th>
-                <th className="px-4 py-3 text-right">SB SoV (from → to)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {detail.keywords.map((row) => (
-                <tr key={row.id}>
-                  <td className="px-4 py-3.5">
-                    <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-                      <ChevronRight
-                        className="size-3.5 text-neutral-400"
-                        aria-hidden
-                      />
-                      {row.keyword}
+      <div className={issueDetailTable.frame}>
+          <IssueDetailTableHeader title="Top Contributing Keywords" />
+          <div className={issueDetailTable.scroll}>
+            <table className={issueDetailTable.table}>
+              <thead>
+                <tr className={issueDetailTable.headRow}>
+                  <th className={issueTh()}>
+                    <span className={issueDetailTable.thCell}>Keyword</span>
+                  </th>
+                  <th className={issueTh("right")}>
+                    <span className={issueDetailTable.thCellRight}>
+                      SP SoV (from → to)
                     </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <SovDelta change={row.sp} />
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <SovDelta change={row.sb} />
-                  </td>
+                  </th>
+                  <th className={issueTh("right")}>
+                    <span className={issueDetailTable.thCellRight}>
+                      SB SoV (from → to)
+                    </span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {detail.keywords.map((row) => (
+                  <tr key={row.id} className={issueDetailTable.row}>
+                    <td className={issueTd()}>
+                      <span className={cn(issueDetailTable.cell, "gap-1.5")}>
+                        <ChevronRight
+                          className="size-3.5 text-neutral-400"
+                          aria-hidden
+                        />
+                        {row.keyword}
+                      </span>
+                    </td>
+                    <td className={issueTd("right")}>
+                      <SovDelta change={row.sp} />
+                    </td>
+                    <td className={issueTd("right")}>
+                      <SovDelta change={row.sb} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
     </div>
   );
 }
@@ -105,12 +120,10 @@ function MetricCard({
         {title}
         <Info className="size-3.5 text-neutral-400" aria-hidden />
       </div>
-      <p className="mt-3 text-lg">
+      <p className="mt-3 text-lg tabular-nums">
         <span className="text-muted-foreground">{formatPct(change.from)}</span>
         <span className="mx-1.5 text-muted-foreground">→</span>
-        <span className="font-bold text-error-600">
-          {formatPct(change.to)}
-        </span>
+        <span className="font-bold text-error-600">{formatPct(change.to)}</span>
       </p>
       <p className="mt-2 text-xs text-muted-foreground">{competitorLabel}</p>
     </div>

@@ -214,6 +214,24 @@
   --sidebar-ring: #a78bfa;
 }
 
+/* Live right now — soft breathing halo (always somewhat visible, never flashy) */
+@keyframes live-signal-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.45;
+  }
+}
+
+.live-signal-halo {
+  animation: live-signal-breathe 2.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -277,6 +277,28 @@ function issuePane(issueKey: IssueKey): string {
   return ISSUE_NAMES[issueKey].pane;
 }
 
+/**
+ * Short chip label for Live right now — matches design like
+ * “Lost Buy Box” / “Rating Dropped”.
+ */
+export function liveIssueChipLabel(issue: RcaIssueRow): string {
+  const names = ISSUE_NAMES[issue.issueKey];
+  const unhealthy = ISSUE_UNHEALTHY_STATUS_LABEL[issue.issueKey];
+
+  if (issue.issueKey === "lostBuyBox") return names.filter;
+  if (issue.issueKey === "ratingReviews") return "Rating Dropped";
+  if (issue.issueKey === "conversionDrop") return "Conversion Dropped";
+  if (issue.issueKey === "sponsoredSov") return "SOV Dropped";
+  if (issue.issueKey === "bestSellerRank") return "BSR Dropped";
+  if (issue.issueKey === "keywordRank") return "Keyword Rank Dropped";
+
+  if (unhealthy && unhealthy.length <= 10) {
+    return `${names.chip} ${unhealthy}`;
+  }
+
+  return names.filter;
+}
+
 function buildLiveIssuesSummary(
   sku: IssueSku,
   groups: RcaIssueGroup[],

@@ -11,21 +11,27 @@ type AllyAiSurfaceProps = {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  /** brand = live/current week (purple). muted = last week / historical (grey). */
+  tone?: "brand" | "muted";
 };
 
 /**
- * Shared AllyAI card chrome — soft brand gradient shell.
+ * Shared AllyAI card chrome — soft gradient shell.
  * Pair with AllyAiHeader for the title row.
  */
 export function AllyAiSurface({
   children,
   className,
   contentClassName,
+  tone = "brand",
 }: AllyAiSurfaceProps) {
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-xl border border-brand-200/60 bg-linear-to-r from-background via-brand-50 to-brand-100 shadow-xs",
+        "relative overflow-hidden rounded-xl border shadow-xs",
+        tone === "muted"
+          ? "border-neutral-200/80 bg-linear-to-r from-background via-neutral-50 to-neutral-100"
+          : "border-brand-200/60 bg-linear-to-r from-background via-brand-50 to-brand-100",
         className,
       )}
     >

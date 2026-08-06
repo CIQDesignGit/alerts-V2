@@ -1,16 +1,21 @@
 "use client";
 
-import { CalendarRange } from "lucide-react";
+import { CalendarRange, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
+import { IssueSkuDetailBody } from "@/components/issue-sku-detail/issue-sku-detail-body";
 import { SkuRcaIssueAiSummary } from "@/components/sku-rca/sku-rca-issue-ai-summary";
 import { SkuRcaIssueRow } from "@/components/sku-rca/sku-rca-issue-row";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import {
   isRedIssue,
+  liveIssueChipLabel,
   type RcaIssueGroup,
+  type RcaIssueRow,
   type RcaLastWeekIssue,
 } from "@/lib/mock-sku-rca";
+import { cn } from "@/lib/utils";
 
 type SkuRcaIssuesProps = {
   sku: IssueSku;
@@ -21,12 +26,15 @@ type SkuRcaIssuesProps = {
   lastWeekIssuesSummary: string;
 };
 
-/** Pulsing dot — cyan “live signal”, distinct from Ally brand purple. */
+/** Soft, slow live pulse — halo breathes but never fully disappears. */
 function LiveSignalDot() {
   return (
-    <span className="relative flex size-2.5 shrink-0" aria-hidden>
-      <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400/70" />
-      <span className="relative inline-flex size-2.5 rounded-full bg-cyan-500" />
+    <span
+      className="relative flex size-4 shrink-0 items-center justify-center"
+      aria-hidden
+    >
+      <span className="live-signal-halo absolute size-3 rounded-full bg-error-500" />
+      <span className="relative size-2 rounded-full bg-error-500" />
     </span>
   );
 }
@@ -44,28 +52,24 @@ export function SkuRcaIssues({
       groups
         .flatMap((group) => group.issues)
         .filter((issue) => isRedIssue(issue.liveStatus))
-        .sort(
-          (a, b) => (a.impactDollars ?? 0) - (b.impactDollars ?? 0),
-        ),
+        .sort((a, b) => (a.impactDollars ?? 0) - (b.impactDollars ?? 0)),
     [groups],
   );
 
-  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  // One chip open at a time (null = all collapsed)
+  const [openKey, setOpenKey] = useState<RcaIssueRow["issueKey"] | null>(null);
+  const openIssue =
+    liveIssues.find((issue) => issue.issueKey === openKey) ?? null;
 
-  function toggle(id: string) {
-    setOpenIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  function toggleChip(issueKey: RcaIssueRow["issueKey"]) {
+    setOpenKey((prev) => (prev === issueKey ? null : issueKey));
   }
 
   return (
     <section className="flex flex-col gap-5">
       <h3 className="text-base font-semibold text-foreground">Issues</h3>
 
-      {/* Live — elevated card + cyan real-time signal */}
+      {/* Live — same card level as last week */}
       <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2.5">
@@ -73,7 +77,7 @@ export function SkuRcaIssues({
             <h4 className="text-sm font-semibold text-foreground">
               Live right now
             </h4>
-            <span className="rounded-md bg-cyan-500/10 px-1.5 py-0.5 text-2xs font-semibold tracking-wide text-cyan-700 uppercase ring-1 ring-cyan-500/15">
+            <span className="rounded-md bg-error-50 px-1.5 py-0.5 text-2xs font-semibold tracking-wide text-error-700 uppercase">
               Now
             </span>
           </div>
@@ -87,26 +91,56 @@ export function SkuRcaIssues({
             No active issues — all checks are healthy.
           </p>
         ) : (
-          <ul>
-            {liveIssues.map((issue) => {
-              const rowId = `live:${issue.issueKey}`;
-              return (
-                <SkuRcaIssueRow
-                  key={rowId}
-                  issue={issue}
-                  sku={sku}
-                  open={openIds.has(rowId)}
-                  onToggle={() => toggle(rowId)}
-                />
-              );
-            })}
-          </ul>
+          <>
+            <ul className="m-0 flex list-none flex-wrap gap-2 px-4 py-3">
+              {liveIssues.map((issue) => {
+                const Icon = ISSUE_ICONS[issue.issueKey];
+                const open = openKey === issue.issueKey;
+                const label = liveIssueChipLabel(issue);
+
+                return (
+                  <li key={issue.issueKey} className="shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleChip(issue.issueKey)}
+                      aria-expanded={open}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-2 text-sm font-medium transition-colors",
+                        open
+                          ? "border-brand-300 bg-brand-50 text-brand-800"
+                          : "border-border bg-background text-foreground hover:bg-neutral-50",
+                      )}
+                    >
+                      <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-error-50">
+                        <Icon
+                          className="size-3.5 text-error-600"
+                          aria-hidden
+                        />
+                      </span>
+                      <span className="whitespace-nowrap">{label}</span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3.5 shrink-0 text-muted-foreground transition-transform",
+                          open && "rotate-180 text-brand-600",
+                        )}
+                        aria-hidden
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {openIssue ? (
+              <LiveIssueAccordionPanel issue={openIssue} sku={sku} />
+            ) : null}
+          </>
         )}
       </div>
 
-      {/* Last week — inset archive / timeline */}
-      <div className="overflow-hidden rounded-xl border border-dashed border-neutral-300/80 bg-neutral-50/60">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200/80 bg-neutral-100/50 px-4 py-2.5">
+      {/* Last week — sibling card, same shell */}
+      <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2.5">
             <CalendarRange
               className="size-4 shrink-0 text-neutral-500"
@@ -115,7 +149,7 @@ export function SkuRcaIssues({
             <h4 className="text-sm font-semibold text-foreground">
               Top Issues last week
             </h4>
-            <span className="rounded-md bg-neutral-200/80 px-1.5 py-0.5 text-2xs font-medium text-neutral-600">
+            <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600 ring-1 ring-neutral-200/80">
               7 days
             </span>
           </div>
@@ -128,11 +162,11 @@ export function SkuRcaIssues({
         />
 
         {lastWeekTopIssues.length === 0 ? (
-          <p className="bg-background/60 px-4 py-3 text-sm text-muted-foreground">
+          <p className="px-4 py-3 text-sm text-muted-foreground">
             No material issues recorded last week.
           </p>
         ) : (
-          <ul className="bg-background/60">
+          <ul>
             {lastWeekTopIssues.map((issue, index) => (
               <SkuRcaIssueRow
                 key={`last-week:${issue.issueKey}`}
@@ -145,5 +179,20 @@ export function SkuRcaIssues({
         )}
       </div>
     </section>
+  );
+}
+
+/** Expanded panel for the selected chip — issue detail only */
+function LiveIssueAccordionPanel({
+  issue,
+  sku,
+}: {
+  issue: RcaIssueRow;
+  sku: IssueSku;
+}) {
+  return (
+    <div className="border-t border-border bg-neutral-50/40 px-4 py-4">
+      <IssueSkuDetailBody sku={sku} issueKey={issue.issueKey} />
+    </div>
   );
 }
