@@ -52,12 +52,13 @@ export function AlertsTab({
     [filters],
   );
 
-  // Search / Brand / Category / SKU filters: hide issue types with 0 matches
+  // Search / Brand / Category / SKU / Issue filters: hide issue types with 0 matches
   const hasActiveFilters = Boolean(
     filters.brand ||
       filters.category ||
       filters.skuId ||
-      filters.skuQuery.trim(),
+      filters.skuQuery.trim() ||
+      filters.issueKey,
   );
 
   const sidebarIssues = useMemo(

@@ -51,7 +51,8 @@ function hasActiveFilters(filters: AlertsFilters) {
     filters.brand ||
       filters.category ||
       filters.skuId ||
-      filters.skuQuery.trim(),
+      filters.skuQuery.trim() ||
+      filters.issueKey,
   );
 }
 

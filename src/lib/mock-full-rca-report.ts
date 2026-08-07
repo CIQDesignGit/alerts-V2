@@ -104,7 +104,7 @@ const EQUATION_COLS: FullRcaTableColumn[] = [
 
 /**
  * Full weekly Amazon RCA card — shown in AllyAI chat after
- * "Run full RCA for the last week".
+ * "Run Gap to Plan Analysis for the last week".
  */
 export function getFullRcaReport(sku: IssueSku): FullRcaReportData {
   return {

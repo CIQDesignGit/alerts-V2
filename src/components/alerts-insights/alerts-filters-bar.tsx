@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 
+import { AlertsIssueFilter } from "@/components/alerts-insights/alerts-issue-filter";
 import { LastCrawlBadge } from "@/components/shared/last-crawl-badge";
 import {
   formatAtRisk,
   formatGapDollars,
   getBrandFilterOptions,
   getCategoryFilterOptions,
+  getIssueFilterOptions,
   summarizeFilterOptions,
   type AlertsFilters,
+  type AlertsGroupBy,
   type FilterDimensionOption,
 } from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
@@ -18,16 +21,20 @@ import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
 type AlertsFiltersBarProps = {
   filters: AlertsFilters;
   onChange: (next: AlertsFilters) => void;
+  /** Taxonomy view shows an Issue type filter; issue-type grouping does not. */
+  groupBy?: AlertsGroupBy;
 };
 
-type OpenMenu = "brand" | "category" | "search" | null;
+type OpenMenu = "issue" | "brand" | "category" | "search" | null;
 
 export function AlertsFiltersBar({
   filters,
   onChange,
+  groupBy = "issue",
 }: AlertsFiltersBarProps) {
   const [open, setOpen] = useState<OpenMenu>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const showIssueFilter = groupBy === "category";
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -37,9 +44,19 @@ export function AlertsFiltersBar({
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, []);
 
+  // Close issue menu when leaving taxonomy view
+  useEffect(() => {
+    if (!showIssueFilter && open === "issue") setOpen(null);
+  }, [showIssueFilter, open]);
+
   const brandOptions = getBrandFilterOptions(filters.skuQuery);
   const categoryOptions = getCategoryFilterOptions(
     filters.brand,
+    filters.skuQuery,
+  );
+  const issueOptions = getIssueFilterOptions(
+    filters.brand,
+    filters.category,
     filters.skuQuery,
   );
   const selectedBrand = brandOptions.find((o) => o.name === filters.brand);
@@ -50,10 +67,17 @@ export function AlertsFiltersBar({
     Boolean(filters.brand) ||
     Boolean(filters.category) ||
     Boolean(filters.skuId) ||
-    Boolean(filters.skuQuery.trim());
+    Boolean(filters.skuQuery.trim()) ||
+    Boolean(showIssueFilter && filters.issueKey);
 
   function clearAll() {
-    onChange({ brand: null, category: null, skuId: null, skuQuery: "" });
+    onChange({
+      brand: null,
+      category: null,
+      skuId: null,
+      skuQuery: "",
+      issueKey: null,
+    });
     setOpen(null);
   }
 
@@ -115,6 +139,22 @@ export function AlertsFiltersBar({
             </button>
           )}
         </div>
+
+        {showIssueFilter && (
+          <AlertsIssueFilter
+            options={issueOptions}
+            selectedKey={filters.issueKey}
+            open={open === "issue"}
+            onOpenChange={(next) => setOpen(next ? "issue" : null)}
+            onSelect={(issueKey) => {
+              onChange({
+                ...filters,
+                issueKey,
+                skuId: null,
+              });
+            }}
+          />
+        )}
 
         <FilterDimensionControl
           label="All Brands"

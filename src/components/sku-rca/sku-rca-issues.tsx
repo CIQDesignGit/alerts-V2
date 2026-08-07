@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { IssueSkuDetailBody } from "@/components/issue-sku-detail/issue-sku-detail-body";
 import { LastCrawlBadge } from "@/components/shared/last-crawl-badge";
+import { LiveSignalDot } from "@/components/shared/live-signal-dot";
 import {
   LAST_WEEK_RANGE_LABEL,
   PeriodBadge,
@@ -29,19 +30,6 @@ type SkuRcaIssuesProps = {
   liveIssuesSummary: string;
   lastWeekIssuesSummary: string;
 };
-
-/** Soft, slow live pulse — halo breathes but never fully disappears. */
-function LiveSignalDot() {
-  return (
-    <span
-      className="relative flex size-4 shrink-0 items-center justify-center"
-      aria-hidden
-    >
-      <span className="live-signal-halo absolute size-3 rounded-full bg-error-500" />
-      <span className="relative size-2 rounded-full bg-error-500" />
-    </span>
-  );
-}
 
 export function SkuRcaIssues({
   sku,

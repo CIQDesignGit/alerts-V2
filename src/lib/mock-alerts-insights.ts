@@ -32,7 +32,7 @@ export type IssueSku = {
   lostAt?: string;
 };
 
-/** Active Alerts tab filters (Brand · Category · SKU) */
+/** Active Alerts tab filters (Brand · Category · SKU · Issue in taxonomy) */
 export type AlertsFilters = {
   brand: string | null;
   category: string | null;
@@ -40,6 +40,8 @@ export type AlertsFilters = {
   skuId: string | null;
   /** Free-text search (name / ASIN / $ gap) */
   skuQuery: string;
+  /** Issue type filter — used in taxonomy view (single-select) */
+  issueKey: IssueKey | null;
 };
 
 /**
@@ -564,19 +566,19 @@ export type AllyAiPrompt = {
   label: string;
   /** Full prompt sent to Ally when selected */
   prompt: string;
-  /** Primary chips (e.g. Run full RCA) use brand styling; default chips are neutral */
+  /** Primary chips (e.g. Run Gap to Plan Analysis) use brand styling; default chips are neutral */
   variant?: "primary" | "default";
 };
 
 /** @deprecated Use AllyAiPrompt */
 export type TaxonomyRcaPrompt = AllyAiPrompt;
 
-/** Primary “run full RCA” chip — shared across taxonomy / aggregate Ally surfaces */
+/** Primary “Gap to Plan Analysis” chip — shared across taxonomy / aggregate Ally surfaces */
 export const FULL_RCA_LAST_WEEK_PROMPT: AllyAiPrompt = {
   id: "full-rca",
-  label: "Run full RCA for the last week",
+  label: "Run Gap to Plan Analysis for the last week",
   prompt:
-    "Run a full root cause analysis for last week. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.",
+    "Run Gap to Plan Analysis for the last week. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.",
   variant: "primary",
 };
 
@@ -662,12 +664,10 @@ export type TaxonomyRcaView = {
   skuCount: number;
   gapDollars: number;
   performanceKpis: TaxonomyPerformanceKpi[];
-  /** AllyAI narrative — latest scrape only (not 24h / WTD) */
-  liveNowSummary: string;
-  /** AllyAI narrative — current week (WTD) */
-  thisWeekSummary: string;
-  /** AllyAI narrative — prior week trend */
-  lastWeekSummary: string;
+  /** Live right now — 3 standard bullets (latest scrape only) */
+  liveNowBullets: string[];
+  /** Last week — 3 standard bullets */
+  lastWeekBullets: string[];
   narratives: AllyInsightBullet[];
   topIssues: TaxonomyRcaTopIssue[];
   skus: CategorySku[];
@@ -2146,6 +2146,40 @@ function rollupIssuesByKey(skus: CategorySku[]) {
     .sort((a, b) => a.gapDollars - b.gapDollars);
 }
 
+/** Full issue-type rollup for a taxonomy node — uses every alert on those SKUs */
+function rollupIssuesForTaxonomyNode(node: AlertsTaxonomyNode) {
+  const skuIds = new Set(node.skus.map((sku) => sku.id));
+  const byIssue = new Map<
+    IssueKey,
+    { skuIds: Set<string>; gapDollars: number }
+  >();
+
+  for (const issue of issueAlerts) {
+    const matching = issue.skus.filter((sku) => skuIds.has(sku.id));
+    if (matching.length === 0) continue;
+
+    const row = byIssue.get(issue.issueKey) ?? {
+      skuIds: new Set<string>(),
+      gapDollars: 0,
+    };
+    for (const sku of matching) {
+      row.skuIds.add(sku.id);
+      row.gapDollars += sku.gapDollars;
+    }
+    byIssue.set(issue.issueKey, row);
+  }
+
+  return [...byIssue.entries()]
+    .map(([issueKey, data]) => ({
+      issueKey,
+      name: issueLabel(issueKey),
+      skuCount: data.skuIds.size,
+      group: issueGroup(issueKey),
+      gapDollars: data.gapDollars,
+    }))
+    .sort((a, b) => a.gapDollars - b.gapDollars);
+}
+
 function avgPriceUndercut(skus: CategorySku[]): number {
   const diffs = skus
     .filter((sku) => sku.theirPrice != null && sku.ourPrice != null)
@@ -2213,102 +2247,161 @@ function buildTaxonomyInsightPrompts(
   return prompts.slice(0, 3);
 }
 
-function buildTaxonomyLiveNowSummary(
-  node: AlertsTaxonomyNode,
-  issueRollup: ReturnType<typeof rollupIssuesByKey>,
-): string {
-  const entity = node.name;
-  const issueTypeCount = issueRollup.length;
-  const uniqueSkuCount = new Set(node.skus.map((sku) => sku.id)).size;
-  const skuCount = uniqueSkuCount > 0 ? uniqueSkuCount : node.skuCount;
+function countIssueOccurrences(node: AlertsTaxonomyNode): number {
+  if (node.level === "sku") return node.issueCount ?? 1;
+  if (node.children.length === 0) {
+    return node.skus.length;
+  }
+  return node.children.reduce(
+    (sum, child) => sum + countIssueOccurrences(child),
+    0,
+  );
+}
 
-  if (issueTypeCount === 0) {
-    return `As of the latest scrape, ${entity} has no live issue types — every monitored check on this rollup is clear.`;
+/** Top child concentrations for bullet 2 — brands / categories / SKUs by level */
+function topConcentrationRows(
+  node: AlertsTaxonomyNode,
+): { name: string; count: number }[] {
+  const rows = node.children
+    .map((child) => ({
+      name: child.name,
+      count: countIssueOccurrences(child),
+    }))
+    .filter((row) => row.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  // Category nodes sometimes omit populated children — fall back to top SKUs
+  if (rows.length === 0 && node.skus.length > 0) {
+    return [...node.skus]
+      .sort((a, b) => a.gapDollars - b.gapDollars)
+      .slice(0, 3)
+      .map((sku) => ({ name: sku.name, count: 1 }));
   }
 
-  const primary = issueRollup[0];
-  const secondary = issueRollup[1];
-  const atRisk = formatGapDollars(node.gapDollars);
+  return rows;
+}
 
+function formatConcentrationList(
+  rows: { name: string; count: number }[],
+  unit: "issues" | "SKUs",
+): string {
+  return rows
+    .map((row) => {
+      const label =
+        unit === "SKUs"
+          ? row.count === 1
+            ? "1 SKU"
+            : `${row.count} SKUs`
+          : row.count === 1
+            ? "1 issue"
+            : `${row.count} issues`;
+      return `${row.name} (${label})`;
+    })
+    .join(", ");
+}
+
+function concentrationPhrase(node: AlertsTaxonomyNode): string {
+  const rows = topConcentrationRows(node);
+  if (rows.length === 0) {
+    return "No concentrated issue clusters in this view.";
+  }
+
+  const list = formatConcentrationList(rows, "issues");
+  if (node.level === "overall") {
+    return `Most issues in ${list}.`;
+  }
+  if (node.level === "brand") {
+    return `Most issues in ${list}.`;
+  }
+  return `Most issues on ${list}.`;
+}
+
+function biggestIssuesPhrase(
+  issueRollup: ReturnType<typeof rollupIssuesByKey>,
+): string {
+  const top = [...issueRollup]
+    .sort((a, b) => b.skuCount - a.skuCount || a.gapDollars - b.gapDollars)
+    .slice(0, 3);
+
+  if (top.length === 0) {
+    return "No active issues flagged in the latest scrape.";
+  }
+
+  const list = formatConcentrationList(
+    top.map((issue) => ({ name: issue.name, count: issue.skuCount })),
+    "SKUs",
+  );
+  return `Biggest issues: ${list}.`;
+}
+
+function taxonomyEntityLabel(node: AlertsTaxonomyNode): string {
+  if (node.level === "overall") return "Portfolio";
+  return node.name;
+}
+
+function uniqueSkuCount(node: AlertsTaxonomyNode): number {
+  const fromSkus = new Set(node.skus.map((sku) => sku.id)).size;
+  return fromSkus > 0 ? fromSkus : node.skuCount;
+}
+
+/**
+ * Live right now — fixed 3-bullet shape; wording adapts by rollup level.
+ * 1) Totals  2) Concentration by next level  3) Biggest issue types
+ */
+function buildTaxonomyLiveNowBullets(
+  node: AlertsTaxonomyNode,
+  issueRollup: ReturnType<typeof rollupIssuesByKey>,
+): string[] {
+  const entity = taxonomyEntityLabel(node);
+  const issueTypeCount = issueRollup.length;
+  const skuCount = uniqueSkuCount(node);
   const typeLabel =
     issueTypeCount === 1 ? "1 issue type" : `${issueTypeCount} issue types`;
   const skuLabel = skuCount === 1 ? "1 SKU" : `${skuCount} SKUs`;
 
-  // Latest-scrape snapshot framing — never “last 24 hours”
-  let summary = `As of the latest scrape, ${entity} has ${typeLabel} that need fixing across ${skuLabel} (${atRisk} at risk).`;
-
-  summary += ` ${primary.name} is the top live driver`;
-  if (secondary) {
-    summary += `, followed by ${secondary.name}`;
-  }
-  summary += ".";
-
-  if (node.level === "overall") {
-    summary += " Drill into brands with the largest latest-scrape $ exposure first.";
-  } else if (node.level === "brand") {
-    summary += " Open the worst categories next to see where the latest-scrape flags cluster.";
+  if (issueTypeCount === 0) {
+    return [
+      `${entity} has no live issue types that need fixing across ${skuLabel}.`,
+      concentrationPhrase(node),
+      "No active issues flagged in the latest scrape.",
+    ];
   }
 
-  return summary;
+  return [
+    `${entity} has ${typeLabel} that need fixing across ${skuLabel}.`,
+    concentrationPhrase(node),
+    biggestIssuesPhrase(issueRollup),
+  ];
 }
 
-function buildTaxonomyThisWeekSummary(
+/**
+ * Last week — same 3-bullet shape; lighter historical wording.
+ */
+function buildTaxonomyLastWeekBullets(
   node: AlertsTaxonomyNode,
-  topIssues: TaxonomyRcaTopIssue[],
-): string {
-  const entity = node.name;
+  issueRollup: ReturnType<typeof rollupIssuesByKey>,
+): string[] {
+  const issueTypeCount = issueRollup.length;
+  const skuCount = uniqueSkuCount(node);
+  const typeLabel =
+    issueTypeCount === 1 ? "1 issue type" : `${issueTypeCount} issue types`;
+  const skuLabel = skuCount === 1 ? "1 SKU" : `${skuCount} SKUs`;
+  const primary = issueRollup[0];
 
-  if (topIssues.length === 0) {
-    return `No active alert pressure on ${entity} this week — checks are largely healthy and performance is tracking close to plan.`;
+  if (issueTypeCount === 0) {
+    return [
+      `No issue types flagged across ${skuLabel} last week.`,
+      concentrationPhrase(node),
+      "No sustained issue patterns across the period.",
+    ];
   }
 
-  const primary = topIssues[0];
-  const secondary = topIssues[1];
-  const atRisk = formatGapDollars(node.gapDollars);
-
-  let summary = `This week, ${primary.name} is the top active issue for ${entity} — ${primary.skuCount} SKU${primary.skuCount === 1 ? "" : "s"} flagged with ${atRisk} at risk.`;
-
-  if (secondary) {
-    summary += ` ${secondary.name} is also elevated across ${secondary.skuCount} SKU${secondary.skuCount === 1 ? "" : "s"}.`;
-  }
-
-  if (node.level === "overall") {
-    summary += " Shark and Ninja brands account for most of the live exposure.";
-  } else if (node.level === "brand") {
-    summary += " Floor Care and Kitchen categories are driving most of the WTD gap.";
-  }
-
-  return summary;
-}
-
-function buildTaxonomyLastWeekSummary(
-  node: AlertsTaxonomyNode,
-  topIssues: TaxonomyRcaTopIssue[],
-  topSellers: [string, number][],
-): string {
-  const entity = node.name;
-
-  if (topIssues.length === 0) {
-    return `Last week was quiet for ${entity} — no sustained issue patterns across the period.`;
-  }
-
-  const primary = topIssues[0];
-  const secondary = topIssues[1];
-  const primaryGap = formatGapDollars(-Math.abs(primary.gapDollars));
-
-  let summary = `Last week, ${primary.name} drove most of the gap for ${entity} — ${primaryGap} across ${primary.skuCount} SKU${primary.skuCount === 1 ? "" : "s"}.`;
-
-  if (secondary) {
-    summary += ` ${secondary.name} followed at ${formatGapDollars(-Math.abs(secondary.gapDollars))}.`;
-  }
-
-  if (topSellers.length >= 2) {
-    summary += ` Sellers ${topSellers[0][0]} and ${topSellers[1][0]} contributed heavily to the impact.`;
-  }
-
-  summary += " Several of these issues are still open this week.";
-
-  return summary;
+  return [
+    `${typeLabel.charAt(0).toUpperCase()}${typeLabel.slice(1)} flagged across ${skuLabel}.`,
+    concentrationPhrase(node),
+    `${primary.name} was the top issue; several remain open.`,
+  ];
 }
 
 function buildTaxonomyIssuePrompts(
@@ -2395,7 +2488,7 @@ function buildTaxonomyPerformanceKpis(
 /** Build portfolio / brand / category RCA copy from taxonomy node SKUs */
 export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView {
   const skus = node.skus;
-  const issueRollup = rollupIssuesByKey(skus);
+  const issueRollup = rollupIssuesForTaxonomyNode(node);
   const topIssues = issueRollup.slice(0, 3).map((issue, index) => ({
     ...issue,
     rank: index + 1,
@@ -2527,9 +2620,8 @@ export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView 
     skuCount: node.skuCount,
     gapDollars: node.gapDollars,
     performanceKpis: buildTaxonomyPerformanceKpis(node),
-    liveNowSummary: buildTaxonomyLiveNowSummary(node, issueRollup),
-    thisWeekSummary: buildTaxonomyThisWeekSummary(node, topIssues),
-    lastWeekSummary: buildTaxonomyLastWeekSummary(node, topIssues, topSellers),
+    liveNowBullets: buildTaxonomyLiveNowBullets(node, issueRollup),
+    lastWeekBullets: buildTaxonomyLastWeekBullets(node, issueRollup),
     narratives: narratives.slice(0, 3),
     topIssues,
     skus,
@@ -2546,6 +2638,8 @@ function countIssuesPerSku(
   const counts = new Map<string, Set<IssueKey>>();
 
   for (const issue of alerts) {
+    if (filters.issueKey && issue.issueKey !== filters.issueKey) continue;
+
     for (const sku of issue.skus) {
       if (
         !skuPassesFilters(sku, filters) ||
@@ -2574,6 +2668,8 @@ export function buildAlertsTaxonomyTree(
   const skuById = new Map<string, CategorySku>();
 
   for (const issue of alerts) {
+    if (filters.issueKey && issue.issueKey !== filters.issueKey) continue;
+
     for (const sku of issue.skus) {
       if (
         !skuPassesFilters(sku, filters) ||
@@ -2830,6 +2926,44 @@ export function getCategoryFilterOptions(
   return rollupDimension(skus, "category");
 }
 
+/**
+ * Issue type rows for taxonomy filter — narrowed by brand / category / search.
+ * Sorted by $ gap (worst first). issueCount = affected SKUs.
+ */
+export function getIssueFilterOptions(
+  brand: string | null = null,
+  category: string | null = null,
+  skuQuery = "",
+): FilterDimensionOption[] {
+  const options: FilterDimensionOption[] = [];
+
+  for (const issue of issueAlerts) {
+    const skus = issue.skus.filter((sku) => {
+      if (brand && sku.brand !== brand) return false;
+      if (category && sku.category !== category) return false;
+      if (!matchesSkuText(sku, skuQuery)) return false;
+      return true;
+    });
+    if (skus.length === 0) continue;
+
+    const gapDollars = skus.reduce((sum, sku) => sum + sku.gapDollars, 0);
+    const gapAbs = Math.abs(gapDollars);
+    const achievedDollars = Math.max(40_000, Math.round(gapAbs * 0.55));
+
+    options.push({
+      id: issue.issueKey,
+      name: issueLabel(issue.issueKey),
+      gapDollars,
+      unitsDelta: Math.round(gapDollars / 400),
+      issueCount: skus.length,
+      achievedDollars,
+      targetDollars: achievedDollars + gapAbs,
+    });
+  }
+
+  return options.sort((a, b) => a.gapDollars - b.gapDollars);
+}
+
 /** SKU rows — narrowed by brand / category when those filters are on */
 export function getSkuFilterOptions(
   brand: string | null = null,
@@ -2874,7 +3008,7 @@ export function summarizeFilterOptions(options: FilterDimensionOption[]) {
   return { gapDollars, unitsDelta, achievedDollars, targetDollars };
 }
 
-/** Apply Brand / Category / SKU text filters (+ optional time window) to issue alerts */
+/** Apply Brand / Category / SKU / Issue filters (+ optional time window) to issue alerts */
 export function filterIssueAlerts(
   alerts: IssueAlert[],
   filters: AlertsFilters,
@@ -2882,6 +3016,8 @@ export function filterIssueAlerts(
 ): IssueAlert[] {
   return alerts
     .map((issue) => {
+      if (filters.issueKey && issue.issueKey !== filters.issueKey) return null;
+
       const skus = issue.skus.filter(
         (sku) =>
           skuPassesFilters(sku, filters) &&
@@ -2894,7 +3030,8 @@ export function filterIssueAlerts(
         (filters.brand ||
           filters.category ||
           filters.skuId ||
-          filters.skuQuery.trim())
+          filters.skuQuery.trim() ||
+          filters.issueKey)
       ) {
         return null;
       }
@@ -2943,6 +3080,7 @@ export const emptyAlertsFilters: AlertsFilters = {
   category: null,
   skuId: null,
   skuQuery: "",
+  issueKey: null,
 };
 
 export const hierarchyTree: HierarchyNode = {

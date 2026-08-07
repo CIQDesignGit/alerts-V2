@@ -90,14 +90,81 @@ export function InsightSegmentText({ segment }: { segment: AllyInsightSegment })
   );
 }
 
+type NumberedInsightItem = {
+  id: string;
+  content: ReactNode;
+};
+
+type NumberedInsightListProps = {
+  items: NumberedInsightItem[];
+  label: string;
+  className?: string;
+  /** brand = purple wash; muted = grey wash (under Live / Last week headers) */
+  tone?: "brand" | "muted";
+};
+
+/** Numbered 1·2·3 insight bullets — shared by Key insights + taxonomy summaries */
+export function NumberedInsightList({
+  items,
+  label,
+  className,
+  tone,
+}: NumberedInsightListProps) {
+  const list = (
+    <ol
+      className={cn("m-0 flex list-none flex-col gap-3 px-4 py-3", className)}
+      aria-label={label}
+    >
+      {items.map((item, index) => (
+        <li key={item.id} className="flex gap-3">
+          <span
+            className={cn(
+              "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+              tone === "muted"
+                ? "bg-neutral-200 text-neutral-700"
+                : "bg-brand-100 text-brand-700",
+            )}
+            aria-hidden
+          >
+            {index + 1}
+          </span>
+          <p className="min-w-0 flex-1 text-sm leading-relaxed text-neutral-800">
+            {item.content}
+          </p>
+        </li>
+      ))}
+    </ol>
+  );
+
+  if (!tone) return list;
+
+  return (
+    <AllyAiSurface
+      tone={tone}
+      className={cn(
+        "rounded-none border-x-0 border-t-0 shadow-none",
+        tone === "muted"
+          ? "border-b border-neutral-200/70"
+          : "border-b border-brand-200/50",
+      )}
+      contentClassName="p-0"
+    >
+      {list}
+    </AllyAiSurface>
+  );
+}
+
 type AllyInsightContentProps = {
   bullets: AllyInsightBullet[];
-  /** Card heading — matches taxonomy RCA insight blocks */
+  /** Card heading — e.g. Key insights for Lost Buy Box */
   title?: string;
   className?: string;
 };
 
-/** Numbered insight card — prompts render outside via SuggestedAiPrompts. */
+/**
+ * Issue-level Key insights — Live header chrome + numbered bullets
+ * (same shell as taxonomy Live right now cards).
+ */
 export function AllyInsightContent({
   bullets,
   title = "Ally Insight",
@@ -106,32 +173,31 @@ export function AllyInsightContent({
   if (bullets.length === 0) return null;
 
   return (
-    <AllyAiSurface className={cn("shrink-0", className)} contentClassName="p-4">
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+    <div
+      className={cn(
+        "shrink-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm",
+        className,
+      )}
+    >
+      <header className="border-b border-neutral-100 px-4 py-2.5">
+        <h3 className="min-w-0 truncate text-sm font-semibold text-foreground">
+          {title}
+        </h3>
+      </header>
 
-      <ol
-        className="mt-3 flex flex-col gap-3"
-        aria-label={title}
-      >
-        {bullets.map((bullet, index) => (
-          <li key={bullet.id} className="flex gap-3">
-            <span
-              className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700"
-              aria-hidden
-            >
-              {index + 1}
-            </span>
-            <p className="min-w-0 flex-1 text-sm leading-relaxed text-neutral-800">
-              {bullet.segments.map((segment, segmentIndex) => (
-                <InsightSegmentText
-                  key={`${bullet.id}-${segmentIndex}`}
-                  segment={segment}
-                />
-              ))}
-            </p>
-          </li>
-        ))}
-      </ol>
-    </AllyAiSurface>
+      <NumberedInsightList
+        label={title}
+        tone="brand"
+        items={bullets.map((bullet) => ({
+          id: bullet.id,
+          content: bullet.segments.map((segment, segmentIndex) => (
+            <InsightSegmentText
+              key={`${bullet.id}-${segmentIndex}`}
+              segment={segment}
+            />
+          )),
+        }))}
+      />
+    </div>
   );
 }
