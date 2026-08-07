@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ChevronDown, Clock, Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 
+import { LastCrawlBadge } from "@/components/shared/last-crawl-badge";
 import {
   formatAtRisk,
   formatGapDollars,
-  ALERTS_LAST_CRAWL_LABEL,
   getBrandFilterOptions,
   getCategoryFilterOptions,
   summarizeFilterOptions,
   type AlertsFilters,
-  type AlertsGroupBy,
   type FilterDimensionOption,
 } from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
@@ -19,7 +18,6 @@ import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
 type AlertsFiltersBarProps = {
   filters: AlertsFilters;
   onChange: (next: AlertsFilters) => void;
-  groupBy: AlertsGroupBy;
 };
 
 type OpenMenu = "brand" | "category" | "search" | null;
@@ -27,7 +25,6 @@ type OpenMenu = "brand" | "category" | "search" | null;
 export function AlertsFiltersBar({
   filters,
   onChange,
-  groupBy,
 }: AlertsFiltersBarProps) {
   const [open, setOpen] = useState<OpenMenu>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -181,17 +178,8 @@ export function AlertsFiltersBar({
         )}
       </div>
 
-      {groupBy === "issue" && (
-        <p className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="size-3.5 shrink-0" aria-hidden />
-          <span>
-            Last crawl{" "}
-            <span className="font-medium text-foreground">
-              {ALERTS_LAST_CRAWL_LABEL}
-            </span>
-          </span>
-        </p>
-      )}
+      {/* Same clock in issue-type and taxonomy — shares ALERTS_LAST_CRAWL_LABEL */}
+      <LastCrawlBadge />
     </div>
   );
 }

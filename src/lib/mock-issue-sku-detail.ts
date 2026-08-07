@@ -268,7 +268,7 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
   const competitorRating = Math.min(5, brandRating + 0.6 + (seed % 5) / 10);
 
   return {
-    alertMessage: `${sku.name} lost the Buy Box in the last 24 hours — ${gapLabel(sku)} at risk.`,
+    alertMessage: `${sku.name} lost the Buy Box on the latest scrape — ${gapLabel(sku)} at risk.`,
     brandLabel: sku.brand || "Shark",
     competitorLabel: competitor,
     competitorBadge: "Latest Winner",

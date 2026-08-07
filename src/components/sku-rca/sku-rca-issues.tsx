@@ -5,6 +5,11 @@ import { useMemo, useState } from "react";
 
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { IssueSkuDetailBody } from "@/components/issue-sku-detail/issue-sku-detail-body";
+import { LastCrawlBadge } from "@/components/shared/last-crawl-badge";
+import {
+  LAST_WEEK_RANGE_LABEL,
+  PeriodBadge,
+} from "@/components/shared/period-badge";
 import { SkuRcaIssueAiSummary } from "@/components/sku-rca/sku-rca-issue-ai-summary";
 import { SkuRcaIssueRow } from "@/components/sku-rca/sku-rca-issue-row";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
@@ -21,7 +26,6 @@ type SkuRcaIssuesProps = {
   sku: IssueSku;
   groups: RcaIssueGroup[];
   lastWeekTopIssues: RcaLastWeekIssue[];
-  lastUpdated: string;
   liveIssuesSummary: string;
   lastWeekIssuesSummary: string;
 };
@@ -43,7 +47,6 @@ export function SkuRcaIssues({
   sku,
   groups,
   lastWeekTopIssues,
-  lastUpdated,
   liveIssuesSummary,
   lastWeekIssuesSummary,
 }: SkuRcaIssuesProps) {
@@ -77,11 +80,9 @@ export function SkuRcaIssues({
             <h4 className="text-sm font-semibold text-foreground">
               Live right now
             </h4>
-            <span className="rounded-md bg-error-50 px-1.5 py-0.5 text-2xs font-semibold tracking-wide text-error-700 uppercase">
-              Now
-            </span>
+            <PeriodBadge tone="live">Now</PeriodBadge>
           </div>
-          <p className="text-xs text-muted-foreground">{lastUpdated}</p>
+          <LastCrawlBadge variant="updated" />
         </header>
 
         <SkuRcaIssueAiSummary summary={liveIssuesSummary} variant="live" />
@@ -149,11 +150,11 @@ export function SkuRcaIssues({
             <h4 className="text-sm font-semibold text-foreground">
               Top Issues last week
             </h4>
-            <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-2xs font-medium text-neutral-600 ring-1 ring-neutral-200/80">
-              7 days
-            </span>
+            <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
           </div>
-          <p className="text-xs text-muted-foreground">Days active · Jul 19–25</p>
+          <p className="text-xs text-muted-foreground">
+            Days active · {LAST_WEEK_RANGE_LABEL}
+          </p>
         </header>
 
         <SkuRcaIssueAiSummary

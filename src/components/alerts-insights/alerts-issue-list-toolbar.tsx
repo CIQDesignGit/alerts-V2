@@ -27,6 +27,27 @@ export function AlertsIssueListCaption({
   );
 }
 
+/**
+ * Muted caption under the taxonomy tree —
+ * brands and categories use the same OPS sort as the issue list.
+ */
+export function AlertsTaxonomyListCaption({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "text-xs leading-snug text-muted-foreground",
+        className,
+      )}
+    >
+      Brands and categories sorted by OPS
+    </p>
+  );
+}
+
 /** Ghost icon button — export visible issue list */
 export function AlertsIssueListExportButton() {
   return (

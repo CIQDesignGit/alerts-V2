@@ -42,8 +42,8 @@ export function StockAvailabilitySkuDetail({
           <span className="font-semibold">
             {detail.oosCrawlCount}/{detail.totalCrawls} crawls
           </span>{" "}
-          in the previous 24 hours. Here are the latest {detail.crawls.length}{" "}
-          crawls.
+          in recent scrapes. Latest crawl status is shown first, then the prior{" "}
+          {Math.max(detail.crawls.length - 1, 0)} crawls for context.
         </p>
 
         <ol className="relative mt-5 ml-1.5 border-l border-neutral-200">

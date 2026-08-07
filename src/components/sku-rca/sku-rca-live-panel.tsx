@@ -29,7 +29,6 @@ export function SkuRcaLivePanel({
         sku={sku}
         groups={data.issueGroups}
         lastWeekTopIssues={data.lastWeekTopIssues}
-        lastUpdated={data.issuesLastUpdated}
         liveIssuesSummary={data.liveIssuesSummary}
         lastWeekIssuesSummary={data.lastWeekIssuesSummary}
       />

@@ -17,11 +17,7 @@ export function HomePage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <AlertsPageHeader
-        filters={filters}
-        onFiltersChange={setFilters}
-        groupBy={alertsGroupBy}
-      />
+      <AlertsPageHeader filters={filters} onFiltersChange={setFilters} />
 
       <AlertsTab
         filters={filters}

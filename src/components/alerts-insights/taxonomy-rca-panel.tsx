@@ -75,6 +75,7 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
 
           <section className="shrink-0 space-y-3">
             <TaxonomyPeriodSummaries
+              liveNowSummary={view.liveNowSummary}
               thisWeekSummary={view.thisWeekSummary}
               lastWeekSummary={view.lastWeekSummary}
             />

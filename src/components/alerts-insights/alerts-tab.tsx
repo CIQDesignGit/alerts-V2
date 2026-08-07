@@ -16,6 +16,7 @@ import { AlertsGroupBySelect } from "@/components/alerts-insights/alerts-group-b
 import {
   AlertsIssueListCaption,
   AlertsIssueListExportButton,
+  AlertsTaxonomyListCaption,
 } from "@/components/alerts-insights/alerts-issue-list-toolbar";
 import { AlertsTaxonomyTree } from "@/components/alerts-insights/alerts-taxonomy-tree";
 import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
@@ -233,6 +234,9 @@ export function AlertsTab({
           >
             {groupBy === "issue" && (
               <AlertsIssueListCaption className="px-1" />
+            )}
+            {groupBy === "category" && taxonomyTree && (
+              <AlertsTaxonomyListCaption className="px-1" />
             )}
             {groupBy === "category" && !taxonomyTree && (
               <p className="px-2 py-6 text-center text-xs text-muted-foreground">

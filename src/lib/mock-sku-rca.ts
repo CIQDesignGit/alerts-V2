@@ -4,6 +4,7 @@ import {
   ISSUE_UNHEALTHY_STATUS_LABEL,
 } from "@/components/alerts/issue-names";
 import {
+  ALERTS_LAST_CRAWL_LABEL,
   FULL_RCA_LAST_WEEK_PROMPT,
   type AllyAiPrompt,
   type IssueSku,
@@ -308,7 +309,7 @@ function buildLiveIssuesSummary(
     .filter((issue) => isRedIssue(issue.liveStatus));
 
   if (live.length === 0) {
-    return `No active issues on ${sku.name} right now — all monitored checks are passing.`;
+    return `As of the latest scrape, ${sku.name} has no live flags — all monitored checks are clear.`;
   }
 
   const sorted = [...live].sort(
@@ -326,10 +327,10 @@ function buildLiveIssuesSummary(
     .map((issue) => issuePane(issue.issueKey));
 
   if (others.length === 0) {
-    return `${primaryName} is the only live flag on ${sku.name}${impact}. ${primary.statusLabel !== "OK" ? `Status: ${primary.statusLabel}.` : ""} Address this first to limit further gap widening today.`.trim();
+    return `As of the latest scrape, ${primaryName} is the only live flag on ${sku.name}${impact}. ${primary.statusLabel !== "OK" ? `Status: ${primary.statusLabel}.` : ""} Address this first to limit further gap widening today.`.trim();
   }
 
-  return `${primaryName} is the top live driver on ${sku.name}${impact}. Also active now: ${others.join(" and ")}${sorted.length > 3 ? ` (+${sorted.length - 3} more)` : ""}.`;
+  return `As of the latest scrape, ${primaryName} is the top live driver on ${sku.name}${impact}. Also flagged on this scrape: ${others.join(" and ")}${sorted.length > 3 ? ` (+${sorted.length - 3} more)` : ""}.`;
 }
 
 function buildLastWeekIssuesSummary(
@@ -421,7 +422,8 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
         subtitle: "$229K plan · $258.3K projected · 112.9%",
       },
     ],
-    issuesLastUpdated: "Last updated 11:35 AM today (2h ago)",
+    // Same clock as Alerts “Last crawl” (ALERTS_LAST_CRAWL_LABEL)
+    issuesLastUpdated: `Last updated ${ALERTS_LAST_CRAWL_LABEL}`,
     issueGroups,
     lastWeekTopIssues,
     liveIssuesSummary: buildLiveIssuesSummary(sku, issueGroups),

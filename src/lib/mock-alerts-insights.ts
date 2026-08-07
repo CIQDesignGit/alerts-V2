@@ -53,8 +53,13 @@ export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "7d";
 /** Fixed "now" for the prototype so Lost At dates stay stable across machines */
 export const ALERTS_MOCK_NOW = new Date("2026-01-16T18:00:00");
 
-/** Last retailer scrape — shown in the Alerts filter bar */
-export const ALERTS_LAST_CRAWL_LABEL = "4:00 PM today (2h ago)";
+/**
+ * Last retailer scrape clock — single source of truth for
+ * Alerts “Last crawl” and SKU “Last updated” (see LastCrawlBadge).
+ */
+export const ALERTS_LAST_CRAWL_TIME = "4:00 PM today";
+export const ALERTS_LAST_CRAWL_RELATIVE = "2h ago";
+export const ALERTS_LAST_CRAWL_LABEL = `${ALERTS_LAST_CRAWL_TIME} (${ALERTS_LAST_CRAWL_RELATIVE})`;
 
 const TIME_WINDOW_HOURS: Record<AlertsTimeWindow, number> = {
   "24h": 24,
@@ -657,6 +662,8 @@ export type TaxonomyRcaView = {
   skuCount: number;
   gapDollars: number;
   performanceKpis: TaxonomyPerformanceKpi[];
+  /** AllyAI narrative — latest scrape only (not 24h / WTD) */
+  liveNowSummary: string;
   /** AllyAI narrative — current week (WTD) */
   thisWeekSummary: string;
   /** AllyAI narrative — prior week trend */
@@ -941,7 +948,10 @@ export function getAlertStrategicInsights(
 /**
  * Issue roll-up insights are anchored on L24h for now.
  * Assume 4 crawls across 24h (~every 6h). Last crawl matches
- * ALERTS_LAST_CRAWL_LABEL ("4:00 PM today · 2h ago").
+ * ALERTS_LAST_CRAWL_LABEL ("4:00 PM today (2h ago)").
+ *
+ * Live right now copy is framed as the latest scrape snapshot.
+ * (This mock treats currently open alert SKUs as that snapshot.)
  */
 const CRAWLS_PER_DAY = 4;
 const HOURS_PER_CRAWL = 24 / CRAWLS_PER_DAY;
@@ -2203,6 +2213,45 @@ function buildTaxonomyInsightPrompts(
   return prompts.slice(0, 3);
 }
 
+function buildTaxonomyLiveNowSummary(
+  node: AlertsTaxonomyNode,
+  issueRollup: ReturnType<typeof rollupIssuesByKey>,
+): string {
+  const entity = node.name;
+  const issueTypeCount = issueRollup.length;
+  const uniqueSkuCount = new Set(node.skus.map((sku) => sku.id)).size;
+  const skuCount = uniqueSkuCount > 0 ? uniqueSkuCount : node.skuCount;
+
+  if (issueTypeCount === 0) {
+    return `As of the latest scrape, ${entity} has no live issue types — every monitored check on this rollup is clear.`;
+  }
+
+  const primary = issueRollup[0];
+  const secondary = issueRollup[1];
+  const atRisk = formatGapDollars(node.gapDollars);
+
+  const typeLabel =
+    issueTypeCount === 1 ? "1 issue type" : `${issueTypeCount} issue types`;
+  const skuLabel = skuCount === 1 ? "1 SKU" : `${skuCount} SKUs`;
+
+  // Latest-scrape snapshot framing — never “last 24 hours”
+  let summary = `As of the latest scrape, ${entity} has ${typeLabel} that need fixing across ${skuLabel} (${atRisk} at risk).`;
+
+  summary += ` ${primary.name} is the top live driver`;
+  if (secondary) {
+    summary += `, followed by ${secondary.name}`;
+  }
+  summary += ".";
+
+  if (node.level === "overall") {
+    summary += " Drill into brands with the largest latest-scrape $ exposure first.";
+  } else if (node.level === "brand") {
+    summary += " Open the worst categories next to see where the latest-scrape flags cluster.";
+  }
+
+  return summary;
+}
+
 function buildTaxonomyThisWeekSummary(
   node: AlertsTaxonomyNode,
   topIssues: TaxonomyRcaTopIssue[],
@@ -2478,6 +2527,7 @@ export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView 
     skuCount: node.skuCount,
     gapDollars: node.gapDollars,
     performanceKpis: buildTaxonomyPerformanceKpis(node),
+    liveNowSummary: buildTaxonomyLiveNowSummary(node, issueRollup),
     thisWeekSummary: buildTaxonomyThisWeekSummary(node, topIssues),
     lastWeekSummary: buildTaxonomyLastWeekSummary(node, topIssues, topSellers),
     narratives: narratives.slice(0, 3),
