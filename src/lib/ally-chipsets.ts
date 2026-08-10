@@ -31,7 +31,7 @@ type ChipTrio = readonly [string, string, string];
 const ISSUE_ROLLED_UP_CHIPS: Record<IssueKey, ChipTrio> = {
   lostBuyBox: [
     "Which SKUs drive most of the Lost Buy Box gap?",
-    "Who's the most frequent buy box competitor (last 30 days)?",
+    "Who's the most frequent buy box competitor (last 7 days)?",
     "How much revenue is at risk from lost buy box this week?",
   ],
   promoBadge: [
@@ -104,7 +104,7 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
   lostBuyBox: [
     "See trends for Last 7 days",
     "Why is this SKU losing buy box - price, stock, or shipping speed?",
-    "Who's the most frequent buy box competitor on this SKU (last 30 days)?",
+    "Who's the most frequent buy box competitor on this SKU (last 7 days)?",
   ],
   promoBadge: [
     "See trends for Last 7 days",
@@ -129,7 +129,7 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
   bestSellerRank: [
     "See trends for Last 7 days",
     "Did this SKU's rank improve or worsen day-over-day?",
-    "How does this SKU's rank compare to its own 30d average?",
+    "How does this SKU's rank compare to its own 7d average?",
   ],
   ratingReviews: [
     "See trends for Last 7 days",
