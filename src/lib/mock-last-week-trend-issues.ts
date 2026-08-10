@@ -23,9 +23,10 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
     summaryMetrics: [
       {
         id: "lbb",
-        label: "LBB %",
-        value: "71%",
-        delta: "+16pp",
+        // Label above, large value below (same pattern as design “LBB DAYS / 5 / 7”)
+        label: "LBB DAYS",
+        value: "5 / 7",
+        delta: "+16%",
         deltaTone: "negative",
       },
       {
@@ -510,6 +511,12 @@ function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
     summaryColumns: 2,
     summaryMetrics: [
       {
+        id: "days-oos",
+        // First in the 7d snapshot — label above, large value (same layout as other KPIs)
+        label: "DAYS OOS",
+        value: "7",
+      },
+      {
         id: "oos",
         label: "REP OOS %",
         value: "100%",
@@ -652,6 +659,19 @@ function getSponsoredSovTrend(_sku: IssueSku): LastWeekTrendData {
           ["3.1%", "3.0%", "2.9%", "2.7%", "2.4%", "2.1%", "2.0%"],
           "negative",
         ),
+      },
+      {
+        id: "top-comp",
+        label: "Top Competitor SOV %",
+        cells: textCells([
+          "0.0%",
+          "0.0%",
+          "0.0%",
+          "0.0%",
+          "0.0%",
+          "0.0%",
+          "0.0%",
+        ]),
       },
     ],
   };
