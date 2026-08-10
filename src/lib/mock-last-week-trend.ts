@@ -35,12 +35,15 @@ export function hasLastWeekTrendCard(issueKey: IssueKey): boolean {
 }
 
 /**
- * True when the user asked for the issue “how it changed in 7 days” chip prompt.
- * Chip label is short; the full prompt sent to Ally is the longer summarize line.
+ * True when the user asked for the Issue Type · SKU “See trends for Last 7 days” chip.
+ * Matches both the current prompt and the older “evolved for…” wording.
  */
 export function isLastSevenDayTrendPrompt(text: string): boolean {
-  return /evolved for .+ over the last 7 days and what changed most recently/i.test(
-    text,
+  return (
+    /trends over the last 7 days and highlight what changed/i.test(text) ||
+    /evolved for .+ over the last 7 days and what changed most recently/i.test(
+      text,
+    )
   );
 }
 

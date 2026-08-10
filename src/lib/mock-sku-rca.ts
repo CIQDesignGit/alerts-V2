@@ -3,9 +3,9 @@ import {
   ISSUE_NAMES,
   ISSUE_UNHEALTHY_STATUS_LABEL,
 } from "@/components/alerts/issue-names";
+import { getTaxonomySkuChips } from "@/lib/ally-chipsets";
 import {
   ALERTS_LAST_CRAWL_LABEL,
-  FULL_RCA_LAST_WEEK_PROMPT,
   type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
@@ -364,25 +364,9 @@ function buildLastWeekIssuesSummary(
   return `${topName} dominated last week's issue trend on ${sku.name}, active ${top.daysPresent} of ${top.daysTotal} days.`;
 }
 
-function buildSkuSuggestedPrompts(sku: IssueSku): AllyAiPrompt[] {
-  return [
-    FULL_RCA_LAST_WEEK_PROMPT,
-    {
-      id: "trends-7d",
-      label: "See trends for Last 7 days",
-      prompt: `Show issue trends for ${sku.name} over the last 7 days and highlight what changed.`,
-    },
-    {
-      id: "summarize-issues",
-      label: `Summarize all issues on ${sku.name}`,
-      prompt: `Summarize all active and recent issues on ${sku.name}, ranked by revenue impact.`,
-    },
-    {
-      id: "changes-24h",
-      label: "What changed in the last 24 hours?",
-      prompt: `What changed on ${sku.name} in the last 24 hours across buy box, promos, traffic, and conversion?`,
-    },
-  ];
+function buildSkuSuggestedPrompts(_sku: IssueSku): AllyAiPrompt[] {
+  // Taxonomy · SKU chipset from the product sheet (exactly 3)
+  return getTaxonomySkuChips();
 }
 
 /** Build RCA payload for a selected alert SKU (mock narrative for layout). */

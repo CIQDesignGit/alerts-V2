@@ -11,7 +11,6 @@ import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
 import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
 import {
   buildTaxonomyRcaView,
-  FULL_RCA_LAST_WEEK_PROMPT,
   type AlertsTaxonomyNode,
 } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
@@ -22,10 +21,8 @@ type TaxonomyRcaPanelProps = {
 
 export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
   const view = useMemo(() => buildTaxonomyRcaView(node), [node]);
-  const insightPrompts = useMemo(
-    () => [FULL_RCA_LAST_WEEK_PROMPT, ...view.insightPrompts],
-    [view.insightPrompts],
-  );
+  // Exactly 3 CSV chips (includes Gap to Plan as Chip 1)
+  const insightPrompts = view.insightPrompts;
 
   // Sample SKU for the full RCA mock when this entity has affected ASINs
   const reportSku = useMemo(() => {

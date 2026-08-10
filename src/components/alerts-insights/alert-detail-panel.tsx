@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { AllyInsightContent } from "@/components/alerts-insights/ally-ai-surface";
 import { AlertMetricTiles } from "@/components/alerts-insights/alert-metric-tiles";
 import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
+import type { IssueKey } from "@/components/alerts/issue-names";
 import { ContentFeedback } from "@/components/shared/content-feedback";
 import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
@@ -22,6 +23,8 @@ export type AlertGroupDetail = {
   title: string;
   /** Stable id for feedback (issueKey or category id) */
   feedbackKey: string;
+  /** Issue Type · Rolled Up chipset key */
+  issueKey: IssueKey;
   skuCount: number;
   gapDollars: number;
   aiSignal?: string;
@@ -68,14 +71,8 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
   );
 
   const insightPrompts = useMemo(
-    () =>
-      buildAlertAllyInsightPrompts(
-        group.title,
-        group.skus,
-        group.gapDollars,
-        group.skuCount,
-      ),
-    [group.title, group.skus, group.gapDollars, group.skuCount],
+    () => buildAlertAllyInsightPrompts(group.issueKey),
+    [group.issueKey],
   );
 
   const metricTiles = useMemo(

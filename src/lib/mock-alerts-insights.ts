@@ -3,7 +3,17 @@ import {
   type IssueGroup,
   type IssueKey,
 } from "@/components/alerts/issue-names";
+import {
+  FULL_RCA_LAST_WEEK_PROMPT,
+  getIssueRolledUpChips,
+  getTaxonomyRolledUpChips,
+  type AllyAiPrompt,
+  type TaxonomyChipLevel,
+} from "@/lib/ally-chipsets";
 import { snapshotMetricLabel } from "@/lib/insights-metrics-config";
+
+export type { AllyAiPrompt } from "@/lib/ally-chipsets";
+export { FULL_RCA_LAST_WEEK_PROMPT };
 
 export type BrandCard = {
   name: string;
@@ -559,83 +569,14 @@ export function buildAlertAllyInsightBullets(
   return bullets;
 }
 
-/** Clickable AllyAI prompt chips — shared by Ally Insight + taxonomy RCA */
-export type AllyAiPrompt = {
-  id: string;
-  /** Short chip label shown in the UI */
-  label: string;
-  /** Full prompt sent to Ally when selected */
-  prompt: string;
-  /** Primary chips (e.g. Run Gap to Plan Analysis) use brand styling; default chips are neutral */
-  variant?: "primary" | "default";
-};
-
 /** @deprecated Use AllyAiPrompt */
 export type TaxonomyRcaPrompt = AllyAiPrompt;
 
-/** Primary “Gap to Plan Analysis” chip — shared across taxonomy / aggregate Ally surfaces */
-export const FULL_RCA_LAST_WEEK_PROMPT: AllyAiPrompt = {
-  id: "full-rca",
-  label: "Run Gap to Plan Analysis for the last week",
-  prompt:
-    "Run Gap to Plan Analysis for the last week. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.",
-  variant: "primary",
-};
-
-/** Contextual follow-up prompts beneath issue-level Ally Insight */
+/** Issue Type · Rolled Up chips — CSV chipset for the aggregate alert panel. */
 export function buildAlertAllyInsightPrompts(
-  title: string,
-  skus: IssueSku[],
-  gapDollars: number,
-  skuCount: number,
+  issueKey: IssueKey,
 ): AllyAiPrompt[] {
-  const sorted = [...skus].sort((a, b) => a.gapDollars - b.gapDollars);
-  const topSku = sorted[0];
-
-  const sellerRollup = new Map<string, { skuCount: number; gap: number }>();
-  for (const sku of skus) {
-    const seller = sku.bbOwner ?? sku.seller;
-    const row = sellerRollup.get(seller) ?? { skuCount: 0, gap: 0 };
-    row.skuCount += 1;
-    row.gap += Math.abs(sku.gapDollars);
-    sellerRollup.set(seller, row);
-  }
-  const topSeller = [...sellerRollup.entries()].sort(
-    (a, b) => b[1].gap - a[1].gap,
-  )[0];
-
-  const prompts: AllyAiPrompt[] = [
-    {
-      id: "rank-skus",
-      label: `Which SKUs drive most of the ${title} gap?`,
-      prompt: `Rank the SKUs contributing to ${title} (${skuCount} SKUs, ${formatGapDollars(gapDollars)} at risk) and explain why each is flagged.`,
-    },
-  ];
-
-  if (topSku) {
-    prompts.push({
-      id: "top-sku",
-      label: `Why is ${topSku.name} the top contributor?`,
-      prompt: `Explain the root cause for ${topSku.name} under ${title} and recommend the fastest fix.`,
-    });
-  }
-
-  if (topSeller) {
-    const [sellerName] = topSeller;
-    prompts.push({
-      id: "seller-map",
-      label: `Is ${sellerName} violating MAP on these SKUs?`,
-      prompt: `Analyze whether ${sellerName} is undercutting MAP on SKUs affected by ${title} and recommend enforcement steps.`,
-    });
-  }
-
-  prompts.push({
-    id: "24h-fix",
-    label: `Highest-ROI fix for ${title} in 24h?`,
-    prompt: `Recommend the highest-ROI actions to reduce ${title} impact across ${skuCount} SKUs within the next 24 hours.`,
-  });
-
-  return prompts.slice(0, 3);
+  return getIssueRolledUpChips(issueKey);
 }
 
 /** One ranked issue in a taxonomy RCA summary */
@@ -2191,60 +2132,10 @@ function avgPriceUndercut(skus: CategorySku[]): number {
 
 function buildTaxonomyInsightPrompts(
   node: AlertsTaxonomyNode,
-  topIssues: TaxonomyRcaTopIssue[],
-  skus: CategorySku[],
 ): TaxonomyRcaPrompt[] {
-  const entity = node.name;
-  const primary = topIssues[0];
-  const prompts: TaxonomyRcaPrompt[] = [];
-
-  if (primary) {
-    prompts.push({
-      id: "why-primary",
-      label: `Why is ${primary.name} hitting ${entity} hardest?`,
-      prompt: `Explain why ${primary.name} is the biggest revenue driver for ${entity} and what changed in the last 7 days.`,
-    });
-  }
-
-  const sellerRollup = new Map<string, number>();
-  for (const sku of skus) {
-    const seller = sku.bbOwner ?? sku.seller;
-    sellerRollup.set(
-      seller,
-      (sellerRollup.get(seller) ?? 0) + Math.abs(sku.gapDollars),
-    );
-  }
-  const topSellers = [...sellerRollup.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2);
-
-  if (topSellers.length >= 2) {
-    prompts.push({
-      id: "seller-map",
-      label: `Are ${topSellers[0][0]} and ${topSellers[1][0]} violating MAP on ${entity}?`,
-      prompt: `Analyze whether sellers ${topSellers[0][0]} and ${topSellers[1][0]} are undercutting MAP on ${entity} SKUs and recommend enforcement steps.`,
-    });
-  } else if (node.level === "overall") {
-    prompts.push({
-      id: "brand-split",
-      label: "Which brands drive most of the portfolio gap?",
-      prompt: `Break down the portfolio revenue gap by brand and rank which brands need immediate attention.`,
-    });
-  } else if (node.level === "brand") {
-    prompts.push({
-      id: "category-split",
-      label: `Which ${entity} categories are worsening fastest?`,
-      prompt: `Compare category-level gap trends for ${entity} over the last 7 days and flag categories accelerating downward.`,
-    });
-  }
-
-  prompts.push({
-    id: "48h-projection",
-    label: `What happens if ${entity} issues stay open 48h?`,
-    prompt: `Project revenue impact for ${entity} if the top issues stay unresolved for the next 48 hours.`,
-  });
-
-  return prompts.slice(0, 3);
+  // SKU nodes use getTaxonomySkuChips elsewhere — rolled-up panels only
+  if (node.level === "sku") return [];
+  return getTaxonomyRolledUpChips(node.level as TaxonomyChipLevel);
 }
 
 function countIssueOccurrences(node: AlertsTaxonomyNode): number {
@@ -2625,7 +2516,7 @@ export function buildTaxonomyRcaView(node: AlertsTaxonomyNode): TaxonomyRcaView 
     narratives: narratives.slice(0, 3),
     topIssues,
     skus,
-    insightPrompts: buildTaxonomyInsightPrompts(node, topIssues, skus),
+    insightPrompts: buildTaxonomyInsightPrompts(node),
     issuePrompts: buildTaxonomyIssuePrompts(node.name, topIssues),
   };
 }

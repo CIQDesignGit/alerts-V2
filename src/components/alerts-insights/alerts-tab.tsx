@@ -315,6 +315,7 @@ export function AlertsTab({
           group={{
             title: issueLabel(selectedIssue.issueKey),
             feedbackKey: selectedIssue.issueKey,
+            issueKey: selectedIssue.issueKey,
             skuCount: selectedIssue.skuCount,
             gapDollars: selectedIssue.gapDollars,
             aiSignal: selectedIssue.aiSignal,
