@@ -400,16 +400,16 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "one-star",
-        label: "1-STAR %",
-        value: "14%",
-        delta: "+6.0pp",
+        label: "NEW 1-STAR REVIEWS",
+        value: "103",
+        delta: "+42",
         deltaTone: "negative",
       },
       {
         id: "two-star",
-        label: "2-STAR %",
-        value: "8%",
-        delta: "+5.0pp",
+        label: "NEW 2-STAR REVIEWS",
+        value: "61",
+        delta: "+28",
         deltaTone: "negative",
       },
     ],
@@ -467,9 +467,9 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "one-star",
-        label: "1★ %",
+        label: "New 1★ reviews",
         cells: textCells(
-          ["5.2%", "6.8%", "7.5%", "11.4%", "12.8%", "13.5%", "14.0%"],
+          ["37", "50", "57", "83", "91", "95", "103"],
           [
             "neutral",
             "neutral",
@@ -483,9 +483,9 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "two-star",
-        label: "2★ %",
+        label: "New 2★ reviews",
         cells: textCells(
-          ["3.1%", "3.5%", "4.0%", "5.2%", "8.6%", "8.5%", "8.3%"],
+          ["22", "26", "30", "38", "61", "60", "61"],
           [
             "neutral",
             "neutral",
@@ -578,17 +578,6 @@ function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
             "negative",
             "negative",
           ],
-          {
-            sublabels: [
-              "0/6 crawls",
-              "2/6 crawls",
-              "3/6 crawls",
-              "4/6 crawls",
-              "6/6 crawls",
-              "6/6 crawls",
-              "6/6 crawls",
-            ],
-          },
         ),
       },
       {

@@ -64,7 +64,7 @@ export function useSkuAllyThread(
         return;
       }
 
-      // “See trends for Last 7 days” → last-week trend card (when designed)
+      // “See trends for Last 7 days for {Issue}” → last-week trend card (when designed)
       if (isLastSevenDayTrendPrompt(trimmed)) {
         const trendIssue = resolveTrendIssueFromPrompt(trimmed, issueKey);
         const trend =

@@ -128,12 +128,7 @@ function TrendCell({
         cellWashClass(cell.tone),
       )}
     >
-      <span>{cell.value}</span>
-      {cell.sublabel ? (
-        <span className="mt-0.5 text-2xs font-normal text-muted-foreground">
-          {cell.sublabel}
-        </span>
-      ) : null}
+      {cell.value}
     </span>
   );
 }

@@ -31,8 +31,6 @@ export type TrendTableCell =
       value: string;
       /** Drives text color + soft wash everywhere (same rule on every issue) */
       tone: TrendTone;
-      /** Second line under the value, e.g. "2/6 crawls" */
-      sublabel?: string;
     }
   | { kind: "empty" }
   | { kind: "check"; ok: boolean }
@@ -88,13 +86,11 @@ export const JUN_1_7_DAYS: TrendDayColumn[] = [
 export function textCells(
   values: string[],
   tone: TrendTone | TrendTone[] = "neutral",
-  options?: { sublabels?: (string | undefined)[] },
 ): TrendTableCell[] {
   return values.map((value, index) => ({
     kind: "text" as const,
     value,
     tone: Array.isArray(tone) ? tone[index]! : tone,
-    sublabel: options?.sublabels?.[index],
   }));
 }
 
