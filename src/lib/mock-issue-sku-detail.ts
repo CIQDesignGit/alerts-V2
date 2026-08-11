@@ -125,20 +125,26 @@ export type RatingReviewsSkuDetail = {
 
 export type StockCrawlRow = {
   id: string;
-  relativeTime: string;
-  absoluteTime: string;
+  /** e.g. "Today, 4:30 AM" */
+  whenLabel: string;
   inStock: boolean;
   location: string;
   zip: string;
 };
 
 export type StockAvailabilitySkuDetail = {
+  /** One-line inventory / unavailability summary above the card */
+  summary: string;
   statusLabel: string;
   location: string;
   zip: string;
   timestamp: string;
   oosCrawlCount: number;
   totalCrawls: number;
+  /** How many crawls are listed by default (e.g. latest 6) */
+  visibleCrawlCount: number;
+  /** Purple “Show all N crawls” link label */
+  showAllLabel: string;
   crawls: StockCrawlRow[];
 };
 
@@ -539,66 +545,63 @@ export function getRatingReviewsSkuDetail(
   };
 }
 
-/** Stock Availability — OOS stamp + crawl timeline. */
+/** Stock Availability — OOS stamp card + crawl timeline. */
 export function getStockAvailabilitySkuDetail(
-  sku: IssueSku,
+  _sku: IssueSku,
 ): StockAvailabilitySkuDetail {
-  const seed = skuSeed(sku);
   return {
+    summary:
+      "24 units on hand. 76% page unavailability. 0% rep OOS. Listing issue — not inventory.",
     statusLabel: "Currently unavailable",
-    location: "New York",
-    zip: "10001",
-    timestamp: "4h ago · 1:09 PM",
-    oosCrawlCount: 18 + (seed % 5),
-    totalCrawls: 24,
+    location: "Los Angeles",
+    zip: "90028",
+    timestamp: "Today, 4:30 AM",
+    oosCrawlCount: 5,
+    totalCrawls: 12,
+    visibleCrawlCount: 6,
+    showAllLabel: "Show all 11 crawls",
     crawls: [
       {
         id: "c1",
-        relativeTime: "4h ago",
-        absoluteTime: "1:09 PM",
+        whenLabel: "Today, 4:30 AM",
         inStock: false,
-        location: "New York",
-        zip: "10001",
+        location: "Los Angeles",
+        zip: "90028",
       },
       {
         id: "c2",
-        relativeTime: "9h ago",
-        absoluteTime: "7:39 AM",
+        whenLabel: "Today, 2:31 AM",
         inStock: false,
         location: "New York",
-        zip: "10001",
+        zip: "10019",
       },
       {
         id: "c3",
-        relativeTime: "15h ago",
-        absoluteTime: "1:39 AM",
+        whenLabel: "Today, 12:30 AM",
         inStock: false,
-        location: "Beverly Hills",
-        zip: "90210",
-      },
-      {
-        id: "c4",
-        relativeTime: "21h ago",
-        absoluteTime: "7:39 PM",
-        inStock: true,
         location: "Chicago",
         zip: "60601",
       },
       {
-        id: "c5",
-        relativeTime: "Yesterday",
-        absoluteTime: "3:39 AM",
+        id: "c4",
+        whenLabel: "Yesterday, 10:30 PM",
         inStock: false,
-        location: "Houston",
-        zip: "77001",
+        location: "Seattle",
+        zip: "98115",
+      },
+      {
+        id: "c5",
+        whenLabel: "Yesterday, 8:30 PM",
+        inStock: false,
+        location: "Los Angeles",
+        zip: "90012",
       },
       {
         id: "c6",
-        relativeTime: "Aug 3",
-        absoluteTime: "3:39 PM",
-        inStock: true,
-        location: "Atlanta",
-        zip: "30301",
+        whenLabel: "Yesterday, 6:58 PM",
+        inStock: false,
+        location: "Chicago",
+        zip: "60614",
       },
     ],
   };
