@@ -84,6 +84,7 @@ export type PromoBadgeSkuDetail = {
   checks: PromoBadgeCheckRow[];
   /** Original/list price card — highlighted when incorrect */
   originalPrice: number;
+  mrpPrice: number;
   originalCardError: boolean;
   sellingPrice: number;
 };
@@ -453,6 +454,7 @@ export function getPromoBadgeSkuDetail(sku: IssueSku): PromoBadgeSkuDetail {
   const ourPrice = sku.ourPrice ?? 129.99;
   // Original is slightly lower than selling — drives “prices incorrect” fail state
   const originalPrice = Number((ourPrice - 2 - (seed % 3) * 0.5).toFixed(2));
+  const mrpPrice = Number((ourPrice + 18 + (seed % 5)).toFixed(2));
   const sellingPrice = Number(ourPrice.toFixed(2));
 
   return {
@@ -469,6 +471,7 @@ export function getPromoBadgeSkuDetail(sku: IssueSku): PromoBadgeSkuDetail {
       },
     ],
     originalPrice,
+    mrpPrice,
     originalCardError: true,
     sellingPrice,
   };

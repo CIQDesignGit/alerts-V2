@@ -61,9 +61,14 @@ export function PromoBadgeSkuDetail({ sku }: PromoBadgeSkuDetailProps) {
           )}
         >
           <p className="text-xs text-muted-foreground">Original</p>
-          <p className="mt-2 text-xl font-bold tracking-tight text-foreground">
-            {formatMoney(detail.originalPrice)}
-          </p>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              {formatMoney(detail.originalPrice)}
+            </span>
+            <span className="text-sm text-muted-foreground line-through">
+              M.R.P: {formatMoney(detail.mrpPrice)}
+            </span>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border bg-background px-4 py-3">

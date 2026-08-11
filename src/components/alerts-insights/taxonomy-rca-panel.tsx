@@ -44,16 +44,24 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6">
-        <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-6")}>
-          <header className="shrink-0 space-y-1">
-            <p className="text-2xs font-semibold tracking-widest text-muted-foreground uppercase">
-              {view.levelLabel}
-            </p>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              {view.entityName}
-            </h2>
-            <p className="text-sm text-muted-foreground">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        {/* Edge-to-edge header — border spans full panel width */}
+        <header className="shrink-0 border-b border-border px-6">
+          <div
+            className={cn(
+              SKU_RCA_CONTENT_WIDTH,
+              "flex items-end justify-between gap-4 py-4",
+            )}
+          >
+            <div className="min-w-0 space-y-1">
+              <p className="text-2xs font-semibold tracking-widest text-muted-foreground uppercase">
+                {view.levelLabel}
+              </p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                {view.entityName}
+              </h2>
+            </div>
+            <p className="shrink-0 pb-1 text-right text-sm text-muted-foreground">
               <span className="font-medium text-foreground">
                 {view.alertCount}
               </span>{" "}
@@ -66,29 +74,34 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
               </span>{" "}
               SKUs affected
             </p>
-          </header>
+          </div>
+        </header>
 
-          <RcaKpiTiles kpis={view.performanceKpis} />
+        {/* Main content — own padding */}
+        <div className="px-6 py-6">
+          <div className={cn(SKU_RCA_CONTENT_WIDTH, "flex flex-col gap-6")}>
+            <RcaKpiTiles kpis={view.performanceKpis} />
 
-          <section className="shrink-0 space-y-3">
-            <TaxonomyPeriodSummaries
-              liveNowBullets={view.liveNowBullets}
-              lastWeekBullets={view.lastWeekBullets}
-            />
-            <ContentFeedback
-              variant="subtle"
-              feedbackKey={node.id}
-              surface="taxonomy-rca"
-              contextLabel={view.entityName}
-              title="Was this insight helpful?"
-            />
-            <SuggestedAiPrompts
-              prompts={insightPrompts}
-              onSelect={onPromptSelect}
-            />
-          </section>
+            <section className="shrink-0 space-y-3">
+              <TaxonomyPeriodSummaries
+                liveNowBullets={view.liveNowBullets}
+                lastWeekBullets={view.lastWeekBullets}
+              />
+              <ContentFeedback
+                variant="subtle"
+                feedbackKey={node.id}
+                surface="taxonomy-rca"
+                contextLabel={view.entityName}
+                title="Was this insight helpful?"
+              />
+              <SuggestedAiPrompts
+                prompts={insightPrompts}
+                onSelect={onPromptSelect}
+              />
+            </section>
 
-          <SkuAllyChatThread messages={messages} />
+            <SkuAllyChatThread messages={messages} />
+          </div>
         </div>
       </div>
     </div>
