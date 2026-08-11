@@ -16,11 +16,11 @@ export const issueDetailTable = {
   scroll: "overflow-x-auto px-3 py-3",
   table: "w-full min-w-xl border-collapse text-left",
   headRow: "border-b border-border",
-  /** Left / label column header */
-  th: "align-top px-2 py-1 text-left text-2xs font-medium tracking-wider text-muted-foreground uppercase",
-  /** Numeric column header — right-aligned */
+  /** Left / label column header — min 12px */
+  th: "align-top px-2 py-1 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase",
+  /** Numeric column header — right-aligned, min 12px */
   thRight:
-    "align-top px-2 py-1 text-right text-2xs font-medium tracking-wider text-muted-foreground uppercase",
+    "align-top px-2 py-1 text-right text-xs font-medium tracking-wider text-muted-foreground uppercase",
   row: "align-middle border-b border-border last:border-b-0",
   /** Left / label cell */
   td: "px-2 py-1 text-left text-xs font-medium text-foreground",

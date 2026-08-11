@@ -221,8 +221,14 @@ export type MediaSpendKeywordRow = {
 };
 
 export type MediaSpendSkuDetail = {
+  summaryLead: string;
+  totalSpendLastWeek: string;
+  totalSpendPreviousWeek: string;
   periodLabel: string;
-  previousPeriodLabel: string;
+  /** Short date under “Spend LW”, e.g. "Aug 4–10" */
+  spendLwDates: string;
+  /** Sub-label under “Spend Change”, e.g. "vs. Jul 28–Aug 3" */
+  spendChangeVs: string;
   rows: MediaSpendKeywordRow[];
 };
 
@@ -753,8 +759,13 @@ export function getKeywordRankSkuDetail(sku: IssueSku): KeywordRankSkuDetail {
 export function getMediaSpendSkuDetail(sku: IssueSku): MediaSpendSkuDetail {
   void sku;
   return {
-    periodLabel: "Last 7 Days (May 3–9)",
-    previousPeriodLabel: "Previous 7 Days (Apr 26–May 2)",
+    summaryLead:
+      "Spend cut on all top keywords last week. Total keyword spend (all KWs):",
+    totalSpendLastWeek: "$0",
+    totalSpendPreviousWeek: "$0",
+    periodLabel: "Last week (Aug 4–10)",
+    spendLwDates: "Aug 4–10",
+    spendChangeVs: "vs. Jul 28–Aug 3",
     rows: [
       {
         id: "m1",
