@@ -231,7 +231,10 @@ export type ConversionMetricCard = {
   title: string;
   from: string;
   to: string;
-  changeLabel: string;
+  /** e.g. "Drop magnitude:" / "Deviation:" */
+  detailLabel: string;
+  /** e.g. "-1.6pp" / "-1,841 (-19.5%)" */
+  detailValue: string;
 };
 
 export type ConversionDropSkuDetail = {
@@ -821,11 +824,7 @@ export function getMediaSpendSkuDetail(sku: IssueSku): MediaSpendSkuDetail {
 export function getConversionDropSkuDetail(
   sku: IssueSku,
 ): ConversionDropSkuDetail {
-  const seed = skuSeed(sku);
-  const fromConv = 5.1;
-  const toConv = Number((4.5 - (seed % 3) * 0.1).toFixed(1));
-  const delta =
-    (((toConv - fromConv) / fromConv) * 100).toFixed(1);
+  void sku;
 
   return {
     summary:
@@ -834,16 +833,18 @@ export function getConversionDropSkuDetail(
       {
         id: "conversion",
         title: "Conversion Drop",
-        from: `${fromConv}%`,
-        to: `${toConv}%`,
-        changeLabel: `(${delta}%)`,
+        from: "3.0%",
+        to: "1.5%",
+        detailLabel: "Drop magnitude:",
+        detailValue: "-1.6pp",
       },
       {
         id: "glance",
         title: "Glance Views",
-        from: "12,480",
-        to: "12,340",
-        changeLabel: "(-1.1%)",
+        from: "9,452",
+        to: "7,611",
+        detailLabel: "Deviation:",
+        detailValue: "-1,841 (-19.5%)",
       },
     ],
   };
