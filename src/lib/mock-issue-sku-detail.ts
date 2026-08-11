@@ -18,6 +18,21 @@ export type BuyBoxComparisonRow = {
   /** Win rate fraction e.g. 1/6 — rendered as link */
   brandWinRate?: string;
   competitorWinRate?: string;
+  /** Crawl times when this side owned the Buy Box (winRate rows) */
+  brandWinChecks?: BuyBoxWinCheckDay[];
+  competitorWinChecks?: BuyBoxWinCheckDay[];
+};
+
+/** One PDP scrape when a seller held the Buy Box */
+export type BuyBoxWinCheck = {
+  time: string;
+  relative: string;
+};
+
+/** Win checks grouped by calendar day for the crawl tooltip */
+export type BuyBoxWinCheckDay = {
+  date: string;
+  checks: BuyBoxWinCheck[];
 };
 
 export type LostBuyBoxSkuDetail = {
@@ -64,6 +79,8 @@ export type PromoBadgeCheckRow = {
 };
 
 export type PromoBadgeSkuDetail = {
+  /** One-line summary above the checklist */
+  summary: string;
   checks: PromoBadgeCheckRow[];
   /** Original/list price card — highlighted when incorrect */
   originalPrice: number;
@@ -229,6 +246,42 @@ function gapLabel(sku: IssueSku): string {
   return formatGapDollars(sku.gapDollars);
 }
 
+/**
+ * Recent scrape times (newest first) used to fill Buy Box Wins tooltips.
+ * Count of returned checks matches the win numerator (e.g. 2 for 2/6).
+ */
+const BUY_BOX_CRAWL_POOL: Array<BuyBoxWinCheck & { date: string }> = [
+  { date: "11 Aug 2026", time: "4:36 AM", relative: "6h ago" },
+  { date: "11 Aug 2026", time: "2:30 AM", relative: "9h ago" },
+  { date: "11 Aug 2026", time: "12:30 AM", relative: "11h ago" },
+  { date: "10 Aug 2026", time: "10:59 PM", relative: "12h ago" },
+  { date: "10 Aug 2026", time: "8:38 PM", relative: "14h ago" },
+  { date: "10 Aug 2026", time: "6:30 PM", relative: "17h ago" },
+  { date: "10 Aug 2026", time: "4:30 PM", relative: "19h ago" },
+  { date: "10 Aug 2026", time: "2:30 PM", relative: "21h ago" },
+  { date: "10 Aug 2026", time: "12:30 PM", relative: "23h ago" },
+  { date: "10 Aug 2026", time: "8:31 AM", relative: "1d ago" },
+  { date: "10 Aug 2026", time: "6:30 AM", relative: "1d ago" },
+];
+
+function buildBuyBoxWinCheckDays(
+  winCount: number,
+  side: "brand" | "competitor",
+): BuyBoxWinCheckDay[] {
+  // Competitor starts one slot later so the two tooltips don’t look identical
+  const offset = side === "competitor" ? 1 : 0;
+  const selected = BUY_BOX_CRAWL_POOL.slice(offset, offset + winCount);
+
+  const byDate = new Map<string, BuyBoxWinCheck[]>();
+  for (const entry of selected) {
+    const day = byDate.get(entry.date) ?? [];
+    day.push({ time: entry.time, relative: entry.relative });
+    byDate.set(entry.date, day);
+  }
+
+  return [...byDate.entries()].map(([date, checks]) => ({ date, checks }));
+}
+
 /** Issue-scoped Ally prompts — CSV Issue Type · SKU chipset (exactly 3). */
 export function getIssueSkuPrompts(
   issueKey: IssueKey,
@@ -249,7 +302,7 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
   const competitorRating = Math.min(5, brandRating + 0.6 + (seed % 5) / 10);
 
   return {
-    alertMessage: `${sku.name} lost the Buy Box on the latest scrape — ${gapLabel(sku)} at risk.`,
+    alertMessage: "You've lost the Buy Box on an important SKU.",
     brandLabel: sku.brand || "Shark",
     competitorLabel: competitor,
     competitorBadge: "Latest Winner",
@@ -285,6 +338,8 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
         competitorValue: `${theirWin}/6`,
         brandWinRate: `${ourWin}/6`,
         competitorWinRate: `${theirWin}/6`,
+        brandWinChecks: buildBuyBoxWinCheckDays(ourWin, "brand"),
+        competitorWinChecks: buildBuyBoxWinCheckDays(theirWin, "competitor"),
       },
     ],
   };
@@ -386,6 +441,8 @@ export function getPromoBadgeSkuDetail(sku: IssueSku): PromoBadgeSkuDetail {
   const sellingPrice = Number(ourPrice.toFixed(2));
 
   return {
+    summary:
+      "Your product is on discount from 2 Aug to 5 Sep, but there is some issue with the display.",
     checks: [
       { id: "badge-visible", label: "Promo Badge Visible?", ok: false },
       { id: "original-correct", label: "Original Price is Correct?", ok: false },

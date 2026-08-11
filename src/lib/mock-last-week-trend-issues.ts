@@ -31,14 +31,14 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "rev",
-        label: "AVG REVENUE LOST",
+        label: "REVENUE LOST",
         value: "-$86.0K",
         delta: "+65%",
         deltaTone: "negative",
       },
       {
         id: "comp",
-        label: "PRIMARY COMPETITOR",
+        label: "BUY BOX WINNER",
         value: competitor,
         infoTooltip:
           "Seller who won the Buy Box most often when you lost it last week.",
@@ -95,7 +95,7 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
         id: "price-gap",
         label: "Price gap",
         infoTooltip:
-          "Your price minus the Buy Box winner’s price. Negative means you were cheaper.",
+          "Average amount by which your price exceeds the Buy Box winner's price when you lose the Buy Box.",
         cells: textCells(
           [
             "-$22.40",
@@ -119,7 +119,7 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "revenue",
-        label: "Revenue impact",
+        label: "Est. Revenue Impact",
         cells: [
           { kind: "empty" },
           { kind: "text", value: "$17.2K", tone: "negative" },

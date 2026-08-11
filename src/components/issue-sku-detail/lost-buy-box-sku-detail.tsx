@@ -10,10 +10,22 @@ import {
 import { useMemo } from "react";
 
 import { IssueDetailTableHeader, issueDetailTable } from "@/components/issue-sku-detail/issue-detail-table";
-import type { BuyBoxComparisonRow } from "@/lib/mock-issue-sku-detail";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type {
+  BuyBoxComparisonRow,
+  BuyBoxWinCheckDay,
+} from "@/lib/mock-issue-sku-detail";
 import { getLostBuyBoxSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
+
+/** Explains how Buy Box Wins % is calculated from PDP visits */
+const BUY_BOX_WINS_TOOLTIP =
+  "CommerceIQ Sales Agent visited the PDP of this SKU multiple times in a day. The Buy Box Wins is the percentage of times the Buy Box was owned by you across all such visits.";
 
 type LostBuyBoxSkuDetailProps = {
   sku: IssueSku;
@@ -85,7 +97,17 @@ function ComparisonRow({ row }: { row: BuyBoxComparisonRow }) {
           <span className="inline-flex items-center gap-1 text-xs font-medium">
             {row.label}
             {row.icon === "winRate" && (
-              <Info className="size-3.5 text-neutral-400" aria-hidden />
+              <Tooltip>
+                <TooltipTrigger
+                  className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:text-neutral-600"
+                  aria-label="About Buy Box Wins"
+                >
+                  <Info className="size-3.5" aria-hidden />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-left leading-snug">
+                  {BUY_BOX_WINS_TOOLTIP}
+                </TooltipContent>
+              </Tooltip>
             )}
           </span>
         </span>
@@ -126,13 +148,25 @@ function CellValue({
   if (row.icon === "winRate") {
     const value =
       side === "brand" ? row.brandWinRate : row.competitorWinRate;
+    const checks =
+      side === "brand" ? row.brandWinChecks : row.competitorWinChecks;
+
     return (
-      <button
-        type="button"
-        className="text-xs font-medium text-brand-600 underline-offset-2 hover:underline"
-      >
-        {value}
-      </button>
+      <Tooltip>
+        <TooltipTrigger
+          className="text-xs font-medium text-brand-600 underline-offset-2 hover:underline"
+          aria-label={`Buy Box wins ${value ?? ""} — view crawl times`}
+        >
+          {value}
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="start"
+          className="flex w-56 max-w-none flex-col items-stretch gap-2.5 px-3 py-2.5 text-left"
+        >
+          <BuyBoxWinChecksTooltip days={checks ?? []} />
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
@@ -140,6 +174,40 @@ function CellValue({
     <span className="text-xs font-medium tabular-nums">
       {side === "brand" ? row.brandValue : row.competitorValue}
     </span>
+  );
+}
+
+/** Dark tooltip body — crawl times when this seller held the Buy Box */
+function BuyBoxWinChecksTooltip({ days }: { days: BuyBoxWinCheckDay[] }) {
+  return (
+    <div className="flex w-full flex-col gap-2.5">
+      <p className="text-xs font-medium leading-snug text-background">
+        This seller owned the Buy Box during these checks
+      </p>
+      {days.map((day) => (
+        <div key={day.date} className="flex flex-col gap-1">
+          <p className="text-2xs font-medium text-background/65">{day.date}</p>
+          <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+            {day.checks.map((check) => (
+              <li
+                key={`${day.date}-${check.time}`}
+                className="flex items-baseline justify-between gap-3 text-xs leading-5"
+              >
+                <span className="inline-flex items-baseline gap-1.5 text-background">
+                  <span aria-hidden className="text-background/70">
+                    •
+                  </span>
+                  {check.time}
+                </span>
+                <span className="shrink-0 text-background/65">
+                  ({check.relative})
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 }
 

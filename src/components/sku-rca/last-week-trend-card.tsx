@@ -26,6 +26,28 @@ const DAY_COL_SHELL = cn(
   DAY_COL_PAD,
 );
 
+/**
+ * Summary KPI value — if it ends with “days” (e.g. “7 / 7 days”),
+ * render that word smaller and in a light neutral tint.
+ */
+function SummaryMetricValue({ value }: { value: string }) {
+  const match = value.match(/^(.*?)\s+(days)$/i);
+  if (!match) {
+    return (
+      <p className="text-base font-semibold tracking-tight text-foreground">
+        {value}
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-base font-semibold tracking-tight text-foreground">
+      {match[1]}{" "}
+      <span className="text-xs font-medium text-neutral-400">{match[2]}</span>
+    </p>
+  );
+}
+
 function deltaClass(tone?: TrendTone) {
   if (tone === "positive") return "text-success-600";
   if (tone === "negative") return "text-error-600";
@@ -192,9 +214,7 @@ export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {
                 ) : null}
               </div>
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <p className="text-base font-semibold tracking-tight text-foreground">
-                  {metric.value}
-                </p>
+                <SummaryMetricValue value={metric.value} />
                 {metric.delta ? (
                   <span
                     className={cn(

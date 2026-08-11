@@ -21,6 +21,8 @@ export function PromoBadgeSkuDetail({ sku }: PromoBadgeSkuDetailProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-sm text-foreground">{detail.summary}</p>
+
       {/* Checklist card */}
       <div className="overflow-hidden rounded-lg border border-border bg-background">
         <ul className="divide-y divide-border">
