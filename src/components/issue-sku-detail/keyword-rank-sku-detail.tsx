@@ -1,7 +1,13 @@
 "use client";
 
+import { Info } from "lucide-react";
 import { useMemo } from "react";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getKeywordRankSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
@@ -10,13 +16,34 @@ type KeywordRankSkuDetailProps = {
   sku: IssueSku;
 };
 
+const PREVIOUS_RANK_TOOLTIP =
+  "Previous ranks are calculated based on the available data from the previous 90 days";
+
+const THRESHOLD_BREACH_TOOLTIP =
+  "Threshold Breached: Organic keyword rank crossed the defined threshold of 5 ranks.";
+
 /** Keyword Rank — drop cards with threshold badge. */
 export function KeywordRankSkuDetail({ sku }: KeywordRankSkuDetailProps) {
   const detail = useMemo(() => getKeywordRankSkuDetail(sku), [sku]);
+  const hasThresholdBreach = detail.cards.some((card) => card.thresholdBreached);
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">{detail.summary}</p>
+      <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+        <span>{detail.summary}</span>
+        <Tooltip>
+          <TooltipTrigger
+            className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:text-neutral-600"
+            aria-label="About keyword ranks"
+          >
+            <Info className="size-3.5" aria-hidden />
+          </TooltipTrigger>
+          <TooltipContent className="flex max-w-xs flex-col gap-2 text-left leading-snug">
+            <p>{PREVIOUS_RANK_TOOLTIP}</p>
+            {hasThresholdBreach && <p>{THRESHOLD_BREACH_TOOLTIP}</p>}
+          </TooltipContent>
+        </Tooltip>
+      </p>
 
       <ul className="flex flex-col gap-3">
         {detail.cards.map((card) => (
@@ -35,57 +62,22 @@ export function KeywordRankSkuDetail({ sku }: KeywordRankSkuDetailProps) {
               )}
             </div>
 
-            <div className="flex flex-col items-end gap-1.5 text-sm">
-              <RankLine
-                label="Organic"
-                from={card.organicFrom}
-                to={card.organicTo}
-                emphasize={card.emphasizeDrop}
-              />
-              {card.paidFrom != null && card.paidTo != null && (
-                <RankLine
-                  label="Paid"
-                  from={card.paidFrom}
-                  to={card.paidTo}
-                  emphasize={card.emphasizeDrop}
-                />
-              )}
+            {/* One rank change per keyword — no Organic / Paid split */}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">#{card.rankFrom}</span>
+              <span className="text-muted-foreground">→</span>
+              <span
+                className={cn(
+                  "font-semibold",
+                  card.emphasizeDrop ? "text-error-600" : "text-foreground",
+                )}
+              >
+                #{card.rankTo}
+              </span>
             </div>
           </li>
         ))}
       </ul>
-
-      <p className="text-xs text-muted-foreground">{detail.thresholdNote}</p>
-    </div>
-  );
-}
-
-function RankLine({
-  label,
-  from,
-  to,
-  emphasize,
-}: {
-  label: string;
-  from: number;
-  to: number;
-  emphasize: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-14 text-right text-2xs text-muted-foreground">
-        {label}
-      </span>
-      <span className="text-muted-foreground">#{from}</span>
-      <span className="text-muted-foreground">→</span>
-      <span
-        className={cn(
-          "font-semibold",
-          emphasize ? "text-error-600" : "text-foreground",
-        )}
-      >
-        #{to}
-      </span>
     </div>
   );
 }

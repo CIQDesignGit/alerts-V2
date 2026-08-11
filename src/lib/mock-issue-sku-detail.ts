@@ -197,11 +197,9 @@ export type KeywordRankCard = {
   id: string;
   keyword: string;
   thresholdBreached: boolean;
-  organicFrom: number;
-  organicTo: number;
-  paidFrom?: number;
-  paidTo?: number;
-  /** Highlight destination ranks in red when threshold breached */
+  rankFrom: number;
+  rankTo: number;
+  /** Highlight destination rank in red when threshold breached */
   emphasizeDrop: boolean;
 };
 
@@ -716,7 +714,7 @@ export function getKeywordRankSkuDetail(sku: IssueSku): KeywordRankSkuDetail {
   void sku;
   return {
     summary:
-      "Top keywords dropped 6–8 positions after a content update, pushing off page 1 for high-volume terms.",
+      "Your rank for some paid keywords has changed.",
     thresholdNote:
       "Threshold Breached: Organic keyword rank crossed the defined threshold of 5 ranks.",
     cards: [
@@ -724,28 +722,24 @@ export function getKeywordRankSkuDetail(sku: IssueSku): KeywordRankSkuDetail {
         id: "kw1",
         keyword: "food processor 8 cup",
         thresholdBreached: true,
-        organicFrom: 3,
-        organicTo: 9,
-        paidFrom: 5,
-        paidTo: 11,
+        rankFrom: 3,
+        rankTo: 9,
         emphasizeDrop: true,
       },
       {
         id: "kw2",
         keyword: "digital food processor",
         thresholdBreached: false,
-        organicFrom: 8,
-        organicTo: 12,
-        paidFrom: 10,
-        paidTo: 14,
+        rankFrom: 8,
+        rankTo: 12,
         emphasizeDrop: false,
       },
       {
         id: "kw3",
         keyword: "food chopper electric",
         thresholdBreached: false,
-        organicFrom: 12,
-        organicTo: 15,
+        rankFrom: 12,
+        rankTo: 15,
         emphasizeDrop: false,
       },
     ],
