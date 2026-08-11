@@ -154,7 +154,7 @@ function CellValue({
     return (
       <Tooltip>
         <TooltipTrigger
-          className="text-xs font-medium text-brand-600 underline-offset-2 hover:underline"
+          className="cursor-help border-b border-dotted border-brand-600 text-xs font-medium text-brand-600"
           aria-label={`Buy Box wins ${value ?? ""} — view crawl times`}
         >
           {value}
