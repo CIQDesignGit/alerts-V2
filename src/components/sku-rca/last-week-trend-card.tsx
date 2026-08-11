@@ -170,7 +170,7 @@ function InfoHint({ label, text }: { label: string; text: string }) {
 }
 
 /**
- * AllyAI reply card — “Last Week Trend” summary + daily metric table.
+ * AllyAI reply card — “Last 7 Day Trend” summary + daily metric table.
  * One layout for every issue — day headers and values share the same padding.
  */
 export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {

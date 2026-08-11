@@ -178,6 +178,8 @@ export type SovChange = {
 };
 
 export type SponsoredSovSkuDetail = {
+  /** One-line diagnosis above the SP/SB metric cards */
+  summary: string;
   sp: SovChange & { competitorPct: number };
   sb: SovChange & { competitorPct: number };
   keywords: {
@@ -676,6 +678,8 @@ export function getSponsoredSovSkuDetail(sku: IssueSku): SponsoredSovSkuDetail {
   const seed = skuSeed(sku);
   const brand = sku.brand || "Shark";
   return {
+    summary:
+      "Competitor ads detected on branded keywords resulting in a drop in SoV.",
     sp: { from: 5, to: 4, deltaPct: -20, competitorPct: 6 },
     sb: { from: 2.5, to: 2, deltaPct: -20, competitorPct: 6 },
     keywords: [

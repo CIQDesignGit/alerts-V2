@@ -17,7 +17,7 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
 
   return {
     issueKey: "lostBuyBox",
-    title: "Last Week Trend (May 3–9)",
+    title: "Last 7 Day Trend (May 3–9)",
     vsPrevWeekTooltip:
       "Compares this week’s Lost Buy Box metrics to the prior 7 days.",
     summaryMetrics: [
@@ -138,7 +138,7 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
 function getPromoBadgeTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "promoBadge",
-    title: "Last Week Trend (May 10–16)",
+    title: "Last 7 Day Trend (May 10–16)",
     vsPrevWeekTooltip:
       "Compares this week’s Promo Badge metrics to the prior 7 days.",
     summaryMetrics: [
@@ -234,7 +234,7 @@ function getPromoBadgeTrend(_sku: IssueSku): LastWeekTrendData {
 function getDealPageVisibilityTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "dealPageVisibility",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Deal Page Visibility metrics to the prior 7 days.",
@@ -272,7 +272,7 @@ function getDealPageVisibilityTrend(_sku: IssueSku): LastWeekTrendData {
 function getCouponTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "coupon",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     vsPrevWeekTooltip:
       "Compares this week’s Coupon detection crawls to the prior 7 days.",
     summaryColumns: 1,
@@ -300,7 +300,7 @@ function getCouponTrend(_sku: IssueSku): LastWeekTrendData {
 function getCreditOfferTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "creditOffer",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     vsPrevWeekTooltip:
       "Compares this week’s Credit Offer detection crawls to the prior 7 days.",
     summaryColumns: 1,
@@ -338,7 +338,7 @@ function getBestSellerRankTrend(_sku: IssueSku): LastWeekTrendData {
 
   return {
     issueKey: "bestSellerRank",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     vsPrevWeekTooltip:
       "Compares this week’s Best Seller Rank metrics to the prior 7 days.",
     summaryColumns: 1,
@@ -379,7 +379,7 @@ function getBestSellerRankTrend(_sku: IssueSku): LastWeekTrendData {
 function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "ratingReviews",
-    title: "Last Week Trend (May 20–26)",
+    title: "Last 7 Day Trend (May 20–26)",
     vsPrevWeekTooltip:
       "Compares this week’s Rating & Reviews metrics to the prior 7 days.",
     summaryColumns: 4,
@@ -505,7 +505,7 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
 function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "stockAvailability",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     vsPrevWeekTooltip:
       "Compares this week’s Stock Availability metrics to the prior 7 days.",
     summaryColumns: 2,
@@ -620,7 +620,7 @@ function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
 function getSponsoredSovTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "sponsoredSov",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Sponsored Share of Voice to the prior 7 days.",
@@ -670,7 +670,7 @@ function getSponsoredSovTrend(_sku: IssueSku): LastWeekTrendData {
 function getConversionDropTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "conversionDrop",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Conversion metrics to the prior 7 days.",
@@ -752,7 +752,7 @@ function rankCell(
 function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "keywordRank",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Keyword Rank metrics to the prior 7 days.",
@@ -835,7 +835,7 @@ function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
 function getMediaSpendTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "mediaSpend",
-    title: "Last Week Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Jun 1–7)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Media Spend by keyword to the prior 7 days.",

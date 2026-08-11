@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -9,6 +9,11 @@ import {
   issueTd,
   issueTh,
 } from "@/components/issue-sku-detail/issue-detail-table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   getSponsoredSovSkuDetail,
   type SovChange,
@@ -19,6 +24,13 @@ import { cn } from "@/lib/utils";
 type SponsoredSovSkuDetailProps = {
   sku: IssueSku;
 };
+
+/** Shared SoV definition — same for SP and SB cards */
+const SOV_INFO_TOOLTIP = {
+  SoV: "Page 1 sponsored placements",
+  Current: "7-day avg",
+  Baseline: "90-day avg",
+} as const;
 
 function formatPct(value: number): string {
   return Number.isInteger(value) ? `${value}%` : `${value}%`;
@@ -43,6 +55,8 @@ export function SponsoredSovSkuDetail({ sku }: SponsoredSovSkuDetailProps) {
 
   return (
     <div className="flex flex-col gap-5">
+      <p className="text-sm text-muted-foreground">{detail.summary}</p>
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <MetricCard
           title="Sponsored Product SoV"
@@ -81,11 +95,7 @@ export function SponsoredSovSkuDetail({ sku }: SponsoredSovSkuDetailProps) {
                 {detail.keywords.map((row) => (
                   <tr key={row.id} className={issueDetailTable.row}>
                     <td className={issueTd()}>
-                      <span className={cn(issueDetailTable.cell, "gap-1.5")}>
-                        <ChevronRight
-                          className="size-3.5 text-neutral-400"
-                          aria-hidden
-                        />
+                      <span className={issueDetailTable.cell}>
                         {row.keyword}
                       </span>
                     </td>
@@ -118,7 +128,17 @@ function MetricCard({
     <div className="rounded-xl border border-border bg-background px-4 py-4">
       <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
         {title}
-        <Info className="size-3.5 text-neutral-400" aria-hidden />
+        <Tooltip>
+          <TooltipTrigger
+            className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:text-neutral-600"
+            aria-label={`About ${title}`}
+          >
+            <Info className="size-3.5" aria-hidden />
+          </TooltipTrigger>
+          <TooltipContent className="flex max-w-xs flex-col items-stretch gap-1 px-3 py-2 text-left">
+            <SovInfoTooltipBody />
+          </TooltipContent>
+        </Tooltip>
       </div>
       <p className="mt-3 text-lg tabular-nums">
         <span className="text-muted-foreground">{formatPct(change.from)}</span>
@@ -126,6 +146,19 @@ function MetricCard({
         <span className="font-bold text-error-600">{formatPct(change.to)}</span>
       </p>
       <p className="mt-2 text-xs text-muted-foreground">{competitorLabel}</p>
+    </div>
+  );
+}
+
+/** Dark tooltip body — bold labels + definitions from design */
+function SovInfoTooltipBody() {
+  return (
+    <div className="flex flex-col gap-1 text-xs leading-snug text-background">
+      {Object.entries(SOV_INFO_TOOLTIP).map(([label, value]) => (
+        <p key={label}>
+          <span className="font-semibold">{label}:</span> {value}
+        </p>
+      ))}
     </div>
   );
 }
