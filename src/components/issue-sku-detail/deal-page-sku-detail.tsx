@@ -1,14 +1,9 @@
 "use client";
 
-import { CircleHelp } from "lucide-react";
-import { useMemo } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { useMemo, useState } from "react";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import type { DealPageReviewedLink } from "@/lib/mock-issue-sku-detail";
 import { getDealPageSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 
@@ -20,7 +15,7 @@ type DealPageSkuDetailProps = {
 export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
   const detail = useMemo(() => getDealPageSkuDetail(sku), [sku]);
 
-  // Split lead so “deals page” can carry the underline + tooltip affordance
+  // Split lead so “deals page” can carry the underline + hover menu
   const dealsPhrase = "deals page";
   const dealsIndex = detail.leadText.lastIndexOf(dealsPhrase);
   const leadBefore =
@@ -32,31 +27,15 @@ export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <TooltipProvider>
-        <p className="flex flex-wrap items-center gap-1.5 text-sm text-foreground">
-          <span>
-            {leadBefore}
-            {dealsIndex >= 0 && (
-              <Tooltip>
-                <TooltipTrigger className="cursor-help border-b border-dotted border-neutral-400 font-medium text-foreground">
-                  {dealsPhrase}
-                </TooltipTrigger>
-                <TooltipContent>{detail.tooltip}</TooltipContent>
-              </Tooltip>
-            )}
-            {leadAfter}
-          </span>
-          <Tooltip>
-            <TooltipTrigger
-              className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:text-neutral-600"
-              aria-label="About deals page"
-            >
-              <CircleHelp className="size-4" aria-hidden />
-            </TooltipTrigger>
-            <TooltipContent>{detail.tooltip}</TooltipContent>
-          </Tooltip>
-        </p>
-      </TooltipProvider>
+      <p className="flex flex-wrap items-center gap-1.5 text-sm text-foreground">
+        <span>
+          {leadBefore}
+          {dealsIndex >= 0 && (
+            <DealsPageHoverMenu pages={detail.reviewedPages} />
+          )}
+          {leadAfter}
+        </span>
+      </p>
 
       {/* Status card — pink hero + missing message */}
       <div className="w-full max-w-xs overflow-hidden rounded-xl border border-border bg-background shadow-md">
@@ -82,5 +61,56 @@ export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** White hover panel listing the 7 deals pages that were reviewed */
+function DealsPageHoverMenu({ pages }: { pages: DealPageReviewedLink[] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        className="cursor-help border-b border-dotted border-neutral-400 font-medium text-foreground"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+      >
+        deals page
+      </button>
+
+      {open ? (
+        <div
+          role="dialog"
+          aria-label="Reviewed deals pages"
+          className="absolute left-0 top-full z-50 mt-1.5 w-80 overflow-hidden rounded-lg border border-border bg-background shadow-md"
+        >
+          <p className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">
+            We have reviewed first fold of these 7 deals pages.
+          </p>
+          <ul className="m-0 list-none divide-y divide-border p-0">
+            {pages.map((page) => (
+              <li key={page.id}>
+                <a
+                  href={page.href}
+                  onClick={(event) => event.preventDefault()}
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm text-foreground transition-colors hover:bg-neutral-50"
+                >
+                  <span>{page.label}</span>
+                  <ArrowUpRight
+                    className="size-4 shrink-0 text-neutral-400"
+                    aria-hidden
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </span>
   );
 }

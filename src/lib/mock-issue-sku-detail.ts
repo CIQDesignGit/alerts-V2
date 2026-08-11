@@ -89,11 +89,18 @@ export type PromoBadgeSkuDetail = {
   sellingPrice: number;
 };
 
+export type DealPageReviewedLink = {
+  id: string;
+  label: string;
+  /** Prototype placeholder — keep users on-page */
+  href: string;
+};
+
 export type DealPageSkuDetail = {
   /** Lead copy above the status card */
   leadText: string;
-  /** Tooltip for “deals page” helper */
-  tooltip: string;
+  /** Deal category pages shown when hovering “deals page” */
+  reviewedPages: DealPageReviewedLink[];
   statusHeadline: string;
   /** Short supporting lines under the headline (mock skeleton text) */
   supportLines: [string, string];
@@ -465,8 +472,27 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
   return {
     leadText:
       "Despite ongoing offer on this product, it is not showing up on the deals page",
-    tooltip:
-      "Deals page is the retailer merchandising surface where Lightning Deals and Best Deals appear. Your SKU has an active offer but is not listed there.",
+    reviewedPages: [
+      { id: "small-appliances", label: "Small Appliances", href: "#" },
+      { id: "hair-care", label: "Hair Care", href: "#" },
+      { id: "toys-games", label: "Toys & Games", href: "#" },
+      {
+        id: "heating-cooling",
+        label: "Heating, Cooling & Air Quality",
+        href: "#",
+      },
+      {
+        id: "vacuums-floor",
+        label: "Vacuums & Floor Care",
+        href: "#",
+      },
+      {
+        id: "carpet-upholstery",
+        label: "Carpet & Upholstery Cleaners & Accessories",
+        href: "#",
+      },
+      { id: "kitchen-dining", label: "Kitchen & Dining", href: "#" },
+    ],
     statusHeadline: "Your SKU is missing",
     supportLines: [sku.name, sku.asin],
   };
