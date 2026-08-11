@@ -47,7 +47,7 @@ Always follow them unless the user explicitly says otherwise.
 - Muted text: `text-muted-foreground`.
 
 ## Product language
-- Follow `product_context.md` terminology exactly (SKU, Gap to plan, Buy Box, AllyAI, Insight, Recommendation).
+- Follow `product_context.md` terminology exactly (SKU, Gap to plan, Buy Box, AllyAI, Insight, Recommendation). Issue list titles come from `issue-names.ts` `.filter` (e.g. Missing Promo Badge, OOS).
 - Dollar Gap first; never sort impact lists alphabetically by default.
 - Every alert/insight should answer “what do I do next?”
 

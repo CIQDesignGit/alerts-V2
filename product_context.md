@@ -17,7 +17,7 @@
 | # | Decision | Status |
 |---|---|---|
 | **C1** | Alerts are **issue-first**; SKUs nest inside each issue. SKU is still the leaf. | ✅ Locked |
-| **C2** | Prefer **old / canonical issue names** (e.g. “Lost Buy Box”, not mock “Buy Box Lost”). Use the three-location table + `issue-names.ts`. | ✅ Locked |
+| **C2** | Alerts list / filter titles use design labels in `issue-names.ts` `.filter` (e.g. “Missing Promo Badge”, “OOS”). Compact chips + RCA pane keep shorter names. Never use reversed mock copy like “Buy Box Lost”. | ✅ Locked |
 | **C3** | Every issue **belongs to one group**: Sales · Operations · Marketing. Store/show as an **issue group tag**. Do **not** organize the Alerts UI into Sales/Ops/Marketing sections yet — list issues by **$ at risk**. | ✅ Locked |
 | **C4** | Primary surface = **Alerts** at `/` — no separate homepage or hierarchy Insights page. | ✅ Locked |
 | **C5** | **Landing = Alerts** (issue/category list). No Overview tab. | ✅ Locked |
@@ -114,7 +114,7 @@ Each alert = one **issue type** rolled up across affected SKUs, showing:
 
 **Breadcrumb example:** `Alerts > Lost Buy Box > Shark IQ AV970`
 
-**Issue names:** use the canonical table below (and `src/components/alerts/issue-names.ts`). Mock labels like “Buy Box Lost” / “Deal Badge Gone” are **not** UI copy — map to “Lost Buy Box” / “Deal Page Visibility” (or Promo Badge) as appropriate.
+**Issue names:** use the three-location table below (and `src/components/alerts/issue-names.ts`). Left list + filters use the `.filter` column. Reversed mock labels like “Buy Box Lost” / “Deal Badge Gone” are **not** UI copy.
 
 **Historical / platform note (may still be true outside this page):**
 Additional signal types (Sales Drop / Increase, Predictive OOS, Content Change, Competitor OOS/Promo, Amazon Forecast change, Predicted CRaP, PO Discrepancy) and delivery via ESM Recommendations / email remain **adjacent surfaces**, not this tab’s list taxonomy unless added to the canonical table.
@@ -211,9 +211,9 @@ Every canonical issue **belongs to exactly one group**. Use as a **tag** on aler
 
 | Group | Typical issues (examples) |
 |---|---|
-| **Sales** | Lost Buy Box, Best Seller Rank, Rating & Reviews, Conversion Drop |
-| **Operations** | Stock Availability, Shipping Speed |
-| **Marketing** | Promo Badge, Deal Page Visibility, Coupon, Sponsored Share of Voice, Keyword Rank, Media Spend |
+| **Sales** | Lost Buy Box, Best Seller Rank Change, Rating Dropped, Conversion |
+| **Operations** | OOS, Shipping Speed |
+| **Marketing** | Missing Promo Badge, Deal Page Visibility, Active Coupon, Share of Voice Drop, Keyword Rank Drop, Media Spend, Credit Offer |
 
 Canonical mapping lives with names in `src/components/alerts/issue-names.ts` (`group` field).
 
@@ -221,23 +221,24 @@ Canonical mapping lives with names in `src/components/alerts/issue-names.ts` (`g
 
 Each RCA issue type has **three display names** depending on where it appears. Canonical source: `src/components/alerts/issue-names.ts`.
 
-| Filter dropdown / Alerts header | Left-panel chip | RCA right pane |
+| Filter dropdown / Alerts left list | Left-panel chip | RCA right pane |
 |---|---|---|
 | Lost Buy Box | Buy Box | Buy Box |
-| Promo Badge | Promo Badge | Promo Badge |
+| Missing Promo Badge | Promo Badge | Promo Badge |
 | Deal Page Visibility | Deal Page | Deal Page Visibility |
-| Coupon | Coupon | Coupon |
-| Best Seller Rank | Best Seller Rank | Best Seller Rank |
-| Rating & Reviews | Rating | Rating & Reviews |
-| Stock Availability | Stock | Stock Availability |
+| Active Coupon | Coupon | Coupon |
+| Credit Offer | Offer | Credit Offer |
+| Best Seller Rank Change | Best Seller Rank | Best Seller Rank |
+| Rating Dropped | Rating | Rating & Reviews |
+| OOS | Stock | Stock Availability |
 | Shipping Speed | Shipping | Shipping Speed |
-| Sponsored Share of Voice | SOV | Sponsored Share of Voice |
-| Keyword Rank | Keyword Rank | Keyword Rank |
+| Share of Voice Drop | SOV | Sponsored Share of Voice |
+| Keyword Rank Drop | Keyword Rank | Keyword Rank |
 | Media Spend | Media Spend | Media Spend |
-| Conversion Drop | Conversion | Conversion |
+| Conversion | Conversion | Conversion |
 
 **Rules:**
-- **Filter dropdown & Alerts tab issue headers** — full descriptive names (e.g. "Lost Buy Box", "Conversion Drop"). **Never** use mock synonyms like “Buy Box Lost”.
+- **Filter dropdown & Alerts left-list titles** — use the design labels in the first column (e.g. "Missing Promo Badge", "OOS", "Rating Dropped"). **Never** use reversed mock synonyms like “Buy Box Lost”.
 - **Left-panel chips / compact badges** — short labels (e.g. "Buy Box", "SOV", "Deal Page").
 - **RCA right pane** — issue row titles in the root-cause accordion.
 

@@ -1,6 +1,6 @@
 /**
  * Canonical RCA / Alerts issue names by UI location + group tag.
- * - filter / Alerts header = full name (prefer these over mock synonyms)
+ * - filter / Alerts header / left list titles = names shown in Alerts design
  * - chip = short label for compact badges
  * - pane = RCA accordion title
  * - group = Sales | Operations | Marketing (tag only; do not section lists by group yet)
@@ -15,7 +15,7 @@ export const ISSUE_NAMES = {
     group: "Sales" as IssueGroup,
   },
   promoBadge: {
-    filter: "Promo Badge",
+    filter: "Missing Promo Badge",
     chip: "Promo Badge",
     pane: "Promo Badge",
     group: "Marketing" as IssueGroup,
@@ -27,7 +27,7 @@ export const ISSUE_NAMES = {
     group: "Marketing" as IssueGroup,
   },
   coupon: {
-    filter: "Coupon",
+    filter: "Active Coupon",
     chip: "Coupon",
     pane: "Coupon",
     group: "Marketing" as IssueGroup,
@@ -39,19 +39,19 @@ export const ISSUE_NAMES = {
     group: "Marketing" as IssueGroup,
   },
   bestSellerRank: {
-    filter: "Best Seller Rank",
+    filter: "Best Seller Rank Change",
     chip: "Best Seller Rank",
     pane: "Best Seller Rank",
     group: "Sales" as IssueGroup,
   },
   ratingReviews: {
-    filter: "Rating & Reviews",
+    filter: "Rating Dropped",
     chip: "Rating",
     pane: "Rating & Reviews",
     group: "Sales" as IssueGroup,
   },
   stockAvailability: {
-    filter: "Stock Availability",
+    filter: "OOS",
     chip: "Stock",
     pane: "Stock Availability",
     group: "Operations" as IssueGroup,
@@ -63,13 +63,13 @@ export const ISSUE_NAMES = {
     group: "Operations" as IssueGroup,
   },
   sponsoredSov: {
-    filter: "Sponsored Share of Voice",
+    filter: "Share of Voice Drop",
     chip: "SOV",
     pane: "Sponsored Share of Voice",
     group: "Marketing" as IssueGroup,
   },
   keywordRank: {
-    filter: "Keyword Rank",
+    filter: "Keyword Rank Drop",
     chip: "Keyword Rank",
     pane: "Keyword Rank",
     group: "Marketing" as IssueGroup,
@@ -81,7 +81,7 @@ export const ISSUE_NAMES = {
     group: "Marketing" as IssueGroup,
   },
   conversionDrop: {
-    filter: "Conversion Drop",
+    filter: "Conversion",
     chip: "Conversion",
     pane: "Conversion",
     group: "Sales" as IssueGroup,

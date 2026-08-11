@@ -3,6 +3,8 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { downloadAlertsCsv } from "@/lib/export-alerts-csv";
+import type { IssueAlert } from "@/lib/mock-alerts-insights";
 import { cn } from "@/lib/utils";
 
 /**
@@ -48,17 +50,20 @@ export function AlertsTaxonomyListCaption({
   );
 }
 
-/** Ghost icon button — export visible issue list */
-export function AlertsIssueListExportButton() {
+/** Ghost icon button — export the currently filtered alerts list as CSV */
+export function AlertsIssueListExportButton({
+  issues,
+}: {
+  /** Filtered issue → SKU rows currently shown in the left list */
+  issues: IssueAlert[];
+}) {
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon-sm"
       aria-label="Export alerts list"
-      onClick={() => {
-        /* Prototype — wire to CSV export when backend is ready */
-      }}
+      onClick={() => downloadAlertsCsv(issues)}
     >
       <Download className="size-3.5 text-brand-600" aria-hidden />
     </Button>

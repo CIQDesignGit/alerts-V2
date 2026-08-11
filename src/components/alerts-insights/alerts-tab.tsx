@@ -216,7 +216,9 @@ export function AlertsTab({
                     onChange={onGroupByChange}
                   />
                 )}
-                {groupBy === "issue" && <AlertsIssueListExportButton />}
+                {groupBy === "issue" && (
+                  <AlertsIssueListExportButton issues={filteredIssues} />
+                )}
                 <button
                   type="button"
                   aria-label="Close alerts panel"

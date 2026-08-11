@@ -108,8 +108,8 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "Who's the most frequent buy box competitor on this SKU (last 7 days)?",
   ],
   promoBadge: [
-    "See trends for Last 7 days for Promo Badge",
-    "Why is this SKU flagged for Promo Badge?",
+    "See trends for Last 7 days for Missing Promo Badge",
+    "Why is this SKU flagged for Missing Promo Badge?",
     "What's the expected vs. live price for this promo?",
   ],
   dealPageVisibility: [
@@ -118,7 +118,7 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "Which deals pages or categories were checked for this SKU?",
   ],
   coupon: [
-    "See trends for Last 7 days for Coupon",
+    "See trends for Last 7 days for Active Coupon",
     "How long has this coupon been active?",
     "Is the Selling Price for the SKU Correct?",
   ],
@@ -128,17 +128,17 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "How long has this credit offer been active?",
   ],
   bestSellerRank: [
-    "See trends for Last 7 days for Best Seller Rank",
+    "See trends for Last 7 days for Best Seller Rank Change",
     "Did this SKU's rank improve or worsen day-over-day?",
     "How does this SKU's rank compare to its own 7d average?",
   ],
   ratingReviews: [
-    "See trends for Last 7 days for Rating & Reviews",
+    "See trends for Last 7 days for Rating Dropped",
     "What's driving this - a rating drop or a spike in 1-2 star reviews?",
     "How much has the rating changed vs. last week?",
   ],
   stockAvailability: [
-    "See trends for Last 7 days for Stock Availability",
+    "See trends for Last 7 days for OOS",
     "Does the SKU have any On-Hand Inventory?",
     "What's the Unavailability % and Rep OOS % for this SKU?",
   ],
@@ -148,17 +148,17 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "Which Zipcodes have delivery data for this SKU today?",
   ],
   sponsoredSov: [
-    "See trends for Last 7 days for Sponsored Share of Voice",
+    "See trends for Last 7 days for Share of Voice Drop",
     "Is this SKU's SoV drop bigger in Sponsored Products or Sponsored Brands?",
     "What's the Top Competitor SOV %",
   ],
   keywordRank: [
-    "See trends for Last 7 days for Keyword Rank",
+    "See trends for Last 7 days for Keyword Rank Drop",
     "Which keywords dropped rank for this SKU?",
     "Is the drop in organic or sponsored rank?",
   ],
   conversionDrop: [
-    "See trends for Last 7 days for Conversion Drop",
+    "See trends for Last 7 days for Conversion",
     "Is this SKU's conversion drop tied to a drop in glance views?",
     "How does this SKU's conversion rate compare to last week?",
   ],
