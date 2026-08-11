@@ -617,13 +617,15 @@ export function getShippingSpeedSkuDetail(
   const marketCount = 5;
 
   return {
-    summary: `Delivery is averaging ${avgDays} days across ${marketCount} markets — ${daysAbovePrime} days slower than standard Prime.`,
+    summary:
+      "Prime avg 1.1 days, Standard avg 5.0 days across 8 ZIP(s). Prime is 3.9 days faster.",
     avgDays,
     marketCount,
     daysAbovePrime,
-    barMinDays: 1,
+    barMinDays: 0,
     barMaxDays: 8,
-    dangerAt: (5.5 - 1) / (8 - 1),
+    // Blue→red split sits at 2 days on the 0–8 day bar
+    dangerAt: 2 / 8,
     markets: [
       {
         id: "ny",

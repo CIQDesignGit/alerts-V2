@@ -24,8 +24,8 @@ const STEM_CLASS: Record<ShippingMarketPoint["level"], string> = {
 /** Shipping Speed — avg delivery + market timeline bar. */
 export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
   const detail = useMemo(() => getShippingSpeedSkuDetail(sku), [sku]);
-  const dangerPct = Math.round(detail.dangerAt * 100);
-  const okPct = 100 - dangerPct;
+  const okPct = Math.round(detail.dangerAt * 100);
+  const dangerPct = 100 - okPct;
 
   return (
     <div className="flex flex-col gap-3">
@@ -87,7 +87,10 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
             </div>
 
             <div className="mx-1 mt-1.5 flex justify-between text-2xs text-neutral-400">
-              <span>{detail.barMinDays} day</span>
+              <span>
+                {detail.barMinDays}{" "}
+                {detail.barMinDays === 1 ? "day" : "days"}
+              </span>
               <span>{detail.barMaxDays} days</span>
             </div>
           </div>
