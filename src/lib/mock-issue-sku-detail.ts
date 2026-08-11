@@ -106,14 +106,17 @@ export type DealPageSkuDetail = {
   supportLines: [string, string];
 };
 
-export type BestSellerRankMetricRow = {
-  id: string;
-  label: string;
-  value: string;
-};
-
 export type BestSellerRankSkuDetail = {
-  rows: BestSellerRankMetricRow[];
+  /** Text before the bold category name */
+  summaryBefore: string;
+  /** Category name emphasized in the summary */
+  category: string;
+  previousRank: number;
+  /** e.g. "3d avg" */
+  previousAvgLabel: string;
+  currentRank: number;
+  /** e.g. "24h avg" */
+  currentAvgLabel: string;
 };
 
 export type RatingReviewsSkuDetail = {
@@ -498,41 +501,22 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
   };
 }
 
-/** Best Seller Rank — L7D key/value metrics card. */
+/** Best Seller Rank — previous vs current rank shields. */
 export function getBestSellerRankSkuDetail(
   sku: IssueSku,
 ): BestSellerRankSkuDetail {
   const seed = skuSeed(sku);
-  const current = 80 + (seed % 40);
-  const highest = Math.max(10, current - 50 - (seed % 20));
-  const lowest = current + 5 + (seed % 25);
-  const median = Math.round((highest + lowest) / 2) - (seed % 10);
-  const category = sku.category || "Appliances";
+  const previousRank = 3 + (seed % 4); // 3–6
+  const currentRank = previousRank + 2 + (seed % 3); // dropped further
+  const category = sku.category || "Ice Cream Machines";
 
   return {
-    rows: [
-      { id: "category", label: "BSR Category", value: category },
-      {
-        id: "median",
-        label: "Median Category Rank (L7D)",
-        value: `#${median}`,
-      },
-      {
-        id: "highest",
-        label: "Highest Rank (L7D)",
-        value: `#${highest}`,
-      },
-      {
-        id: "lowest",
-        label: "Lowest Rank (L7D)",
-        value: `#${lowest}`,
-      },
-      {
-        id: "current",
-        label: "Current BSR",
-        value: `#${current}`,
-      },
-    ],
+    summaryBefore: "Your product's rank has dropped in ",
+    category,
+    previousRank,
+    previousAvgLabel: "3d avg",
+    currentRank,
+    currentAvgLabel: "24h avg",
   };
 }
 
