@@ -400,16 +400,16 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "one-star",
-        label: "NEW 1-STAR REVIEWS",
-        value: "103",
-        delta: "+42",
+        label: "1-STAR %",
+        value: "14.2%",
+        delta: "+3.1pp",
         deltaTone: "negative",
       },
       {
         id: "two-star",
-        label: "NEW 2-STAR REVIEWS",
-        value: "61",
-        delta: "+28",
+        label: "2-STAR %",
+        value: "8.3%",
+        delta: "+1.8pp",
         deltaTone: "negative",
       },
     ],
@@ -467,7 +467,7 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "one-star",
-        label: "New 1★ reviews",
+        label: "New 1★",
         cells: textCells(
           ["37", "50", "57", "83", "91", "95", "103"],
           [
@@ -483,7 +483,7 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "two-star",
-        label: "New 2★ reviews",
+        label: "New 2★",
         cells: textCells(
           ["22", "26", "30", "38", "61", "60", "61"],
           [

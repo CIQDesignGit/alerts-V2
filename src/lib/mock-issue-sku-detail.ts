@@ -116,21 +116,11 @@ export type BestSellerRankSkuDetail = {
   rows: BestSellerRankMetricRow[];
 };
 
-export type RatingReviewsRow = {
-  id: string;
-  label: string;
-  icon: "rating" | "reviews" | "velocity" | "sentiment";
-  brandValue: string;
-  competitorValue: string;
-  brandRating?: number;
-  competitorRating?: number;
-};
-
 export type RatingReviewsSkuDetail = {
-  alertMessage: string;
-  brandLabel: string;
-  competitorLabel: string;
-  rows: RatingReviewsRow[];
+  /** Lead copy above the Old → New rating cards */
+  summary: string;
+  oldRating: number;
+  newRating: number;
 };
 
 export type StockCrawlRow = {
@@ -358,7 +348,8 @@ export function getCouponSkuDetail(sku: IssueSku): CouponSkuDetail {
   const couponAmount = (2 + (seed % 5) + 0.95).toFixed(2);
 
   return {
-    alertMessage: `Coupon activity on ${sku.name} is shifting Buy Box ownership — ${gapLabel(sku)} at risk.`,
+    alertMessage:
+      "An active vendor-promoted coupon was detected on the Amazon product page for this SKU",
     rows: [
       {
         id: "t-3h",
@@ -401,7 +392,8 @@ export function getCreditOfferSkuDetail(sku: IssueSku): CreditOfferSkuDetail {
   const cashback = 5 + (seed % 6) * 5; // $5, $10, … $30
 
   return {
-    alertMessage: `Credit offer activity on ${sku.name} is lowering effective price vs Buy Box — ${gapLabel(sku)} at risk.`,
+    alertMessage:
+      "An active credit offer was detected on the Amazon product page for this SKU",
     rows: [
       {
         id: "t-3h",
@@ -536,55 +528,14 @@ export function getBestSellerRankSkuDetail(
   };
 }
 
-/** Rating & Reviews — brand vs competitor snapshot. */
+/** Rating Dropped — Old → New star rating cards. */
 export function getRatingReviewsSkuDetail(
-  sku: IssueSku,
+  _sku: IssueSku,
 ): RatingReviewsSkuDetail {
-  const seed = skuSeed(sku);
-  const competitor = sku.bbOwner ?? "Dyson";
-  const brandRating = 3.4 + (seed % 8) / 10;
-  const competitorRating = Math.min(5, brandRating + 0.5 + (seed % 4) / 10);
-  const brandReviews = 800 + seed * 12;
-  const competitorReviews = brandReviews + 400 + seed * 5;
-  const brandVelocity = Math.max(1, 4 - (seed % 4));
-  const competitorVelocity = brandVelocity + 3 + (seed % 3);
-
   return {
-    alertMessage: `${sku.name} rating & review signals are underperforming peers — ${gapLabel(sku)} at risk.`,
-    brandLabel: sku.brand || "Shark",
-    competitorLabel: competitor,
-    rows: [
-      {
-        id: "rating",
-        label: "Star rating",
-        icon: "rating",
-        brandValue: brandRating.toFixed(1),
-        competitorValue: competitorRating.toFixed(1),
-        brandRating,
-        competitorRating,
-      },
-      {
-        id: "reviews",
-        label: "Total reviews",
-        icon: "reviews",
-        brandValue: brandReviews.toLocaleString(),
-        competitorValue: competitorReviews.toLocaleString(),
-      },
-      {
-        id: "velocity",
-        label: "New reviews (7d)",
-        icon: "velocity",
-        brandValue: String(brandVelocity),
-        competitorValue: String(competitorVelocity),
-      },
-      {
-        id: "sentiment",
-        label: "Recent sentiment",
-        icon: "sentiment",
-        brandValue: seed % 2 === 0 ? "Mixed" : "Declining",
-        competitorValue: "Positive",
-      },
-    ],
+    summary: "Your product's rating has dropped.",
+    oldRating: 4.2,
+    newRating: 4,
   };
 }
 
