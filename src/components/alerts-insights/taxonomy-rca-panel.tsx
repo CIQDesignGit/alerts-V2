@@ -21,7 +21,7 @@ type TaxonomyRcaPanelProps = {
 
 export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
   const view = useMemo(() => buildTaxonomyRcaView(node), [node]);
-  // Exactly 3 CSV chips (includes Gap to Plan as Chip 1)
+  // Taxonomy levels: Gap to Plan chip only
   const insightPrompts = view.insightPrompts;
 
   // Sample SKU for the full RCA mock when this entity has affected ASINs

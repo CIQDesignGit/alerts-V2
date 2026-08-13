@@ -5,7 +5,6 @@ import {
 } from "@/components/alerts/issue-names";
 import {
   FULL_RCA_LAST_WEEK_PROMPT,
-  getIssueRolledUpChips,
   getTaxonomyRolledUpChips,
   type AllyAiPrompt,
   type TaxonomyChipLevel,
@@ -571,13 +570,6 @@ export function buildAlertAllyInsightBullets(
 
 /** @deprecated Use AllyAiPrompt */
 export type TaxonomyRcaPrompt = AllyAiPrompt;
-
-/** Issue Type · Rolled Up chips — CSV chipset for the aggregate alert panel. */
-export function buildAlertAllyInsightPrompts(
-  issueKey: IssueKey,
-): AllyAiPrompt[] {
-  return getIssueRolledUpChips(issueKey);
-}
 
 /** One ranked issue in a taxonomy RCA summary */
 export type TaxonomyRcaTopIssue = {

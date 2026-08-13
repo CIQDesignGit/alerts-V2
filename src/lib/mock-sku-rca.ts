@@ -365,7 +365,7 @@ function buildLastWeekIssuesSummary(
 }
 
 function buildSkuSuggestedPrompts(_sku: IssueSku): AllyAiPrompt[] {
-  // Taxonomy · SKU chipset from the product sheet (exactly 3)
+  // Taxonomy · SKU: Gap to Plan chip only
   return getTaxonomySkuChips();
 }
 

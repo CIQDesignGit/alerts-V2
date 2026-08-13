@@ -4,7 +4,6 @@ import { useMemo } from "react";
 
 import { AllyInsightContent } from "@/components/alerts-insights/ally-ai-surface";
 import { AlertMetricTiles } from "@/components/alerts-insights/alert-metric-tiles";
-import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
 import type { IssueKey } from "@/components/alerts/issue-names";
 import { ContentFeedback } from "@/components/shared/content-feedback";
 import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
@@ -12,7 +11,6 @@ import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
 import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
 import {
   buildAlertAllyInsightBullets,
-  buildAlertAllyInsightPrompts,
   buildAlertMetricTiles,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
@@ -56,7 +54,7 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
     [group],
   );
 
-  const { messages, onPromptSelect } = useSkuAllyThread(reportSku);
+  const { messages } = useSkuAllyThread(reportSku);
 
   const allyInsightBullets = useMemo(
     () =>
@@ -68,11 +66,6 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
         group.aiSignal,
       ),
     [group.title, group.skus, group.gapDollars, group.skuCount, group.aiSignal],
-  );
-
-  const insightPrompts = useMemo(
-    () => buildAlertAllyInsightPrompts(group.issueKey),
-    [group.issueKey],
   );
 
   const metricTiles = useMemo(
@@ -105,10 +98,6 @@ export function AlertDetailPanel({ group }: AlertDetailPanelProps) {
             surface="ally-insight"
             contextLabel={group.title}
             title="Was this alert helpful?"
-          />
-          <SuggestedAiPrompts
-            prompts={insightPrompts}
-            onSelect={onPromptSelect}
           />
 
           <SkuAllyChatThread messages={messages} />

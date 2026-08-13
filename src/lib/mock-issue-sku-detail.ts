@@ -297,7 +297,7 @@ function buildBuyBoxWinCheckDays(
   return [...byDate.entries()].map(([date, checks]) => ({ date, checks }));
 }
 
-/** Issue-scoped Ally prompts — CSV Issue Type · SKU chipset (exactly 3). */
+/** Issue-scoped Ally prompts — Issue Type · SKU: L7D trends chip only. */
 export function getIssueSkuPrompts(
   issueKey: IssueKey,
   _sku: IssueSku,
