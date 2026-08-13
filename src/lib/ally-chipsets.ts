@@ -231,6 +231,7 @@ export function getIssueSkuChips(issueKey: IssueKey): AllyAiPrompt[] {
           label: chip1,
           // Detected by isLastSevenDayTrendPrompt → opens last-week trend card
           prompt: `Show ${issueName} trends over the last 7 days and highlight what changed.`,
+          variant: "primary",
         }
       : chipFromLabel(`${issueKey}-sku-1`, chip1);
 

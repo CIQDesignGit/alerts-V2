@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { IssueKey } from "@/components/alerts/issue-names";
 import { ISSUE_NAMES } from "@/components/alerts/issue-names";
 import type { SkuAllyChatMessage } from "@/components/sku-rca/sku-ally-chat-thread";
+import { getAllyChipReply } from "@/lib/ally-chip-replies";
 import {
   FULL_RCA_LAST_WEEK_PROMPT,
   type AllyAiPrompt,
@@ -23,17 +24,85 @@ type UseSkuAllyThreadOptions = {
   issueKey?: IssueKey;
 };
 
+/** Brief pause so the dots feel like Ally is thinking */
+const THINKING_MS = 750;
+
 /**
- * AllyAI chat thread for SKU, issue-aggregate, and taxonomy RCA surfaces.
- * Suggested chips send straight into the thread (no floating composer).
+ * AllyAI reply for SKU, issue-aggregate, and taxonomy RCA surfaces.
+ * Each chip click shows only that prompt + one reply (replaces any prior pair).
  */
 export function useSkuAllyThread(
   sku: IssueSku,
   { issueKey }: UseSkuAllyThreadOptions = {},
 ) {
   const [messages, setMessages] = useState<SkuAllyChatMessage[]>([]);
+  const thinkingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Push a user message + Ally reply into the thread */
+  // Clear the delay timer if this screen unmounts
+  useEffect(() => {
+    return () => {
+      if (thinkingTimerRef.current) clearTimeout(thinkingTimerRef.current);
+    };
+  }, []);
+
+  /** Build the Ally reply for this prompt (mock router — not a real model) */
+  const buildReply = useCallback(
+    (trimmed: string, stamp: number): SkuAllyChatMessage => {
+      const isFullRca =
+        trimmed === FULL_RCA_LAST_WEEK_PROMPT.prompt ||
+        /full root cause analysis/i.test(trimmed);
+
+      if (isFullRca) {
+        return {
+          id: `rca-${stamp}`,
+          role: "assistant",
+          kind: "full-rca",
+          report: getFullRcaReport(sku),
+        };
+      }
+
+      if (isLastSevenDayTrendPrompt(trimmed)) {
+        const trendIssue = resolveTrendIssueFromPrompt(trimmed, issueKey);
+        const trend =
+          trendIssue && hasLastWeekTrendCard(trendIssue)
+            ? getLastWeekTrend(trendIssue, sku)
+            : null;
+
+        if (trend) {
+          return {
+            id: `trend-${stamp}`,
+            role: "assistant",
+            kind: "last-week-trend",
+            trend,
+          };
+        }
+
+        const issueLabel = trendIssue
+          ? ISSUE_NAMES[trendIssue].filter
+          : "this issue";
+        return {
+          id: `ally-${stamp}`,
+          role: "assistant",
+          kind: "text",
+          text: `I don’t have a last-7-day trend card for ${issueLabel} yet. Try another issue’s “changed in 7 days” prompt, or pick a different Explore more suggestion.`,
+        };
+      }
+
+      // Chip-specific mock copy (2–3 lines) when we have it
+      const chipReply = getAllyChipReply(trimmed);
+      return {
+        id: `ally-${stamp}`,
+        role: "assistant",
+        kind: "text",
+        text:
+          chipReply ??
+          "Got it — I’m reviewing this alert. Ask a follow-up from Explore more above.",
+      };
+    },
+    [issueKey, sku],
+  );
+
+  /** Show the question right away, dots while “thinking”, then the answer */
   const sendMessage = useCallback(
     (text: string) => {
       const trimmed = text.trim();
@@ -45,75 +114,26 @@ export function useSkuAllyThread(
         role: "user",
         text: trimmed,
       };
+      const reply = buildReply(trimmed, stamp);
 
-      // Same full-RCA wording as the chip → rich report card
-      const isFullRca =
-        trimmed === FULL_RCA_LAST_WEEK_PROMPT.prompt ||
-        /full root cause analysis/i.test(trimmed);
+      // Cancel any in-flight thinking delay from a prior chip click
+      if (thinkingTimerRef.current) clearTimeout(thinkingTimerRef.current);
 
-      if (isFullRca) {
-        setMessages([
-          userMessage,
-          {
-            id: `rca-${stamp}`,
-            role: "assistant",
-            kind: "full-rca",
-            report: getFullRcaReport(sku),
-          },
-        ]);
-        return;
-      }
-
-      // “See trends for Last 7 days for {Issue}” → last-week trend card (when designed)
-      if (isLastSevenDayTrendPrompt(trimmed)) {
-        const trendIssue = resolveTrendIssueFromPrompt(trimmed, issueKey);
-        const trend =
-          trendIssue && hasLastWeekTrendCard(trendIssue)
-            ? getLastWeekTrend(trendIssue, sku)
-            : null;
-
-        if (trend) {
-          setMessages((prev) => [
-            ...prev,
-            userMessage,
-            {
-              id: `trend-${stamp}`,
-              role: "assistant",
-              kind: "last-week-trend",
-              trend,
-            },
-          ]);
-          return;
-        }
-
-        const issueLabel = trendIssue
-          ? ISSUE_NAMES[trendIssue].filter
-          : "this issue";
-        setMessages((prev) => [
-          ...prev,
-          userMessage,
-          {
-            id: `ally-${stamp}`,
-            role: "assistant",
-            kind: "text",
-            text: `I don’t have a last-7-day trend card for ${issueLabel} yet. Try another issue’s “changed in 7 days” prompt, or pick a different Explore more suggestion.`,
-          },
-        ]);
-        return;
-      }
-
-      setMessages((prev) => [
-        ...prev,
+      setMessages([
         userMessage,
         {
-          id: `ally-${stamp}`,
+          id: `thinking-${stamp}`,
           role: "assistant",
-          kind: "text",
-          text: "Got it — I’m reviewing this alert. Ask a follow-up from Explore more above.",
+          kind: "thinking",
         },
       ]);
+
+      thinkingTimerRef.current = setTimeout(() => {
+        setMessages([userMessage, reply]);
+        thinkingTimerRef.current = null;
+      }, THINKING_MS);
     },
-    [issueKey, sku],
+    [buildReply],
   );
 
   const onPromptSelect = useCallback(
