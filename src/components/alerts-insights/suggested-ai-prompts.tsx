@@ -41,7 +41,7 @@ export function SuggestedAiPrompts({
                 className={
                   isPrimary
                     ? "inline-flex items-center rounded-full border border-brand-200 bg-brand-50/60 px-3 py-1.5 text-left text-xs leading-snug whitespace-nowrap font-medium text-neutral-800 transition-colors hover:border-brand-300 hover:bg-brand-50"
-                    : "inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-left text-xs leading-snug whitespace-nowrap text-muted-foreground transition-colors hover:bg-neutral-50 hover:text-foreground"
+                    : "inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-left text-xs leading-snug whitespace-nowrap text-neutral-800 transition-colors hover:bg-neutral-50 hover:text-foreground"
                 }
               >
                 <span className="min-w-0">{item.label}</span>
