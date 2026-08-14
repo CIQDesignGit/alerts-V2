@@ -119,7 +119,10 @@ export function useSkuAllyThread(
 
   /** Gap to Plan: 5-step trail over 4s, then collapsed trail + full report */
   const startGapToPlanProcessing = useCallback(
-    (userMessage: SkuAllyChatMessage, stamp: number) => {
+    (
+      userMessage: Extract<SkuAllyChatMessage, { role: "user" }>,
+      stamp: number,
+    ) => {
       const processingId = `processing-${stamp}`;
       const steps = GAP_TO_PLAN_PROCESSING_STEPS;
       const report = buildReply(userMessage.text, stamp);
@@ -181,7 +184,7 @@ export function useSkuAllyThread(
       if (!trimmed) return;
 
       const stamp = Date.now();
-      const userMessage: SkuAllyChatMessage = {
+      const userMessage: Extract<SkuAllyChatMessage, { role: "user" }> = {
         id: `user-${stamp}`,
         role: "user",
         text: trimmed,
