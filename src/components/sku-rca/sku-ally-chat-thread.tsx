@@ -1,10 +1,11 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import { useEffect, useRef } from "react";
 
+import { AllyProcessingTrail } from "@/components/sku-rca/ally-processing-trail";
 import { FullRcaReport } from "@/components/sku-rca/full-rca-report";
 import { LastWeekTrendCard } from "@/components/sku-rca/last-week-trend-card";
+import type { AllyProcessingStep } from "@/lib/ally-processing-steps";
 import type { FullRcaReportData } from "@/lib/mock-full-rca-report";
 import type { LastWeekTrendData } from "@/lib/mock-last-week-trend";
 
@@ -23,7 +24,15 @@ export type SkuAllyChatMessage =
       trend: LastWeekTrendData;
     }
   | { id: string; role: "assistant"; kind: "text"; text: string }
-  | { id: string; role: "assistant"; kind: "thinking" };
+  | { id: string; role: "assistant"; kind: "thinking" }
+  | {
+      id: string;
+      role: "assistant";
+      kind: "processing";
+      steps: AllyProcessingStep[];
+      activeIndex: number;
+      status: "running" | "done";
+    };
 
 type SkuAllyChatThreadProps = {
   messages: SkuAllyChatMessage[];
@@ -47,7 +56,7 @@ function ThinkingDots() {
   );
 }
 
-/** AllyAI message list — one question + one reply (or thinking dots) at a time. */
+/** AllyAI message list — one question + reply (or processing trail) at a time. */
 export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -55,20 +64,17 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
   useEffect(() => {
     if (messages.length === 0) return;
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [messages.length, messages.at(-1)?.id]);
+  }, [messages.length, messages.at(-1)?.id, messages.at(-1)]);
 
   if (messages.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-4 border-t border-border pt-6">
-      <div className="flex items-center gap-1.5">
-        <Sparkles className="size-3.5 text-brand-600" aria-hidden />
-        <p className="text-xs font-medium text-muted-foreground">
-          Conversation with AllyAI
-        </p>
-      </div>
+      <h3 className="text-sm font-semibold tracking-tight text-neutral-800">
+        Chat with Ally AI
+      </h3>
 
-      <ul className="m-0 flex list-none flex-col gap-4 p-0">
+      <ul className="m-0 flex list-none flex-col gap-5 p-0">
         {messages.map((message) => (
           <li key={message.id}>
             {message.role === "user" ? (
@@ -80,6 +86,12 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
               </div>
             ) : message.kind === "thinking" ? (
               <ThinkingDots />
+            ) : message.kind === "processing" ? (
+              <AllyProcessingTrail
+                steps={message.steps}
+                activeIndex={message.activeIndex}
+                status={message.status}
+              />
             ) : message.kind === "full-rca" ? (
               <FullRcaReport report={message.report} />
             ) : message.kind === "last-week-trend" ? (

@@ -4,7 +4,10 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
-import type { AlertsTaxonomyNode } from "@/lib/mock-alerts-insights";
+import {
+  skuShortCode,
+  type AlertsTaxonomyNode,
+} from "@/lib/mock-alerts-insights";
 import { cn, controlFocusClass } from "@/lib/utils";
 
 /** Same cap as Issue Type expanded SKU lists before “View all” */
@@ -38,8 +41,35 @@ function metadataLine(node: AlertsTaxonomyNode): string {
   if (node.level === "category") {
     return `${node.skuCount} SKU${node.skuCount === 1 ? "" : "s"}`;
   }
+  // SKU rows render a structured subtitle (mono codes) in TaxonomyRow
+  return "";
+}
+
+/** SKU subtitle: short code + ASIN (mono) + issue count — one row, even separators */
+function SkuMetadataLine({ node }: { node: AlertsTaxonomyNode }) {
   const issues = node.issueCount ?? 1;
-  return `${node.asin ?? ""} · ${issues} issue${issues === 1 ? "" : "s"}`;
+  const asin = node.asin ?? "";
+  const issueText = `${issues} issue${issues === 1 ? "" : "s"}`;
+
+  if (!asin) {
+    return <span>{issueText}</span>;
+  }
+
+  return (
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate">
+      <span className="shrink-0 font-mono">{skuShortCode(asin)}</span>
+      <span
+        className="size-0.5 shrink-0 rounded-full bg-neutral-600"
+        aria-hidden
+      />
+      <span className="shrink-0 font-mono">{asin}</span>
+      <span
+        className="size-0.5 shrink-0 rounded-full bg-neutral-600"
+        aria-hidden
+      />
+      <span className="truncate">{issueText}</span>
+    </span>
+  );
 }
 
 function TaxonomyRow({
@@ -118,7 +148,7 @@ function TaxonomyRow({
           {node.name}
         </span>
         <span className="mt-0.5 block text-xs text-muted-foreground">
-          {metadataLine(node)}
+          {isSku ? <SkuMetadataLine node={node} /> : metadataLine(node)}
         </span>
       </button>
     </div>

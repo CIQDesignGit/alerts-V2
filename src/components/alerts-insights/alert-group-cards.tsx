@@ -9,6 +9,7 @@ import type { IssueKey } from "@/components/alerts/issue-names";
 import {
   issueGroup,
   issueLabel,
+  skuShortCode,
   type CategoryAlert,
   type IssueAlert,
 } from "@/lib/mock-alerts-insights";
@@ -279,11 +280,25 @@ function SkuList({
                     <p className="truncate text-sm font-medium text-foreground">
                       {sku.name}
                     </p>
-                    <p className="truncate font-mono text-2xs text-muted-foreground">
-                      {sku.asin} · {sku.category}
-                      {showIssueChip && sku.issueKey
-                        ? ` · ${issueLabel(sku.issueKey)}`
-                        : ""}
+                    <p className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate text-xs text-muted-foreground">
+                      <span className="shrink-0 font-mono">
+                        {skuShortCode(sku.asin)}
+                      </span>
+                      <span
+                        className="size-0.5 shrink-0 rounded-full bg-neutral-600"
+                        aria-hidden
+                      />
+                      <span className="shrink-0 font-mono">{sku.asin}</span>
+                      <span
+                        className="size-0.5 shrink-0 rounded-full bg-neutral-600"
+                        aria-hidden
+                      />
+                      <span className="truncate">
+                        {sku.category}
+                        {showIssueChip && sku.issueKey
+                          ? ` · ${issueLabel(sku.issueKey)}`
+                          : ""}
+                      </span>
                     </p>
                   </div>
                 </div>

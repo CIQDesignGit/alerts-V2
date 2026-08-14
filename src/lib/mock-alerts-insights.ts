@@ -41,6 +41,17 @@ export type IssueSku = {
   lostAt?: string;
 };
 
+/**
+ * 4-character alphanumeric code shown first on SKU list rows
+ * (before the full ASIN) in Issue Type + Taxonomy trees.
+ */
+export function skuShortCode(asin: string): string {
+  const compact = asin.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  // Skip common B0 Amazon prefix so the code stays product-looking
+  const body = compact.startsWith("B0") ? compact.slice(2) : compact;
+  return `${body}0000`.slice(0, 4);
+}
+
 /** Active Alerts tab filters (Brand · Category · SKU · Issue in taxonomy) */
 export type AlertsFilters = {
   brand: string | null;
