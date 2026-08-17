@@ -6,7 +6,6 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { IssueKey } from "@/components/alerts/issue-names";
-import { ListGapAmount } from "@/components/shared/list-gap-amount";
 import {
   issueGroup,
   issueLabel,
@@ -112,7 +111,6 @@ export function IssueGroupCard({
             {issue.skuCount} SKUs · {issueGroup(issue.issueKey)}
           </p>
         </div>
-        <ListGapAmount gapDollars={issue.gapDollars} />
         <ExpandIcon open={open} selected={groupSelected} />
       </button>
 
@@ -181,7 +179,6 @@ export function CategoryGroupCard({
             {issueChips.length > 2 ? ` +${issueChips.length - 2}` : ""}
           </p>
         </div>
-        <ListGapAmount gapDollars={category.gapDollars} />
         <ExpandIcon open={open} selected={groupSelected} />
       </button>
 
@@ -305,7 +302,6 @@ function SkuList({
                     </p>
                   </div>
                 </div>
-                <ListGapAmount gapDollars={sku.gapDollars} className="ml-2" />
               </button>
             </li>
           );
