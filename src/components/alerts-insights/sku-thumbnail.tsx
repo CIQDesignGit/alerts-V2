@@ -7,33 +7,27 @@ type SkuThumbnailProps = {
   className?: string;
 };
 
-/**
- * Soft pastel washes — very light so they don’t compete with text.
- * Each SKU name maps to a stable variant (same product = same gradient).
- */
-const PASTEL_CLASSES = [
-  // blue → yellow
-  "bg-[linear-gradient(135deg,#eef3fb_0%,#fbf7ea_100%)]",
-  "bg-[linear-gradient(160deg,#f0f5fc_0%,#faf5e6_55%,#f8f1e0_100%)]",
-  // pink → green
-  "bg-[linear-gradient(135deg,#faf0f4_0%,#eef6f0_100%)]",
-  "bg-[linear-gradient(150deg,#f9eef3_0%,#f2f8f3_60%,#ebf4ee_100%)]",
-  // peach → purple
-  "bg-[linear-gradient(135deg,#fbf1e9_0%,#f3eef8_100%)]",
-  "bg-[linear-gradient(145deg,#faf0e8_0%,#f5f0f9_50%,#eee8f5_100%)]",
+/** Product photos in /public/assets/sku — assigned by name hash (stable “random”). */
+const SKU_IMAGE_SRCS = [
+  "/assets/sku/sku-01-bosch-canister.png",
+  "/assets/sku/sku-02-bissell-upright.png",
+  "/assets/sku/sku-03-dyson-head.png",
+  "/assets/sku/sku-04-dynavac-industrial.png",
+  "/assets/sku/sku-05-domestica-stick.png",
+  "/assets/sku/sku-06-robot-vacuum.png",
 ] as const;
 
-function pastelClassForName(name: string) {
+function imageSrcForName(name: string) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
-    hash = (hash + name.charCodeAt(i) * (i + 1)) % PASTEL_CLASSES.length;
+    hash = (hash + name.charCodeAt(i) * (i + 1)) % SKU_IMAGE_SRCS.length;
   }
-  return PASTEL_CLASSES[hash];
+  return SKU_IMAGE_SRCS[hash];
 }
 
 function sizeClass(size: number) {
   if (size >= 96) return "size-24"; // 96px
-  if (size >= 80) return "size-20"; // 80px — expanded RCA header (title+meta+actions)
+  if (size >= 80) return "size-20"; // 80px — expanded RCA header
   if (size >= 64) return "size-16"; // 64px
   if (size >= 56) return "size-14"; // 56px
   if (size >= 40) return "size-10"; // 40px
@@ -41,16 +35,19 @@ function sizeClass(size: number) {
   return "size-9"; // 36px
 }
 
-/** Placeholder product image until real SKU art is wired up */
+/** SKU product thumbnail — picks one of the shared asset photos from the name. */
 export function SkuThumbnail({ name, size = 40, className }: SkuThumbnailProps) {
   return (
-    <span
-      role="img"
-      aria-label={`${name} thumbnail`}
+    // Local static assets — same pattern as other /public images in this app
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={imageSrcForName(name)}
+      alt={`${name} thumbnail`}
+      width={size}
+      height={size}
       className={cn(
-        "inline-block shrink-0 rounded-sm border border-neutral-200/50",
+        "inline-block shrink-0 rounded-sm border border-neutral-200/50 bg-neutral-100 object-cover",
         sizeClass(size),
-        pastelClassForName(name),
         className,
       )}
     />
