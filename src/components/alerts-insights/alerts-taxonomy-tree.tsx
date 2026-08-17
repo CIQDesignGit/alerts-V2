@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
+import { ListGapAmount } from "@/components/shared/list-gap-amount";
 import {
   skuShortCode,
   type AlertsTaxonomyNode,
@@ -135,21 +136,24 @@ function TaxonomyRow({
         aria-current={selected ? "true" : undefined}
         onClick={onSelect}
         className={cn(
-          "min-w-0 flex-1 text-left outline-none",
+          "flex min-w-0 flex-1 items-start gap-2 text-left outline-none",
           controlFocusClass,
         )}
       >
-        <span
-          className={cn(
-            "block text-sm text-foreground",
-            selected ? "font-bold" : "font-semibold",
-          )}
-        >
-          {node.name}
+        <span className="min-w-0 flex-1">
+          <span
+            className={cn(
+              "block text-sm text-foreground",
+              selected ? "font-bold" : "font-semibold",
+            )}
+          >
+            {node.name}
+          </span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {isSku ? <SkuMetadataLine node={node} /> : metadataLine(node)}
+          </span>
         </span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">
-          {isSku ? <SkuMetadataLine node={node} /> : metadataLine(node)}
-        </span>
+        <ListGapAmount gapDollars={node.gapDollars} />
       </button>
     </div>
   );

@@ -35,6 +35,8 @@ export function AlertsFiltersBar({
   const [open, setOpen] = useState<OpenMenu>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const showIssueFilter = groupBy === "category";
+  // Category is a child of brand — hide it until a brand is chosen
+  const showCategoryFilter = Boolean(filters.brand);
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -48,6 +50,10 @@ export function AlertsFiltersBar({
   useEffect(() => {
     if (!showIssueFilter && open === "issue") setOpen(null);
   }, [showIssueFilter, open]);
+
+  useEffect(() => {
+    if (!showCategoryFilter && open === "category") setOpen(null);
+  }, [showCategoryFilter, open]);
 
   const brandOptions = getBrandFilterOptions(filters.skuQuery);
   const categoryOptions = getCategoryFilterOptions(
@@ -180,29 +186,38 @@ export function AlertsFiltersBar({
             });
             setOpen(null);
           }}
-          onClear={() => onChange({ ...filters, brand: null, skuId: null })}
-        />
-
-        <FilterDimensionControl
-          label="All Categories"
-          dimension="category"
-          selected={selectedCategory}
-          options={categoryOptions}
-          open={open === "category"}
-          onOpenChange={(next) => setOpen(next ? "category" : null)}
-          listHeading="Categories by $ gap"
-          onSelect={(option) => {
+          onClear={() =>
             onChange({
               ...filters,
-              category: option.name,
+              brand: null,
+              category: null,
               skuId: null,
-            });
-            setOpen(null);
-          }}
-          onClear={() =>
-            onChange({ ...filters, category: null, skuId: null })
+            })
           }
         />
+
+        {showCategoryFilter && (
+          <FilterDimensionControl
+            label="All Categories"
+            dimension="category"
+            selected={selectedCategory}
+            options={categoryOptions}
+            open={open === "category"}
+            onOpenChange={(next) => setOpen(next ? "category" : null)}
+            listHeading="Categories by $ gap"
+            onSelect={(option) => {
+              onChange({
+                ...filters,
+                category: option.name,
+                skuId: null,
+              });
+              setOpen(null);
+            }}
+            onClear={() =>
+              onChange({ ...filters, category: null, skuId: null })
+            }
+          />
+        )}
 
         {hasActive && (
           <button
@@ -297,11 +312,14 @@ function FilterDimensionControl({
           aria-controls={panelId}
           onClick={() => onOpenChange(!open)}
           className={cn(
-            "flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-neutral-50",
+            "flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-neutral-50",
             controlFocusClass,
           )}
         >
           {label}
+          <span className="shrink-0 font-mono text-2xs font-semibold text-error-600">
+            {formatGapDollars(summary.gapDollars)}
+          </span>
           <ChevronDown
             className={cn(
               "size-3.5 text-muted-foreground transition-transform",
