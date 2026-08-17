@@ -16,8 +16,6 @@ import { getSkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
 const COLLAPSE_AT = 24;
-/** Stay collapsed until scrolled nearly back to top — avoids threshold flicker */
-const EXPAND_AT = 8;
 
 type IssueSkuDetailShellProps = {
   sku: IssueSku;
@@ -44,10 +42,7 @@ export function IssueSkuDetailShell({
   const { messages, onPromptSelect } = useSkuAllyThread(sku, { issueKey });
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
-    const top = e.currentTarget.scrollTop;
-    setCollapsed((wasCollapsed) =>
-      wasCollapsed ? top > EXPAND_AT : top > COLLAPSE_AT,
-    );
+    setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
   }
 
   return (

@@ -33,13 +33,13 @@ export function SkuRcaHeader({
   const pdpUrl = `https://www.amazon.com/dp/${data.asin}`;
 
   return (
-    <header className="relative z-20 shrink-0 overflow-hidden border-b border-border bg-background">
+    <header className="relative shrink-0 border-b border-border bg-background">
       {/* Expanded header */}
       <div
         className={cn(
-          "relative bg-background px-6 transition-opacity duration-200",
+          "relative px-6 transition-all duration-200",
           collapsed
-            ? "pointer-events-none absolute inset-x-0 top-0 opacity-0"
+            ? "pointer-events-none absolute inset-x-0 opacity-0"
             : "opacity-100",
         )}
         aria-hidden={collapsed}
@@ -77,10 +77,10 @@ export function SkuRcaHeader({
       {/* Collapsed sticky strip */}
       <div
         className={cn(
-          "relative bg-background px-6 transition-opacity duration-200",
+          "relative px-6 transition-all duration-200",
           collapsed
             ? "opacity-100"
-            : "pointer-events-none absolute inset-x-0 top-0 opacity-0",
+            : "pointer-events-none absolute inset-x-0 opacity-0",
         )}
         aria-hidden={!collapsed}
       >
