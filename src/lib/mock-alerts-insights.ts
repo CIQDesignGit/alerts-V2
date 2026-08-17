@@ -474,7 +474,7 @@ export type AllyInsightBullet = {
   segments: AllyInsightSegment[];
 };
 
-/** Bulleted Ally Insight copy for issue-type roll-ups (L24h · last 4 crawls) */
+/** Bulleted Ally Insight copy for issue-type roll-ups */
 export function buildAlertAllyInsightBullets(
   title: string,
   skus: IssueSku[],
@@ -483,7 +483,7 @@ export function buildAlertAllyInsightBullets(
   _aiSignal?: string,
 ): AllyInsightBullet[] {
   const metrics = buildAlertMetricTiles(skus, gapDollars);
-  const { newCount, recurringCount } = metrics.recency;
+  const { recurringCount } = metrics.recency;
   const issueLabelLower = title.toLowerCase();
 
   const totalDollars =
@@ -510,41 +510,6 @@ export function buildAlertAllyInsightBullets(
       ],
     },
   ];
-
-  if (skuCount > 0) {
-    // Crawl recency — same L24h framing as the metric tile above
-    if (newCount > 0 && recurringCount > 0) {
-      bullets.push({
-        id: "recency",
-        segments: [
-          {
-            kind: "text",
-            text: `Of those, ${recurringCount} have shown up across the last 4 crawls and ${newCount} ${newCount === 1 ? "is" : "are"} new in the latest crawl`,
-          },
-        ],
-      });
-    } else if (recurringCount > 0) {
-      bullets.push({
-        id: "recency",
-        segments: [
-          {
-            kind: "text",
-            text: `Of those, all ${recurringCount} have shown up across the last 4 crawls`,
-          },
-        ],
-      });
-    } else {
-      bullets.push({
-        id: "recency",
-        segments: [
-          {
-            kind: "text",
-            text: `Of those, all ${newCount} are new in the latest crawl`,
-          },
-        ],
-      });
-    }
-  }
 
   if (recurringCount > 0 && topBrand && topCategory) {
     const brandIsSingle = brandRows.length === 1 || topBrand.pct >= 100;
