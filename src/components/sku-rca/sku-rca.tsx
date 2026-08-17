@@ -19,6 +19,8 @@ type SkuRcaProps = {
 };
 
 const COLLAPSE_AT = 24;
+/** Stay collapsed until scrolled nearly back to top — avoids threshold flicker */
+const EXPAND_AT = 8;
 
 /**
  * Alert SKU detail — live diagnosis only for now.
@@ -30,7 +32,10 @@ export function SkuRca({ sku, onClose }: SkuRcaProps) {
   const { messages, onPromptSelect } = useSkuAllyThread(sku);
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
-    setCollapsed(e.currentTarget.scrollTop > COLLAPSE_AT);
+    const top = e.currentTarget.scrollTop;
+    setCollapsed((wasCollapsed) =>
+      wasCollapsed ? top > EXPAND_AT : top > COLLAPSE_AT,
+    );
   }
 
   return (
