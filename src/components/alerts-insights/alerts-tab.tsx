@@ -79,6 +79,19 @@ export function AlertsTab({
     [filters],
   );
 
+  // Issue view: count every SKU under every issue (same SKU can count more than once).
+  // Taxonomy view: unique SKUs only (one SKU lives under one branch).
+  const listHeader = useMemo(() => {
+    if (groupBy === "category") {
+      return { title: "SKUs", count: taxonomyTree?.skuCount ?? 0 };
+    }
+    const skuAppearances = filteredIssues.reduce(
+      (sum, issue) => sum + issue.skuCount,
+      0,
+    );
+    return { title: "Alerts", count: skuAppearances };
+  }, [groupBy, filteredIssues, taxonomyTree]);
+
   const [expandedId, setExpandedId] = useState<string | null>(
     filteredIssues[0]?.issueKey ?? null,
   );
@@ -204,9 +217,11 @@ export function AlertsTab({
           <div className="border-b border-border bg-background px-3 py-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
-                <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
+                <h2 className="text-sm font-semibold text-foreground">
+                  {listHeader.title}
+                </h2>
                 <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-2 text-2xs font-medium text-neutral-600">
-                  {filteredIssues.length}
+                  {listHeader.count}
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-2">

@@ -1197,7 +1197,15 @@ export const aiBrief = {
   ],
 };
 
-/** Issue-level alerts — sorted by Gap $ (most negative first) */
+/**
+ * Issue-level alerts — sorted by Gap $ (most negative first).
+ *
+ * Shared SKU ids (same product under multiple issues) — used so Issue “Alerts”
+ * count can double-count, while Taxonomy “SKUs” count stays unique:
+ * - s1 Shark IQ AV970 → Lost Buy Box, SOV, Keyword Rank, Coupon
+ * - s2 Shark Stratos Upright → Lost Buy Box, SOV, Coupon
+ * - s3 Shark FlexStyle HD440 → Lost Buy Box, SOV
+ */
 const issueAlertsUnsorted: IssueAlert[] = [
   {
     issueKey: "lostBuyBox",
@@ -1208,6 +1216,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
       "VacuumKing_US holds Buy Box on several high-gap SKUs at $20–30 below list. Damage spans robotics, uprights, hair care, and more — not a single-category problem.",
     skus: [
       {
+        // Also listed under sponsoredSov, keywordRank, coupon (same id)
         id: "s1",
         name: "Shark IQ AV970",
         asin: "B08XYZ1234",
@@ -1222,6 +1231,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Jan 16 15:40",
       },
       {
+        // Also listed under sponsoredSov + coupon (same id)
         id: "s2",
         name: "Shark Stratos Upright",
         asin: "B09ABC5678",
@@ -1237,6 +1247,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Jan 16 09:20",
       },
       {
+        // Also listed under sponsoredSov (same id)
         id: "s3",
         name: "Shark FlexStyle HD440",
         asin: "B07DEF9012",
@@ -1559,9 +1570,10 @@ const issueAlertsUnsorted: IssueAlert[] = [
       "Sponsored Share of Voice dropped below 40% on 5 priority keywords. Competitors increased bids while our campaigns were paused.",
     skus: [
       {
-        id: "sov1",
+        // Same product as lostBuyBox s1 — multi-issue demo
+        id: "s1",
         name: "Shark IQ AV970",
-        asin: "B0SOV001",
+        asin: "B08XYZ1234",
         seller: "VacuumKing_US",
         brand: "Shark",
         category: "Floor Care Robotics",
@@ -1569,9 +1581,10 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Jan 16 09:00",
       },
       {
-        id: "sov2",
+        // Same product as lostBuyBox s2 — multi-issue demo
+        id: "s2",
         name: "Shark Stratos Upright",
-        asin: "B0SOV002",
+        asin: "B09ABC5678",
         seller: "Amazon.com",
         brand: "Shark",
         category: "Floor Care",
@@ -1599,9 +1612,10 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Jan 15 12:40",
       },
       {
-        id: "sov5",
+        // Same product as lostBuyBox s3 — multi-issue demo
+        id: "s3",
         name: "Shark FlexStyle HD440",
-        asin: "B0SOV005",
+        asin: "B07DEF9012",
         seller: "BeautyDealz",
         brand: "Shark",
         category: "Hair Care",
@@ -1629,9 +1643,10 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Jan 16 07:30",
       },
       {
-        id: "kw2",
+        // Same product as lostBuyBox s1 — multi-issue demo
+        id: "s1",
         name: "Shark IQ AV970",
-        asin: "B0KW002",
+        asin: "B08XYZ1234",
         seller: "VacuumKing_US",
         brand: "Shark",
         category: "Floor Care Robotics",
@@ -1689,9 +1704,10 @@ const issueAlertsUnsorted: IssueAlert[] = [
       "Competitor coupons detected on 4 high-traffic SKUs. Subscribe & Save and dollar-off offers are undercutting list price.",
     skus: [
       {
-        id: "cp1",
+        // Same product as lostBuyBox s1 — multi-issue demo
+        id: "s1",
         name: "Shark IQ AV970",
-        asin: "B0CPN001",
+        asin: "B08XYZ1234",
         seller: "VacuumKing_US",
         brand: "Shark",
         category: "Floor Care Robotics",
@@ -1702,9 +1718,10 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Jan 16 10:15",
       },
       {
-        id: "cp2",
+        // Same product as lostBuyBox s2 — multi-issue demo
+        id: "s2",
         name: "Shark Stratos Upright",
-        asin: "B0CPN002",
+        asin: "B09ABC5678",
         seller: "VacuumKing_US",
         brand: "Shark",
         category: "Floor Care",
