@@ -1,12 +1,15 @@
 "use client";
 
 import { ExternalLink, History, MapPin } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PDP_SNAPSHOTS } from "@/lib/mock-pdp-snapshots";
 import { formatCompactDollars } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
+
+const SNAPSHOT_PANEL_WIDTH = 320;
 
 /** Amazon “a” + smile mark — PNG asset in /public */
 function AmazonMark({ className }: { className?: string }) {
@@ -58,27 +61,66 @@ export function PdpPageLink({
 /** Opens a popover of product-page snapshots saved at each crawl */
 export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+    null,
+  );
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
+
+  // Header clips overflow, so the panel is drawn on the page body instead.
+  useLayoutEffect(() => {
+    if (!open) {
+      setCoords(null);
+      return;
+    }
+
+    const anchor = rootRef.current;
+    if (!anchor) return;
+
+    const rect = anchor.getBoundingClientRect();
+    const margin = 8;
+    let left = rect.left;
+    if (left + SNAPSHOT_PANEL_WIDTH > window.innerWidth - margin) {
+      left = Math.max(margin, rect.right - SNAPSHOT_PANEL_WIDTH);
+    }
+    setCoords({ top: rect.bottom + 6, left });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
 
     function onDocMouseDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (
+        rootRef.current?.contains(target) ||
+        panelRef.current?.contains(target)
+      ) {
+        return;
       }
+      setOpen(false);
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
 
+    function onScrollOrResize(event: Event) {
+      if (event.type === "scroll" && panelRef.current?.contains(event.target as Node)) {
+        return;
+      }
+      setOpen(false);
+    }
+
     document.addEventListener("mousedown", onDocMouseDown);
     document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("scroll", onScrollOrResize, true);
+    window.addEventListener("resize", onScrollOrResize);
     return () => {
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
     };
   }, [open]);
 
@@ -102,53 +144,58 @@ export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
         {!compact && "PDP Snapshots"}
       </Button>
 
-      {open ? (
-        <div
-          id={panelId}
-          role="dialog"
-          aria-label="PDP Snapshots"
-          className="absolute top-full left-0 z-40 mt-1.5 flex w-80 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-lg"
-        >
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">
-              PDP Snapshots
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Product page snapshots saved at the time of each crawl.
-            </p>
-          </div>
+      {open && coords
+        ? createPortal(
+            <div
+              ref={panelRef}
+              id={panelId}
+              role="dialog"
+              aria-label="PDP Snapshots"
+              style={{ top: coords.top, left: coords.left }}
+              className="fixed z-50 flex w-80 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-lg"
+            >
+              <div className="border-b border-border px-4 py-3">
+                <p className="text-sm font-semibold text-foreground">
+                  PDP Snapshots
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Product page snapshots saved at the time of each crawl.
+                </p>
+              </div>
 
-          <ul className="m-0 max-h-80 list-none divide-y divide-border overflow-y-auto p-0">
-            {PDP_SNAPSHOTS.map((snap) => (
-              <li key={snap.id}>
-                <a
-                  href={snap.href}
-                  onClick={(event) => event.preventDefault()}
-                  className="flex items-start justify-between gap-3 px-4 py-3 transition-colors hover:bg-neutral-50"
-                >
-                  <span className="min-w-0 flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-foreground">
-                      {snap.whenLabel}
-                    </span>
-                    <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
-                      <span>{snap.relativeLabel}</span>
-                      <span aria-hidden>·</span>
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="size-3 shrink-0" aria-hidden />
-                        {snap.city} ({snap.zip})
+              <ul className="m-0 max-h-80 list-none divide-y divide-border overflow-y-auto p-0">
+                {PDP_SNAPSHOTS.map((snap) => (
+                  <li key={snap.id}>
+                    <a
+                      href={snap.href}
+                      onClick={(event) => event.preventDefault()}
+                      className="flex items-start justify-between gap-3 px-4 py-3 transition-colors hover:bg-neutral-50"
+                    >
+                      <span className="min-w-0 flex flex-col gap-1">
+                        <span className="text-sm font-semibold text-foreground">
+                          {snap.whenLabel}
+                        </span>
+                        <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
+                          <span>{snap.relativeLabel}</span>
+                          <span aria-hidden>·</span>
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="size-3 shrink-0" aria-hidden />
+                            {snap.city} ({snap.zip})
+                          </span>
+                        </span>
                       </span>
-                    </span>
-                  </span>
-                  <ExternalLink
-                    className="mt-0.5 size-4 shrink-0 text-neutral-400"
-                    aria-hidden
-                  />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+                      <ExternalLink
+                        className="mt-0.5 size-4 shrink-0 text-neutral-400"
+                        aria-hidden
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
