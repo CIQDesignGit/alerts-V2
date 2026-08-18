@@ -95,7 +95,7 @@ export type IssueKey = keyof typeof ISSUE_NAMES;
  * Generic legend stays “Detected”; cells use this issue-specific word.
  */
 export const ISSUE_SCRAPE_DETECTED_LABEL: Record<IssueKey, string> = {
-  lostBuyBox: "Lost Buy Box",
+  lostBuyBox: "LBB",
   promoBadge: "Missing",
   dealPageVisibility: "Missing",
   coupon: "Detected",
