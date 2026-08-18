@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ExternalLink, Tag, XCircle } from "lucide-react";
+import { Check, ExternalLink, Tag } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -93,23 +93,24 @@ export function CouponSkuDetail({ sku }: CouponSkuDetailProps) {
 }
 
 function CouponDetectedBadge({ detected }: { detected: boolean }) {
-  const Icon = detected ? CheckCircle2 : XCircle;
+  if (detected) {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-medium">
+        <span
+          className="inline-flex size-5 items-center justify-center rounded-full bg-error-100"
+          aria-hidden
+        >
+          <span className="size-2 rounded-full bg-error-600" />
+        </span>
+        Coupon detected
+      </span>
+    );
+  }
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 font-medium",
-        detected ? "text-success-700" : "text-neutral-500",
-      )}
-    >
-      <Icon
-        className={cn(
-          "size-4",
-          detected ? "text-success-600" : "text-neutral-400",
-        )}
-        aria-hidden
-      />
-      {detected ? "Yes" : "No"}
+    <span className="inline-flex items-center gap-1.5 font-medium">
+      <Check className="size-3.5 text-success-600" aria-hidden />
+      No Coupon
     </span>
   );
 }

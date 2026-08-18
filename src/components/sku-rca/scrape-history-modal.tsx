@@ -4,6 +4,7 @@ import { CalendarDays, Check, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { ISSUE_SCRAPE_DETECTED_LABEL } from "@/components/alerts/issue-names";
 import { Button } from "@/components/ui/button";
 import {
   getScrapeHistoryData,
@@ -147,7 +148,7 @@ function ScrapeHistoryTable({ data }: { data: ScrapeHistoryData }) {
             </span>
             <span className="inline-flex items-center gap-1">
               <Check className="size-3 text-success-600" aria-hidden />
-              Clear
+              No issue
             </span>
           </span>
         </div>
@@ -163,7 +164,7 @@ function ScrapeHistoryTable({ data }: { data: ScrapeHistoryData }) {
               {data.days.map((day) => (
                 <th
                   key={day.label}
-                  className="min-w-14 px-1.5 py-2 text-center"
+                  className="min-w-28 px-1.5 py-2 text-left"
                 >
                   <span className="block text-[10px] font-semibold leading-tight text-neutral-700">
                     {day.label}
@@ -175,15 +176,18 @@ function ScrapeHistoryTable({ data }: { data: ScrapeHistoryData }) {
           <tbody>
             {data.issues.map((row) => (
               <tr
-                key={row.issueLabel}
+                key={row.issueKey}
                 className="border-b border-border last:border-b-0"
               >
                 <td className="sticky left-0 z-10 bg-background px-4 py-2 text-xs font-medium leading-tight text-foreground">
                   {row.issueLabel}
                 </td>
                 {row.detectedOnDay.map((detected, i) => (
-                  <td key={i} className="px-1.5 py-2 text-center">
-                    <ScrapeCell detected={detected} />
+                  <td key={i} className="px-1.5 py-2 text-left">
+                    <ScrapeCell
+                      detected={detected}
+                      detectedLabel={ISSUE_SCRAPE_DETECTED_LABEL[row.issueKey]}
+                    />
                   </td>
                 ))}
               </tr>
@@ -214,26 +218,26 @@ function DetectedDot({ size = "md" }: { size?: "sm" | "md" }) {
   );
 }
 
-function ScrapeCell({ detected }: { detected: boolean }) {
+function ScrapeCell({
+  detected,
+  detectedLabel,
+}: {
+  detected: boolean;
+  detectedLabel: string;
+}) {
   if (detected) {
     return (
-      <span
-        className="inline-flex items-center justify-center"
-        aria-label="Issue detected"
-        title="Issue detected"
-      >
-        <DetectedDot />
+      <span className="inline-flex items-center justify-start gap-1 text-[11px] font-medium text-neutral-500">
+        <DetectedDot size="sm" />
+        {detectedLabel}
       </span>
     );
   }
 
   return (
-    <span
-      className="inline-flex items-center justify-center"
-      aria-label="No issue detected"
-      title="No issue detected"
-    >
+    <span className="inline-flex items-center justify-start">
       <Check className="size-3.5 text-success-600" aria-hidden />
+      <span className="sr-only">No issue</span>
     </span>
   );
 }

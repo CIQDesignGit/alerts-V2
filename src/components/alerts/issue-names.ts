@@ -39,13 +39,13 @@ export const ISSUE_NAMES = {
     group: "Marketing" as IssueGroup,
   },
   bestSellerRank: {
-    filter: "Best Seller Rank Change",
+    filter: "Best Seller Rank Drop",
     chip: "Best Seller Rank",
     pane: "Best Seller Rank",
     group: "Sales" as IssueGroup,
   },
   ratingReviews: {
-    filter: "Rating Dropped",
+    filter: "Rating Drop",
     chip: "Rating",
     pane: "Rating & Reviews",
     group: "Sales" as IssueGroup,
@@ -89,6 +89,26 @@ export const ISSUE_NAMES = {
 } as const;
 
 export type IssueKey = keyof typeof ISSUE_NAMES;
+
+/**
+ * Short supporting copy next to the scrape-history detected icon.
+ * Generic legend stays “Detected”; cells use this issue-specific word.
+ */
+export const ISSUE_SCRAPE_DETECTED_LABEL: Record<IssueKey, string> = {
+  lostBuyBox: "Lost Buy Box",
+  promoBadge: "Missing",
+  dealPageVisibility: "Missing",
+  coupon: "Detected",
+  creditOffer: "Detected",
+  stockAvailability: "OOS",
+  shippingSpeed: "Low",
+  ratingReviews: "Drop",
+  bestSellerRank: "Drop",
+  sponsoredSov: "Drop",
+  keywordRank: "Drop",
+  conversionDrop: "Drop",
+  mediaSpend: "Drop",
+};
 
 /**
  * Unhealthy-state pill copy for live issue rows.

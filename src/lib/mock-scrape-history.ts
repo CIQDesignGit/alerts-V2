@@ -1,9 +1,15 @@
+import {
+  ISSUE_NAMES,
+  type IssueKey,
+} from "@/components/alerts/issue-names";
+
 /** One day column in the 7-day scrape history grid */
 export type ScrapeHistoryDay = {
   label: string;
 };
 
 export type ScrapeHistoryIssueRow = {
+  issueKey: IssueKey;
   issueLabel: string;
   /** One boolean per day — true when the issue was detected on that day */
   detectedOnDay: boolean[];
@@ -19,8 +25,70 @@ export type ScrapeHistoryData = {
 
 const SCRAPES_PER_DAY = 4;
 
+/** Row order matches the scrape-history detected-label list. */
+const SCRAPE_ISSUE_ROWS: Array<{
+  issueKey: IssueKey;
+  detectedOnDay: boolean[];
+}> = [
+  {
+    issueKey: "lostBuyBox",
+    detectedOnDay: [false, false, false, true, false, false, false],
+  },
+  {
+    issueKey: "promoBadge",
+    detectedOnDay: [false, false, true, true, true, true, true],
+  },
+  {
+    issueKey: "dealPageVisibility",
+    detectedOnDay: [false, false, false, false, false, true, true],
+  },
+  {
+    issueKey: "coupon",
+    detectedOnDay: [true, true, true, true, true, true, true],
+  },
+  {
+    issueKey: "creditOffer",
+    detectedOnDay: [false, true, true, false, false, true, false],
+  },
+  {
+    issueKey: "stockAvailability",
+    detectedOnDay: [true, true, true, true, true, true, true],
+  },
+  {
+    issueKey: "shippingSpeed",
+    detectedOnDay: [false, false, true, false, false, false, false],
+  },
+  {
+    issueKey: "ratingReviews",
+    detectedOnDay: [false, false, false, false, false, false, true],
+  },
+  {
+    issueKey: "bestSellerRank",
+    detectedOnDay: [false, false, true, false, false, true, true],
+  },
+  {
+    issueKey: "sponsoredSov",
+    detectedOnDay: [false, true, false, false, true, false, false],
+  },
+  {
+    issueKey: "keywordRank",
+    detectedOnDay: [true, false, false, true, false, false, true],
+  },
+  {
+    issueKey: "conversionDrop",
+    detectedOnDay: [false, false, true, true, false, false, false],
+  },
+  {
+    issueKey: "mediaSpend",
+    detectedOnDay: [false, false, false, true, true, false, false],
+  },
+];
+
 /** Prototype scrape grid — binary issue detection per day (any scrape flagged = detected). */
-export function getScrapeHistoryData(asin: string, skuName: string): ScrapeHistoryData {
+export function getScrapeHistoryData(
+  asin: string,
+  skuName: string,
+): ScrapeHistoryData {
   return {
     asin,
     skuName,
@@ -34,39 +102,10 @@ export function getScrapeHistoryData(asin: string, skuName: string): ScrapeHisto
       { label: "FRI 07/31" },
       { label: "SAT 08/01" },
     ],
-    issues: [
-      {
-        issueLabel: "Lost Buy Box",
-        detectedOnDay: [false, false, false, true, false, false, false],
-      },
-      {
-        issueLabel: "Missing Promo Badge",
-        detectedOnDay: [false, false, true, true, true, true, true],
-      },
-      {
-        issueLabel: "Deal Page Visibility",
-        detectedOnDay: [false, false, false, false, false, true, true],
-      },
-      {
-        issueLabel: "Active Coupon",
-        detectedOnDay: [true, true, true, true, true, true, true],
-      },
-      {
-        issueLabel: "OOS",
-        detectedOnDay: [true, true, true, true, true, true, true],
-      },
-      {
-        issueLabel: "Shipping Speed",
-        detectedOnDay: [false, false, true, false, false, false, false],
-      },
-      {
-        issueLabel: "Rating Dropped",
-        detectedOnDay: [false, false, false, false, false, false, true],
-      },
-      {
-        issueLabel: "Best Seller Rank Change",
-        detectedOnDay: [false, false, true, false, false, true, true],
-      },
-    ],
+    issues: SCRAPE_ISSUE_ROWS.map((row) => ({
+      issueKey: row.issueKey,
+      issueLabel: ISSUE_NAMES[row.issueKey].filter,
+      detectedOnDay: row.detectedOnDay,
+    })),
   };
 }

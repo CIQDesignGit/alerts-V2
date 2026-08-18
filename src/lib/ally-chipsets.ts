@@ -59,12 +59,12 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "How long has this credit offer been active?",
   ],
   bestSellerRank: [
-    "See trends for Last 7 days for Best Seller Rank Change",
+    "See trends for Last 7 days for Best Seller Rank Drop",
     "Did this SKU's rank improve or worsen day-over-day?",
     "How does this SKU's rank compare to its own 7d average?",
   ],
   ratingReviews: [
-    "See trends for Last 7 days for Rating Dropped",
+    "See trends for Last 7 days for Rating Drop",
     "What's driving this - a rating drop or a spike in 1-2 star reviews?",
     "How much has the rating changed vs. last week?",
   ],
