@@ -61,9 +61,9 @@ export function OpsValue({
       )}
       <span
         className={cn(
-          "font-mono text-xs font-semibold tabular-nums text-foreground",
+          "font-mono text-xs tabular-nums text-slate-800",
+          matchMeta ? "font-medium leading-4" : "font-semibold",
           !showLabel && !matchMeta && "leading-5",
-          matchMeta && "leading-4",
         )}
       >
         {formatOpsDollars(dollars)}
