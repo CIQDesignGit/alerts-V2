@@ -7,6 +7,11 @@ type OpsValueProps = {
   variant?: "inline" | "badge";
   /** Hide “OPS” on nested tree rows — dollar amount still shows */
   showLabel?: boolean;
+  /**
+   * Where the unlabeled $ sits on a two-line row.
+   * title = next to the name · meta = next to the ASIN / SKU count line
+   */
+  alignWith?: "title" | "meta";
   className?: string;
 };
 
@@ -18,6 +23,7 @@ export function OpsValue({
   dollars,
   variant = "inline",
   showLabel = true,
+  alignWith = "title",
   className,
 }: OpsValueProps) {
   if (variant === "badge") {
@@ -37,27 +43,31 @@ export function OpsValue({
     );
   }
 
+  const matchMeta = !showLabel && alignWith === "meta";
+
   return (
     <span
       title="Ordered Product Sales"
       className={cn(
         "inline-flex shrink-0 flex-col items-end leading-tight",
+        matchMeta && "self-end",
         className,
       )}
     >
-        {showLabel && (
-          <span className="text-2xs font-medium tracking-wide text-muted-foreground">
-            OPS
-          </span>
-        )}
-        <span
-          className={cn(
-            "font-mono text-xs font-semibold tabular-nums text-foreground",
-            !showLabel && "leading-5",
-          )}
-        >
-          {formatOpsDollars(dollars)}
+      {showLabel && (
+        <span className="text-2xs font-medium tracking-wide text-muted-foreground">
+          OPS
         </span>
+      )}
+      <span
+        className={cn(
+          "font-mono text-xs font-semibold tabular-nums text-foreground",
+          !showLabel && !matchMeta && "leading-5",
+          matchMeta && "leading-4",
+        )}
+      >
+        {formatOpsDollars(dollars)}
+      </span>
     </span>
   );
 }

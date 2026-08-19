@@ -156,6 +156,7 @@ function TaxonomyRow({
         <OpsValue
           dollars={node.opsDollars}
           showLabel={node.level === "overall"}
+          alignWith={node.level === "sku" ? "meta" : "title"}
         />
       </button>
     </div>

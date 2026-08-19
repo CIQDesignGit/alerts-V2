@@ -286,35 +286,37 @@ function SkuList({
                     : "hover:bg-neutral-100",
                 )}
               >
-                <div className="flex min-w-0 flex-1 items-start gap-2">
-                  <SkuThumbnail name={sku.name} size={36} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium leading-5 text-foreground">
-                      {sku.name}
-                    </p>
-                    <p className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate text-xs text-muted-foreground">
-                      <span className="shrink-0 font-mono">
-                        {skuShortCode(sku.asin)}
-                      </span>
-                      <span
-                        className="size-0.5 shrink-0 rounded-full bg-neutral-600"
-                        aria-hidden
-                      />
-                      <span className="shrink-0 font-mono">{sku.asin}</span>
-                      <span
-                        className="size-0.5 shrink-0 rounded-full bg-neutral-600"
-                        aria-hidden
-                      />
-                      <span className="truncate">
-                        {sku.category}
-                        {showIssueChip && sku.issueKey
-                          ? ` · ${issueLabel(sku.issueKey)}`
-                          : ""}
-                      </span>
-                    </p>
-                  </div>
+                <SkuThumbnail name={sku.name} size={36} />
+                <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-2">
+                  <p className="col-span-2 truncate text-sm font-medium leading-5 text-foreground">
+                    {sku.name}
+                  </p>
+                  <p className="inline-flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
+                    <span className="shrink-0 font-mono">
+                      {skuShortCode(sku.asin)}
+                    </span>
+                    <span
+                      className="size-0.5 shrink-0 rounded-full bg-neutral-600"
+                      aria-hidden
+                    />
+                    <span className="shrink-0 font-mono">{sku.asin}</span>
+                    <span
+                      className="size-0.5 shrink-0 rounded-full bg-neutral-600"
+                      aria-hidden
+                    />
+                    <span className="truncate">
+                      {sku.category}
+                      {showIssueChip && sku.issueKey
+                        ? ` · ${issueLabel(sku.issueKey)}`
+                        : ""}
+                    </span>
+                  </p>
+                  <OpsValue
+                    dollars={skuOpsDollars(sku)}
+                    showLabel={false}
+                    alignWith="meta"
+                  />
                 </div>
-                <OpsValue dollars={skuOpsDollars(sku)} showLabel={false} />
               </button>
             </li>
           );
