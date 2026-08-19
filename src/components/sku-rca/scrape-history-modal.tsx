@@ -5,6 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { ISSUE_SCRAPE_DETECTED_LABEL } from "@/components/alerts/issue-names";
+import {
+  LAST_WEEK_RANGE_LABEL,
+  PeriodBadge,
+} from "@/components/shared/period-badge";
 import { Button } from "@/components/ui/button";
 import {
   getScrapeHistoryData,
@@ -97,12 +101,15 @@ function ScrapeHistoryModal({
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-6 py-5">
           <div className="min-w-0">
-            <h2
-              id="scrape-history-title"
-              className="text-lg font-bold text-foreground"
-            >
-              7-day scrape history · {data.skuName}
-            </h2>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2
+                id="scrape-history-title"
+                className="text-lg font-bold text-foreground"
+              >
+                7-day scrape history · {data.skuName}
+              </h2>
+              <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">
               Whether each issue was detected on that day (4 scrapes per day).
             </p>

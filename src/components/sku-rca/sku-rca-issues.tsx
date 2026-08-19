@@ -129,20 +129,15 @@ export function SkuRcaIssues({
 
       {/* Last week — sibling card, same shell */}
       <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-          <div className="flex items-center gap-2.5">
-            <CalendarRange
-              className="size-4 shrink-0 text-neutral-500"
-              aria-hidden
-            />
-            <h4 className="text-sm font-semibold text-foreground">
-              Top Issues last week
-            </h4>
-            <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Days active · {LAST_WEEK_RANGE_LABEL}
-          </p>
+        <header className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-2.5">
+          <CalendarRange
+            className="size-4 shrink-0 text-neutral-500"
+            aria-hidden
+          />
+          <h4 className="text-sm font-semibold text-foreground">
+            Top Issues last week
+          </h4>
+          <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
         </header>
 
         <SkuRcaIssueAiSummary
