@@ -5,6 +5,7 @@ import {
   type IssueAlert,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
+import { skuOpsDollars } from "@/lib/ops";
 
 /** Exact column order from the Alert Export CSV template */
 const CSV_HEADERS = [
@@ -16,19 +17,6 @@ const CSV_HEADERS = [
   "OPS_30d",
   "Since",
 ] as const;
-
-/**
- * Stable mock Ordered Product Sales (30d) per ASIN.
- * Prototype only — real OPS would come from the backend.
- */
-function skuOps30d(sku: IssueSku): number {
-  let hash = 0;
-  for (const ch of sku.asin) {
-    hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  }
-  // Keep values in the same ballpark as the product sample (~130k–210k)
-  return 130_000 + (hash % 80_000);
-}
 
 /**
  * Turn Lost At ("Jan 16 15:40") into sample-style "Since"
@@ -76,7 +64,7 @@ export function buildAlertsExportCsv(issues: IssueAlert[]): string {
           sku.asin,
           sku.name,
           sku.category,
-          skuOps30d(sku),
+          skuOpsDollars(sku),
           formatSinceLabel(sku.lostAt),
         ]
           .map(escapeCsvCell)

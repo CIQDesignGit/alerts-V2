@@ -6,6 +6,7 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { ISSUE_ICONS } from "@/components/alerts/issue-icons";
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import type { IssueKey } from "@/components/alerts/issue-names";
+import { OpsValue } from "@/components/shared/ops-value";
 import {
   issueGroup,
   issueLabel,
@@ -13,6 +14,7 @@ import {
   type CategoryAlert,
   type IssueAlert,
 } from "@/lib/mock-alerts-insights";
+import { rolledUpOpsDollars, skuOpsDollars } from "@/lib/ops";
 import { cn } from "@/lib/utils";
 
 /** How many SKUs show in an expanded group before “View all” */
@@ -98,18 +100,23 @@ export function IssueGroupCard({
         onClick={onCardClick}
       >
         <IssueTypeIcon issueKey={issue.issueKey} />
-        <div className="min-w-0 flex-1">
-          <p
-            className={cn(
-              "text-sm text-foreground",
-              groupSelected ? "font-bold" : "font-semibold",
-            )}
-          >
-            {issueLabel(issue.issueKey)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {issue.skuCount} SKUs · {issueGroup(issue.issueKey)}
-          </p>
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p
+              className={cn(
+                "text-sm leading-5 text-foreground",
+                groupSelected ? "font-bold" : "font-semibold",
+              )}
+            >
+              {issueLabel(issue.issueKey)}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {issue.skuCount} SKUs · {issueGroup(issue.issueKey)}
+            </p>
+          </div>
+          <OpsValue
+            dollars={rolledUpOpsDollars(issue.skus, issue.skuCount)}
+          />
         </div>
         <ExpandIcon open={open} selected={groupSelected} />
       </button>
@@ -165,19 +172,24 @@ export function CategoryGroupCard({
         className={groupCardButtonClass(groupSelected)}
         onClick={onCardClick}
       >
-        <div className="min-w-0 flex-1">
-          <p
-            className={cn(
-              "text-sm text-foreground",
-              groupSelected ? "font-bold" : "font-semibold",
-            )}
-          >
-            {category.name}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {category.skuCount} SKUs · {issueChips.slice(0, 2).join(", ")}
-            {issueChips.length > 2 ? ` +${issueChips.length - 2}` : ""}
-          </p>
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p
+              className={cn(
+                "text-sm leading-5 text-foreground",
+                groupSelected ? "font-bold" : "font-semibold",
+              )}
+            >
+              {category.name}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {category.skuCount} SKUs · {issueChips.slice(0, 2).join(", ")}
+              {issueChips.length > 2 ? ` +${issueChips.length - 2}` : ""}
+            </p>
+          </div>
+          <OpsValue
+            dollars={rolledUpOpsDollars(category.skus, category.skuCount)}
+          />
         </div>
         <ExpandIcon open={open} selected={groupSelected} />
       </button>
@@ -267,7 +279,7 @@ function SkuList({
                 type="button"
                 onClick={() => onSelectSku(sku.id)}
                 className={cn(
-                  "flex w-full items-start rounded-md px-3 py-2 text-left outline-none",
+                  "flex w-full items-start gap-2 rounded-md px-3 py-2 text-left outline-none",
                   "focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-inset",
                   active
                     ? "bg-brand-100/70 ring-1 ring-brand-200"
@@ -277,7 +289,7 @@ function SkuList({
                 <div className="flex min-w-0 flex-1 items-start gap-2">
                   <SkuThumbnail name={sku.name} size={36} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p className="truncate text-sm font-medium leading-5 text-foreground">
                       {sku.name}
                     </p>
                     <p className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate text-xs text-muted-foreground">
@@ -302,6 +314,7 @@ function SkuList({
                     </p>
                   </div>
                 </div>
+                <OpsValue dollars={skuOpsDollars(sku)} showLabel={false} />
               </button>
             </li>
           );

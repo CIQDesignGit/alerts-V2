@@ -9,6 +9,7 @@ import {
   type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
+import { skuOpsDollars } from "@/lib/ops";
 
 export type RcaLiveStatus = "ok" | "warning" | "bad";
 
@@ -58,6 +59,8 @@ export type SkuRcaData = {
   asin: string;
   name: string;
   gapDollars: number;
+  /** Ordered Product Sales — shown next to Gap in the SKU header */
+  opsDollars: number;
   gapUnits?: number;
   summaryHeadline: string;
   kpis: RcaKpiCard[];
@@ -380,6 +383,7 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
     asin: sku.asin,
     name: sku.name,
     gapDollars: sku.gapDollars,
+    opsDollars: skuOpsDollars(sku),
     gapUnits: -150,
     summaryHeadline:
       "Revenue collapsed after SAS price jumped to $529.99 on May 3, losing the buy box for the full week. Recovery has started this week, but a missing deal badge is still limiting conversion.",

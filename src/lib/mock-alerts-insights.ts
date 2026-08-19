@@ -10,6 +10,7 @@ import {
   type TaxonomyChipLevel,
 } from "@/lib/ally-chipsets";
 import { snapshotMetricLabel } from "@/lib/insights-metrics-config";
+import { skuOpsDollars, sumOpsDollars } from "@/lib/ops";
 
 export type { AllyAiPrompt } from "@/lib/ally-chipsets";
 export { FULL_RCA_LAST_WEEK_PROMPT };
@@ -2035,6 +2036,8 @@ export type AlertsTaxonomyNode = {
   asin?: string;
   skuId?: string;
   gapDollars: number;
+  /** Rolled-up Ordered Product Sales for this node */
+  opsDollars: number;
   skus: CategorySku[];
   children: AlertsTaxonomyNode[];
 };
@@ -2588,6 +2591,7 @@ export function buildAlertsTaxonomyTree(
             asin: sku.asin,
             skuId: sku.id,
             gapDollars: sku.gapDollars,
+            opsDollars: skuOpsDollars(sku),
             skus: [sku],
             children: [],
           }));
@@ -2598,6 +2602,7 @@ export function buildAlertsTaxonomyTree(
             level: "category" as const,
             skuCount: sortedSkus.length,
             gapDollars: sortedSkus.reduce((sum, s) => sum + s.gapDollars, 0),
+            opsDollars: sumOpsDollars(sortedSkus),
             skus: sortedSkus,
             children: skuNodes,
           };
@@ -2613,6 +2618,7 @@ export function buildAlertsTaxonomyTree(
         categoryCount: categoryNodes.length,
         skuCount: brandSkus.length,
         gapDollars: brandSkus.reduce((sum, s) => sum + s.gapDollars, 0),
+        opsDollars: sumOpsDollars(brandSkus),
         skus: brandSkus,
         children: categoryNodes,
       };
@@ -2626,6 +2632,7 @@ export function buildAlertsTaxonomyTree(
     brandCount: brandNodes.length,
     skuCount: skus.length,
     gapDollars: skus.reduce((sum, s) => sum + s.gapDollars, 0),
+    opsDollars: sumOpsDollars(skus),
     skus,
     children: brandNodes,
   };

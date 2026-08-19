@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
+import { OpsValue } from "@/components/shared/ops-value";
 import {
   skuShortCode,
   type AlertsTaxonomyNode,
@@ -135,21 +136,27 @@ function TaxonomyRow({
         aria-current={selected ? "true" : undefined}
         onClick={onSelect}
         className={cn(
-          "min-w-0 flex-1 text-left outline-none",
+          "flex min-w-0 flex-1 items-start justify-between gap-2 text-left outline-none",
           controlFocusClass,
         )}
       >
-        <span
-          className={cn(
-            "block text-sm text-foreground",
-            selected ? "font-bold" : "font-semibold",
-          )}
-        >
-          {node.name}
+        <span className="min-w-0">
+          <span
+            className={cn(
+              "block text-sm leading-5 text-foreground",
+              selected ? "font-bold" : "font-semibold",
+            )}
+          >
+            {node.name}
+          </span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {isSku ? <SkuMetadataLine node={node} /> : metadataLine(node)}
+          </span>
         </span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">
-          {isSku ? <SkuMetadataLine node={node} /> : metadataLine(node)}
-        </span>
+        <OpsValue
+          dollars={node.opsDollars}
+          showLabel={node.level === "overall"}
+        />
       </button>
     </div>
   );

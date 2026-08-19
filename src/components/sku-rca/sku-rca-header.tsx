@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
+import { OpsValue } from "@/components/shared/ops-value";
 import { ScrapeHistoryButton } from "@/components/sku-rca/scrape-history-modal";
 import {
   GapBadge,
@@ -67,7 +68,10 @@ export function SkuRcaHeader({
                     skuName={data.name}
                   />
                 )}
-                <GapBadge dollars={data.gapDollars} />
+                <span className="inline-flex items-center gap-2">
+                  <OpsValue dollars={data.opsDollars} variant="badge" />
+                  <GapBadge dollars={data.gapDollars} />
+                </span>
               </div>
             </div>
           </div>
