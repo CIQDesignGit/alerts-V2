@@ -112,7 +112,7 @@ Each alert = one **issue type** rolled up across affected SKUs, showing:
 - **Issue type** — canonical issue names, sorted by $ at risk
 - **Taxonomy** — nested Overall → Brand → Category → SKU tree (same left/right shell)
 
-**Breadcrumb example:** `Alerts > Lost Buy Box > Shark IQ AV970`
+**Breadcrumb example:** `Alerts > Lost Buy Box > CleanPro Robot Vac R900`
 
 **Issue names:** use the three-location table below (and `src/components/alerts/issue-names.ts`). Left list + filters use the `.filter` column. Reversed mock labels like “Buy Box Lost” / “Deal Badge Gone” are **not** UI copy.
 

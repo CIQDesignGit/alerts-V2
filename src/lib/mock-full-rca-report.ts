@@ -243,7 +243,7 @@ export function getFullRcaReport(sku: IssueSku): FullRcaReportData {
         },
         bullets: [
           "The drop in ad-attributed sales (−$118,679) accounts for essentially all of the total revenue decline (−$114,069). Paid search was the primary sales engine.",
-          'A 93% spend cut pulled spend from five high-importance keywords: "ninja crispi", "glass air fryer", "ninja air fryer", "crispi", and "air fryer glass".',
+          'A 93% spend cut pulled spend from five high-importance keywords: "kitchenpro air fryer", "glass air fryer", "compact air fryer", "crispy basket", and "air fryer glass".',
           "Direct consequences: ~30% traffic drop and ~37% conversion drop on the page.",
         ],
         callout: {

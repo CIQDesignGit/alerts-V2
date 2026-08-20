@@ -9,9 +9,9 @@ type SkuThumbnailProps = {
 
 /** Product photos in /public/assets/sku — assigned by name hash (stable “random”). */
 const SKU_IMAGE_SRCS = [
-  "/assets/sku/sku-01-bosch-canister.png",
-  "/assets/sku/sku-02-bissell-upright.png",
-  "/assets/sku/sku-03-dyson-head.png",
+  "/assets/sku/sku-01-canister-vacuum.png",
+  "/assets/sku/sku-02-upright-vacuum.png",
+  "/assets/sku/sku-03-vacuum-head.png",
   "/assets/sku/sku-04-dynavac-industrial.png",
   "/assets/sku/sku-05-domestica-stick.png",
   "/assets/sku/sku-06-robot-vacuum.png",

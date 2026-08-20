@@ -318,7 +318,7 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
 
   return {
     alertMessage: "You've lost the Buy Box on an important SKU.",
-    brandLabel: sku.brand || "Shark",
+    brandLabel: sku.brand || "CleanPro",
     competitorLabel: competitor,
     competitorBadge: "Latest Winner",
     rows: [
@@ -667,7 +667,7 @@ export function getShippingSpeedSkuDetail(
 /** Sponsored Share of Voice — SP/SB cards + keyword table. */
 export function getSponsoredSovSkuDetail(sku: IssueSku): SponsoredSovSkuDetail {
   const seed = skuSeed(sku);
-  const brand = sku.brand || "Shark";
+  const brand = sku.brand || "CleanPro";
   return {
     summary:
       "Competitor ads detected on branded keywords resulting in a drop in SoV.",
@@ -700,7 +700,7 @@ export function getSponsoredSovSkuDetail(sku: IssueSku): SponsoredSovSkuDetail {
       },
       {
         id: "k5",
-        keyword: `${brand} NX23 Vacuum`,
+        keyword: `${brand} X23 Vacuum`,
         sp: { from: 9, to: 6.4, deltaPct: -29 },
         sb: { from: 9, to: 6.4, deltaPct: -29 },
       },
@@ -799,7 +799,7 @@ export function getMediaSpendSkuDetail(sku: IssueSku): MediaSpendSkuDetail {
       },
       {
         id: "m4",
-        keyword: "shark cordless vacuum",
+        keyword: "cleanpro cordless vacuum",
         importance: "High",
         sfr: 2100,
         last7Days: 890,

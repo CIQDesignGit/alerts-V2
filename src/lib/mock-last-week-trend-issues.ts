@@ -785,7 +785,7 @@ function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
       ),
       ...keywordRankPair(
         "kw2",
-        "shark cordless vacuum",
+        "cleanpro cordless vacuum",
         [
           rankCell("#6"),
           rankCell("#8"),
@@ -871,7 +871,7 @@ function getMediaSpendTrend(_sku: IssueSku): LastWeekTrendData {
       },
       {
         id: "kw3",
-        label: "shark cordless vacuum",
+        label: "cleanpro cordless vacuum",
         cells: textCells([
           "$280",
           "$260",

@@ -1,7 +1,7 @@
 import type { AlertMetricTilesData } from "@/lib/mock-alerts-insights";
 
 /**
- * Split "Shark 100%" into name + percent for display only.
+ * Split "CleanPro 100%" into name + percent for display only.
  * Does not change source data — only how the string is laid out.
  */
 function splitValueNameAndPct(value: string): {

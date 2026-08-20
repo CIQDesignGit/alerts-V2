@@ -34,7 +34,7 @@ export function InsightsLevelHeader({
   return (
     <header className="relative shrink-0 border-b border-border bg-background">
       <div className="px-6 py-3">
-        {/* Hierarchy path — e.g. Entire Business > Shark > Hair Care */}
+        {/* Hierarchy path — e.g. Entire Business > CleanPro > Hair Care */}
         {breadcrumbs.length > 0 && (
           <nav
             aria-label="Hierarchy path"

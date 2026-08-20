@@ -68,7 +68,7 @@ export function InsightsTab({
     if (initialSkuId && findHierarchyNode(hierarchyTree, initialSkuId)) {
       return initialSkuId;
     }
-    return "shark";
+    return "cleanpro";
   });
   const [expandedIds, setExpandedIds] = useState(() => {
     if (initialSkuId && findHierarchyNode(hierarchyTree, initialSkuId)) {
@@ -78,7 +78,7 @@ export function InsightsTab({
         hierarchyPathIds(hierarchyTree, parent?.id ?? initialSkuId),
       );
     }
-    return new Set(["biz", "shark"]);
+    return new Set(["biz", "cleanpro"]);
   });
   const [configOpen, setConfigOpen] = useState(false);
   const [mode, setMode] = useState<InsightsMode>("live");
