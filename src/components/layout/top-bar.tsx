@@ -19,8 +19,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const BREADCRUMB_BY_PATH: Record<string, string[]> = {
-  "/": ["Agents", "Alerts"],
-  "/alerts": ["Agents", "Alerts"],
+  "/": ["Agents", "Sales Agent"],
+  "/alerts": ["Agents", "Sales Agent"],
   "/chat": ["Agents", "Ask Ally"],
   "/settings": ["Settings"],
   "/command-center": ["Agents", "Command Center"],

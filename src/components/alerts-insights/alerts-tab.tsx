@@ -89,7 +89,7 @@ export function AlertsTab({
       (sum, issue) => sum + issue.skuCount,
       0,
     );
-    return { title: "Alerts", count: skuAppearances };
+    return { title: "SKUs", count: skuAppearances };
   }, [groupBy, filteredIssues, taxonomyTree]);
 
   const [expandedId, setExpandedId] = useState<string | null>(
