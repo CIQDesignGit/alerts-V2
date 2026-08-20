@@ -128,7 +128,7 @@ export type RatingReviewsSkuDetail = {
 
 export type StockCrawlRow = {
   id: string;
-  /** e.g. "Today, 4:30 AM" */
+  /** e.g. "Today, 4:00 PM" — newest matches LastCrawlBadge */
   whenLabel: string;
   inStock: boolean;
   location: string;
@@ -548,7 +548,7 @@ export function getStockAvailabilitySkuDetail(
     statusLabel: "Currently unavailable",
     location: "Los Angeles",
     zip: "90028",
-    timestamp: "Today, 4:30 AM",
+    timestamp: "Today, 4:00 PM",
     oosCrawlCount: 5,
     totalCrawls: 12,
     visibleCrawlCount: 6,
@@ -556,21 +556,21 @@ export function getStockAvailabilitySkuDetail(
     crawls: [
       {
         id: "c1",
-        whenLabel: "Today, 4:30 AM",
+        whenLabel: "Today, 4:00 PM",
         inStock: false,
         location: "Los Angeles",
         zip: "90028",
       },
       {
         id: "c2",
-        whenLabel: "Today, 2:31 AM",
+        whenLabel: "Today, 10:00 AM",
         inStock: false,
         location: "New York",
         zip: "10019",
       },
       {
         id: "c3",
-        whenLabel: "Today, 12:30 AM",
+        whenLabel: "Today, 4:00 AM",
         inStock: false,
         location: "Chicago",
         zip: "60601",
