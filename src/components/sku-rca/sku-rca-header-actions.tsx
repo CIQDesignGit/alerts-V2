@@ -5,7 +5,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { PDP_SNAPSHOTS } from "@/lib/mock-pdp-snapshots";
+import { getPdpSnapshotsForSku } from "@/lib/mock-pdp-snapshots";
 import { formatCompactDollars } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,14 @@ export function PdpPageLink({
 }
 
 /** Opens a popover of product-page snapshots saved at each crawl */
-export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
+export function PdpSnapshotsButton({
+  skuName,
+  compact,
+}: {
+  /** Drives which Amazon PDP each snapshot row opens */
+  skuName: string;
+  compact?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(
     null,
@@ -67,6 +74,7 @@ export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
+  const snapshots = getPdpSnapshotsForSku(skuName);
 
   // Header clips overflow, so the panel is drawn on the page body instead.
   useLayoutEffect(() => {
@@ -164,11 +172,12 @@ export function PdpSnapshotsButton({ compact }: { compact?: boolean }) {
               </div>
 
               <ul className="m-0 max-h-80 list-none divide-y divide-border overflow-y-auto p-0">
-                {PDP_SNAPSHOTS.map((snap) => (
+                {snapshots.map((snap) => (
                   <li key={snap.id}>
                     <a
                       href={snap.href}
-                      onClick={(event) => event.preventDefault()}
+                      target="_blank"
+                      rel="noreferrer"
                       className="flex items-start justify-between gap-3 px-4 py-3 transition-colors hover:bg-neutral-50"
                     >
                       <span className="min-w-0 flex flex-col gap-1">

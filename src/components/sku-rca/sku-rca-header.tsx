@@ -11,6 +11,7 @@ import {
   PdpSnapshotsButton,
 } from "@/components/sku-rca/sku-rca-header-actions";
 import { Button } from "@/components/ui/button";
+import { getPdpUrlForSku } from "@/lib/mock-pdp-snapshots";
 import type { SkuRcaData } from "@/lib/mock-sku-rca";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,8 @@ export function SkuRcaHeader({
   onClose,
   showScrapeHistory = false,
 }: SkuRcaHeaderProps) {
-  const pdpUrl = `https://www.amazon.com/dp/${data.asin}`;
+  // Same Amazon URL as PDP Snapshots rows for this SKU
+  const pdpUrl = getPdpUrlForSku(data.name);
 
   return (
     <header className="relative z-20 shrink-0 overflow-hidden border-b border-border bg-background">
@@ -60,7 +62,7 @@ export function SkuRcaHeader({
                 {data.name}
               </h2>
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
-                <PdpSnapshotsButton />
+                <PdpSnapshotsButton skuName={data.name} />
                 <PdpPageLink href={pdpUrl} />
                 {showScrapeHistory && (
                   <ScrapeHistoryButton
@@ -99,7 +101,7 @@ export function SkuRcaHeader({
             {data.name}
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
-            <PdpSnapshotsButton compact />
+            <PdpSnapshotsButton skuName={data.name} compact />
             <PdpPageLink href={pdpUrl} compact />
             {showScrapeHistory && (
               <ScrapeHistoryButton
