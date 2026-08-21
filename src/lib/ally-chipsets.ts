@@ -21,6 +21,25 @@ export const FULL_RCA_LAST_WEEK_PROMPT: AllyAiPrompt = {
   variant: "primary",
 };
 
+/** Build the Gap to Plan chip with the selected entity in the label (e.g. CleanPro). */
+export function buildGapToPlanLastWeekPrompt(entityLabel: string): AllyAiPrompt {
+  const name = entityLabel.trim() || "this view";
+  const label = `Run Gap to Plan for ${name} for the last week`;
+  return {
+    id: "full-rca",
+    label,
+    prompt: `${label}. Summarize top drivers, seller behavior, and recommended actions for the next 48 hours.`,
+    variant: "primary",
+  };
+}
+
+/** True when the user asked for the Gap to Plan / full RCA report. */
+export function isGapToPlanPrompt(text: string): boolean {
+  return (
+    /run gap to plan/i.test(text) || /full root cause analysis/i.test(text)
+  );
+}
+
 /** Taxonomy levels that show rolled-up Ally chips (not SKU). */
 export type TaxonomyChipLevel = "overall" | "brand" | "category";
 
@@ -131,14 +150,15 @@ export function getIssueSkuChips(issueKey: IssueKey): AllyAiPrompt[] {
  */
 export function getTaxonomyRolledUpChips(
   _level: TaxonomyChipLevel,
+  entityName: string,
 ): AllyAiPrompt[] {
-  return [FULL_RCA_LAST_WEEK_PROMPT];
+  return [buildGapToPlanLastWeekPrompt(entityName)];
 }
 
 /**
  * Taxonomy · SKU (multi-issue SkuRca):
  * only the Gap to Plan chip — same rule as rolled-up taxonomy levels.
  */
-export function getTaxonomySkuChips(): AllyAiPrompt[] {
-  return [FULL_RCA_LAST_WEEK_PROMPT];
+export function getTaxonomySkuChips(skuName?: string): AllyAiPrompt[] {
+  return [buildGapToPlanLastWeekPrompt(skuName?.trim() || "this SKU")];
 }

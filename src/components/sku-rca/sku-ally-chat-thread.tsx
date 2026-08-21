@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { ContentFeedback } from "@/components/shared/content-feedback";
 import { AllyProcessingTrail } from "@/components/sku-rca/ally-processing-trail";
 import { FullRcaReport } from "@/components/sku-rca/full-rca-report";
 import { LastWeekTrendCard } from "@/components/sku-rca/last-week-trend-card";
@@ -93,7 +94,30 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
                 status={message.status}
               />
             ) : message.kind === "full-rca" ? (
-              <FullRcaReport report={message.report} />
+              <div className="flex flex-col gap-4">
+                <FullRcaReport report={message.report} />
+                <ContentFeedback
+                  variant="subtle"
+                  feedbackKey={`${message.id}:${message.report.headerTitle}`}
+                  surface="gap-to-plan"
+                  contextLabel={message.report.headerTitle}
+                  title="Was this Gap to Plan analysis helpful?"
+                  positiveChips={[
+                    "Clear priorities",
+                    "Useful $ impact",
+                    "Actionable recommendations",
+                    "Good context",
+                    "Saved me time",
+                  ]}
+                  negativeChips={[
+                    "Wrong root cause",
+                    "Missing context",
+                    "Unclear actions",
+                    "Numbers seem off",
+                    "Not relevant",
+                  ]}
+                />
+              </div>
             ) : message.kind === "last-week-trend" ? (
               <LastWeekTrendCard trend={message.trend} />
             ) : (

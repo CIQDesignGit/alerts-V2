@@ -9,7 +9,7 @@ import {
   type TrendTableRow,
 } from "@/lib/mock-last-week-trend-shared";
 
-/** Lost Buy Box — matches the May 3–9 design screenshot */
+/** Lost Buy Box — matches the Aug 9–15 design screenshot */
 function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
   const competitor = sku.bbOwner
     ? `${sku.bbOwner} (3P Seller)`
@@ -17,7 +17,7 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
 
   return {
     issueKey: "lostBuyBox",
-    title: "Last 7 Day Trend (May 3–9)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Lost Buy Box metrics to the prior 7 days.",
     summaryMetrics: [
@@ -66,13 +66,13 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
       },
     ],
     days: [
-      { id: "d0", dateLabel: "May 3", dayLabel: "Sat" },
-      { id: "d1", dateLabel: "May 4", dayLabel: "Sun" },
-      { id: "d2", dateLabel: "May 5", dayLabel: "Mon" },
-      { id: "d3", dateLabel: "May 6", dayLabel: "Tue" },
-      { id: "d4", dateLabel: "May 7", dayLabel: "Wed" },
-      { id: "d5", dateLabel: "May 8", dayLabel: "Thu" },
-      { id: "d6", dateLabel: "May 9", dayLabel: "Fri" },
+      { id: "d0", dateLabel: "Aug 9", dayLabel: "Sun" },
+      { id: "d1", dateLabel: "Aug 10", dayLabel: "Mon" },
+      { id: "d2", dateLabel: "Aug 11", dayLabel: "Tue" },
+      { id: "d3", dateLabel: "Aug 12", dayLabel: "Wed" },
+      { id: "d4", dateLabel: "Aug 13", dayLabel: "Thu" },
+      { id: "d5", dateLabel: "Aug 14", dayLabel: "Fri" },
+      { id: "d6", dateLabel: "Aug 15", dayLabel: "Sat" },
     ],
     rows: [
       {
@@ -134,11 +134,11 @@ function getLostBuyBoxTrend(sku: IssueSku): LastWeekTrendData {
   };
 }
 
-/** Promo Badge — matches the May 10–16 design screenshot */
+/** Promo Badge — matches the Aug 9–15 design screenshot */
 function getPromoBadgeTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "promoBadge",
-    title: "Last 7 Day Trend (May 10–16)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Promo Badge metrics to the prior 7 days.",
     summaryMetrics: [
@@ -186,13 +186,13 @@ function getPromoBadgeTrend(_sku: IssueSku): LastWeekTrendData {
       },
     ],
     days: [
-      { id: "d0", dateLabel: "May 10", dayLabel: "Sat" },
-      { id: "d1", dateLabel: "May 11", dayLabel: "Sun" },
-      { id: "d2", dateLabel: "May 12", dayLabel: "Mon" },
-      { id: "d3", dateLabel: "May 13", dayLabel: "Tue" },
-      { id: "d4", dateLabel: "May 14", dayLabel: "Wed" },
-      { id: "d5", dateLabel: "May 15", dayLabel: "Thu" },
-      { id: "d6", dateLabel: "May 16", dayLabel: "Fri" },
+      { id: "d0", dateLabel: "Aug 9", dayLabel: "Sun" },
+      { id: "d1", dateLabel: "Aug 10", dayLabel: "Mon" },
+      { id: "d2", dateLabel: "Aug 11", dayLabel: "Tue" },
+      { id: "d3", dateLabel: "Aug 12", dayLabel: "Wed" },
+      { id: "d4", dateLabel: "Aug 13", dayLabel: "Thu" },
+      { id: "d5", dateLabel: "Aug 14", dayLabel: "Fri" },
+      { id: "d6", dateLabel: "Aug 15", dayLabel: "Sat" },
     ],
     rows: [
       {
@@ -234,7 +234,7 @@ function getPromoBadgeTrend(_sku: IssueSku): LastWeekTrendData {
 function getDealPageVisibilityTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "dealPageVisibility",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Deal Page Visibility metrics to the prior 7 days.",
@@ -272,7 +272,7 @@ function getDealPageVisibilityTrend(_sku: IssueSku): LastWeekTrendData {
 function getCouponTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "coupon",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Coupon detection crawls to the prior 7 days.",
     summaryColumns: 1,
@@ -300,7 +300,7 @@ function getCouponTrend(_sku: IssueSku): LastWeekTrendData {
 function getCreditOfferTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "creditOffer",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Credit Offer detection crawls to the prior 7 days.",
     summaryColumns: 1,
@@ -338,7 +338,7 @@ function getBestSellerRankTrend(_sku: IssueSku): LastWeekTrendData {
 
   return {
     issueKey: "bestSellerRank",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Best Seller Rank metrics to the prior 7 days.",
     summaryColumns: 1,
@@ -379,7 +379,7 @@ function getBestSellerRankTrend(_sku: IssueSku): LastWeekTrendData {
 function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "ratingReviews",
-    title: "Last 7 Day Trend (May 20–26)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Rating & Reviews metrics to the prior 7 days.",
     summaryColumns: 4,
@@ -414,13 +414,13 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
       },
     ],
     days: [
-      { id: "d0", dateLabel: "May 20", dayLabel: "Tue" },
-      { id: "d1", dateLabel: "May 21", dayLabel: "Wed" },
-      { id: "d2", dateLabel: "May 22", dayLabel: "Thu" },
-      { id: "d3", dateLabel: "May 23", dayLabel: "Fri" },
-      { id: "d4", dateLabel: "May 24", dayLabel: "Sat" },
-      { id: "d5", dateLabel: "May 25", dayLabel: "Sun" },
-      { id: "d6", dateLabel: "May 26", dayLabel: "Mon" },
+      { id: "d0", dateLabel: "Aug 9", dayLabel: "Sun" },
+      { id: "d1", dateLabel: "Aug 10", dayLabel: "Mon" },
+      { id: "d2", dateLabel: "Aug 11", dayLabel: "Tue" },
+      { id: "d3", dateLabel: "Aug 12", dayLabel: "Wed" },
+      { id: "d4", dateLabel: "Aug 13", dayLabel: "Thu" },
+      { id: "d5", dateLabel: "Aug 14", dayLabel: "Fri" },
+      { id: "d6", dateLabel: "Aug 15", dayLabel: "Sat" },
     ],
     rows: [
       {
@@ -505,7 +505,7 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
 function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "stockAvailability",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     vsPrevWeekTooltip:
       "Compares this week’s Stock Availability metrics to the prior 7 days.",
     summaryColumns: 2,
@@ -620,7 +620,7 @@ function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
 function getSponsoredSovTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "sponsoredSov",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Sponsored Share of Voice to the prior 7 days.",
@@ -670,7 +670,7 @@ function getSponsoredSovTrend(_sku: IssueSku): LastWeekTrendData {
 function getConversionDropTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "conversionDrop",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Conversion metrics to the prior 7 days.",
@@ -752,7 +752,7 @@ function rankCell(
 function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "keywordRank",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Keyword Rank metrics to the prior 7 days.",
@@ -835,7 +835,7 @@ function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
 function getMediaSpendTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "mediaSpend",
-    title: "Last 7 Day Trend (Jun 1–7)",
+    title: "Last 7 Day Trend (Aug 9–15)",
     showVsPrevWeek: false,
     vsPrevWeekTooltip:
       "Compares this week’s Media Spend by keyword to the prior 7 days.",

@@ -5,7 +5,7 @@ export type TrendTone = "positive" | "negative" | "neutral";
 
 export type TrendDayColumn = {
   id: string;
-  /** e.g. "May 3" */
+  /** e.g. "Aug 9" */
   dateLabel: string;
   /** e.g. "Sat" */
   dayLabel: string;
@@ -55,7 +55,7 @@ export type TrendTableRow = {
 
 export type LastWeekTrendData = {
   issueKey: IssueKey;
-  /** Card title, e.g. "Last 7 Day Trend (May 3–9)" */
+  /** Card title, e.g. "Last 7 Day Trend (Aug 9–15)" */
   title: string;
   vsPrevWeekTooltip: string;
   /** Hide the header “vs prev week” control (table-only designs) */
@@ -71,15 +71,15 @@ export type LastWeekTrendData = {
   showTypeColumn?: boolean;
 };
 
-/** Shared Jun 1–7 column headers used by most trend designs */
+/** Shared last-week column headers (Aug 9–15) used by most trend designs */
 export const JUN_1_7_DAYS: TrendDayColumn[] = [
-  { id: "d0", dateLabel: "Jun 1", dayLabel: "Sun" },
-  { id: "d1", dateLabel: "Jun 2", dayLabel: "Mon" },
-  { id: "d2", dateLabel: "Jun 3", dayLabel: "Tue" },
-  { id: "d3", dateLabel: "Jun 4", dayLabel: "Wed" },
-  { id: "d4", dateLabel: "Jun 5", dayLabel: "Thu" },
-  { id: "d5", dateLabel: "Jun 6", dayLabel: "Fri" },
-  { id: "d6", dateLabel: "Jun 7", dayLabel: "Sat" },
+  { id: "d0", dateLabel: "Aug 9", dayLabel: "Sun" },
+  { id: "d1", dateLabel: "Aug 10", dayLabel: "Mon" },
+  { id: "d2", dateLabel: "Aug 11", dayLabel: "Tue" },
+  { id: "d3", dateLabel: "Aug 12", dayLabel: "Wed" },
+  { id: "d4", dateLabel: "Aug 13", dayLabel: "Thu" },
+  { id: "d5", dateLabel: "Aug 14", dayLabel: "Fri" },
+  { id: "d6", dateLabel: "Aug 15", dayLabel: "Sat" },
 ];
 
 /** Helpers — keep row builders readable */

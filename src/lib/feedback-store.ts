@@ -1,5 +1,9 @@
 /** Where in the app feedback was collected */
-export type FeedbackSurface = "sku-rca" | "ally-insight" | "taxonomy-rca";
+export type FeedbackSurface =
+  | "sku-rca"
+  | "ally-insight"
+  | "taxonomy-rca"
+  | "gap-to-plan";
 
 export type FeedbackVote = "up" | "down";
 

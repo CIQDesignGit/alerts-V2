@@ -225,9 +225,9 @@ export type MediaSpendSkuDetail = {
   totalSpendLastWeek: string;
   totalSpendPreviousWeek: string;
   periodLabel: string;
-  /** Short date under “Spend LW”, e.g. "Aug 4–10" */
+  /** Short date under “Spend LW”, e.g. "Aug 9–15" */
   spendLwDates: string;
-  /** Sub-label under “Spend Change”, e.g. "vs. Jul 28–Aug 3" */
+  /** Sub-label under “Spend Change”, e.g. "vs. Aug 2–8" */
   spendChangeVs: string;
   rows: MediaSpendKeywordRow[];
 };
@@ -266,17 +266,17 @@ function gapLabel(sku: IssueSku): string {
  * Count of returned checks matches the win numerator (e.g. 2 for 2/6).
  */
 const BUY_BOX_CRAWL_POOL: Array<BuyBoxWinCheck & { date: string }> = [
-  { date: "11 Aug 2026", time: "4:36 AM", relative: "6h ago" },
-  { date: "11 Aug 2026", time: "2:30 AM", relative: "9h ago" },
-  { date: "11 Aug 2026", time: "12:30 AM", relative: "11h ago" },
-  { date: "10 Aug 2026", time: "10:59 PM", relative: "12h ago" },
-  { date: "10 Aug 2026", time: "8:38 PM", relative: "14h ago" },
-  { date: "10 Aug 2026", time: "6:30 PM", relative: "17h ago" },
-  { date: "10 Aug 2026", time: "4:30 PM", relative: "19h ago" },
-  { date: "10 Aug 2026", time: "2:30 PM", relative: "21h ago" },
-  { date: "10 Aug 2026", time: "12:30 PM", relative: "23h ago" },
-  { date: "10 Aug 2026", time: "8:31 AM", relative: "1d ago" },
-  { date: "10 Aug 2026", time: "6:30 AM", relative: "1d ago" },
+  { date: "21 Aug 2026", time: "4:36 AM", relative: "6h ago" },
+  { date: "21 Aug 2026", time: "2:30 AM", relative: "9h ago" },
+  { date: "21 Aug 2026", time: "12:30 AM", relative: "11h ago" },
+  { date: "20 Aug 2026", time: "10:59 PM", relative: "12h ago" },
+  { date: "20 Aug 2026", time: "8:38 PM", relative: "14h ago" },
+  { date: "20 Aug 2026", time: "6:30 PM", relative: "17h ago" },
+  { date: "20 Aug 2026", time: "4:30 PM", relative: "19h ago" },
+  { date: "20 Aug 2026", time: "2:30 PM", relative: "21h ago" },
+  { date: "20 Aug 2026", time: "12:30 PM", relative: "23h ago" },
+  { date: "20 Aug 2026", time: "8:31 AM", relative: "1d ago" },
+  { date: "20 Aug 2026", time: "6:30 AM", relative: "1d ago" },
 ];
 
 function buildBuyBoxWinCheckDays(
@@ -459,7 +459,7 @@ export function getPromoBadgeSkuDetail(sku: IssueSku): PromoBadgeSkuDetail {
 
   return {
     summary:
-      "Your product is on discount from 2 Aug to 5 Sep, but there is some issue with the display.",
+      "Your product is on discount from 9 Aug to 5 Sep, but there is some issue with the display.",
     checks: [
       { id: "badge-visible", label: "Promo Badge Visible?", ok: false },
       { id: "original-correct", label: "Original Price is Correct?", ok: false },
@@ -763,9 +763,9 @@ export function getMediaSpendSkuDetail(sku: IssueSku): MediaSpendSkuDetail {
       "Spend cut on all top keywords last week. Total keyword spend (all KWs):",
     totalSpendLastWeek: "$0",
     totalSpendPreviousWeek: "$0",
-    periodLabel: "Last week (Aug 4–10)",
-    spendLwDates: "Aug 4–10",
-    spendChangeVs: "vs. Jul 28–Aug 3",
+    periodLabel: "Last week (Aug 9–15)",
+    spendLwDates: "Aug 9–15",
+    spendChangeVs: "vs. Aug 2–8",
     rows: [
       {
         id: "m1",

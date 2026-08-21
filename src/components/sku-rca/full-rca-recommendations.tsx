@@ -6,19 +6,24 @@ type FullRcaRecommendationsProps = {
   items: FullRcaRecommendation[];
 };
 
-/** Urgency list — typography + spacing over nested boxes. */
+/**
+ * Recommendations body — stacked action cards
+ * (matches the Gap to Plan design reference).
+ */
 export function FullRcaRecommendationsList({
   items,
 }: FullRcaRecommendationsProps) {
   return (
-    <ul className="m-0 flex list-none flex-col gap-4 p-0">
+    <ul className="m-0 flex list-none flex-col gap-3 bg-neutral-50/70 px-4 py-4">
       {items.map((item) => (
-        <li key={item.id} className="border-l-2 border-brand-300 pl-3">
-          <p className="text-2xs font-semibold tracking-wider text-brand-600 uppercase">
-            {item.urgency}
+        <li
+          key={item.id}
+          className="rounded-lg border border-border bg-background px-4 py-3.5"
+        >
+          <p className="text-sm font-semibold leading-snug text-foreground">
+            {item.title}
           </p>
-          <p className="mt-1 text-sm font-medium text-foreground">{item.title}</p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             {item.description}
           </p>
         </li>

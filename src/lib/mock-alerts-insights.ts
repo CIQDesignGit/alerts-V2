@@ -6,10 +6,18 @@ import {
 import {
   FULL_RCA_LAST_WEEK_PROMPT,
   getTaxonomyRolledUpChips,
+  isGapToPlanPrompt,
   type AllyAiPrompt,
   type TaxonomyChipLevel,
 } from "@/lib/ally-chipsets";
 import { snapshotMetricLabel } from "@/lib/insights-metrics-config";
+import {
+  EOW_KPI_TITLE,
+  LAST_WEEK_KPI_TITLE,
+  MOCK_NOW,
+  PORTFOLIO_WTD_RANGE,
+  WTD_KPI_TITLE,
+} from "@/lib/mock-calendar";
 import {
   paintIssueAlertsOps,
   paintTaxonomyOpsDescending,
@@ -19,7 +27,7 @@ import {
 } from "@/lib/ops";
 
 export type { AllyAiPrompt } from "@/lib/ally-chipsets";
-export { FULL_RCA_LAST_WEEK_PROMPT };
+export { FULL_RCA_LAST_WEEK_PROMPT, isGapToPlanPrompt };
 
 export type BrandCard = {
   name: string;
@@ -85,7 +93,7 @@ export type AlertsTimeWindow = "24h" | "7d" | "30d";
 export const DEFAULT_ALERTS_TIME_WINDOW: AlertsTimeWindow = "7d";
 
 /** Fixed "now" for the prototype so Lost At dates stay stable across machines */
-export const ALERTS_MOCK_NOW = new Date("2026-01-16T18:00:00");
+export const ALERTS_MOCK_NOW = MOCK_NOW;
 
 /**
  * Last retailer scrape clock — single source of truth for
@@ -117,7 +125,7 @@ export function alertsTimeWindowPhrase(window: AlertsTimeWindow): string {
   return "last 30 days";
 }
 
-/** Turn "Jan 15 14:32" into a real Date (year taken from ALERTS_MOCK_NOW). */
+/** Turn "Aug 20 14:32" into a real Date (year taken from ALERTS_MOCK_NOW). */
 export function parseLostAt(lostAt: string): Date | null {
   const match = lostAt.match(
     /^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})$/,
@@ -147,7 +155,7 @@ export function parseLostAt(lostAt: string): Date | null {
     Number(hour),
     Number(minute),
   );
-  // Dec before a Jan "now" belongs to the previous year
+  // Dates after mock "now" wrap to the previous year
   if (parsed > ALERTS_MOCK_NOW) {
     parsed.setFullYear(parsed.getFullYear() - 1);
   }
@@ -1063,7 +1071,7 @@ export const portfolioGap = {
   /** Plain-language window (avoid cryptic “WTD” alone in the UI) */
   periodLabel: "Week to date",
   /** Inclusive dates for the current week-to-date window */
-  periodRange: "Mon Jul 20 – Wed Jul 22",
+  periodRange: PORTFOLIO_WTD_RANGE,
 };
 
 export const brandCards: BrandCard[] = [
@@ -1205,7 +1213,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         theirPrice: 289,
         ourPrice: 319,
         // New in latest crawl (after previous 10:00 crawl, at/before 16:00 scrape)
-        lostAt: "Jan 16 15:40",
+        lostAt: "Aug 21 15:40",
       },
       {
         // Also listed under sponsoredSov + coupon (same id)
@@ -1221,7 +1229,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         theirPrice: 248,
         ourPrice: 279,
         // Seen in an earlier crawl today — counts as recurring
-        lostAt: "Jan 16 09:20",
+        lostAt: "Aug 21 09:20",
       },
       {
         // Also listed under sponsoredSov (same id)
@@ -1235,7 +1243,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "BeautyDealz",
         theirPrice: 199,
         ourPrice: 219,
-        lostAt: "Jan 14 09:17",
+        lostAt: "Aug 19 09:17",
       },
       {
         id: "s4",
@@ -1248,7 +1256,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "DealHunterPro",
         theirPrice: 149,
         ourPrice: 169,
-        lostAt: "Jan 13 11:40",
+        lostAt: "Aug 18 11:40",
       },
       {
         id: "s5",
@@ -1261,7 +1269,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "KitchenMart_US",
         theirPrice: 179,
         ourPrice: 199,
-        lostAt: "Jan 12 09:15",
+        lostAt: "Aug 17 09:15",
       },
       {
         id: "s6",
@@ -1274,7 +1282,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "VacuMart_US",
         theirPrice: 39,
         ourPrice: 49,
-        lostAt: "Jan 11 16:05",
+        lostAt: "Aug 16 16:05",
       },
     ],
   },
@@ -1294,7 +1302,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -38_000,
-        lostAt: "Jan 16 07:55",
+        lostAt: "Aug 21 07:55",
       },
       {
         id: "pb2",
@@ -1304,7 +1312,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -32_000,
-        lostAt: "Jan 16 07:55",
+        lostAt: "Aug 21 07:55",
       },
       {
         id: "pb3",
@@ -1314,7 +1322,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -28_000,
-        lostAt: "Jan 15 20:30",
+        lostAt: "Aug 20 20:30",
       },
       {
         id: "pb4",
@@ -1324,7 +1332,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Hair Care",
         gapDollars: -25_000,
-        lostAt: "Jan 15 14:12",
+        lostAt: "Aug 20 14:12",
       },
       {
         id: "pb5",
@@ -1334,7 +1342,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -22_000,
-        lostAt: "Jan 11 09:40",
+        lostAt: "Aug 16 09:40",
       },
     ],
   },
@@ -1354,7 +1362,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -42_000,
-        lostAt: "Jan 16 08:12",
+        lostAt: "Aug 21 08:12",
       },
       {
         id: "d2",
@@ -1364,7 +1372,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -35_000,
-        lostAt: "Jan 16 08:12",
+        lostAt: "Aug 21 08:12",
       },
       {
         id: "d3",
@@ -1374,7 +1382,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -28_000,
-        lostAt: "Jan 15 19:44",
+        lostAt: "Aug 20 19:44",
       },
       {
         id: "d4",
@@ -1384,7 +1392,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -22_000,
-        lostAt: "Jan 15 11:05",
+        lostAt: "Aug 20 11:05",
       },
       {
         id: "d5",
@@ -1394,7 +1402,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -18_000,
-        lostAt: "Jan 14 16:30",
+        lostAt: "Aug 19 16:30",
       },
       {
         id: "d6",
@@ -1404,7 +1412,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -15_000,
-        lostAt: "Jan 14 09:18",
+        lostAt: "Aug 19 09:18",
       },
       {
         id: "d7",
@@ -1414,7 +1422,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -12_000,
-        lostAt: "Jan 11 16:10",
+        lostAt: "Aug 16 16:10",
       },
       {
         id: "d8",
@@ -1424,7 +1432,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -8_000,
-        lostAt: "Jan 10 11:25",
+        lostAt: "Aug 15 11:25",
       },
     ],
   },
@@ -1444,7 +1452,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -32_000,
-        lostAt: "Jan 16 06:40",
+        lostAt: "Aug 21 06:40",
       },
       {
         id: "st2",
@@ -1454,7 +1462,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -24_000,
-        lostAt: "Jan 15 22:15",
+        lostAt: "Aug 20 22:15",
       },
       {
         id: "st3",
@@ -1464,7 +1472,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Home Comfort",
         gapDollars: -18_000,
-        lostAt: "Jan 15 13:28",
+        lostAt: "Aug 20 13:28",
       },
       {
         id: "st4",
@@ -1474,7 +1482,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -10_000,
-        lostAt: "Jan 11 08:30",
+        lostAt: "Aug 16 08:30",
       },
       {
         id: "st5",
@@ -1484,7 +1492,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -6_000,
-        lostAt: "Jan 10 14:20",
+        lostAt: "Aug 15 14:20",
       },
     ],
   },
@@ -1504,7 +1512,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -14_000,
-        lostAt: "Jan 16 11:20",
+        lostAt: "Aug 21 11:20",
       },
       {
         id: "sh2",
@@ -1514,7 +1522,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -11_000,
-        lostAt: "Jan 16 09:05",
+        lostAt: "Aug 21 09:05",
       },
       {
         id: "sh3",
@@ -1524,7 +1532,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -9_000,
-        lostAt: "Jan 15 16:40",
+        lostAt: "Aug 20 16:40",
       },
       {
         id: "sh4",
@@ -1534,7 +1542,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Home Comfort",
         gapDollars: -6_000,
-        lostAt: "Jan 11 10:05",
+        lostAt: "Aug 16 10:05",
       },
     ],
   },
@@ -1555,7 +1563,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -20_000,
-        lostAt: "Jan 16 09:00",
+        lostAt: "Aug 21 09:00",
       },
       {
         // Same product as lostBuyBox s2 — multi-issue demo
@@ -1566,7 +1574,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -16_000,
-        lostAt: "Jan 16 09:00",
+        lostAt: "Aug 21 09:00",
       },
       {
         id: "sov3",
@@ -1576,7 +1584,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -14_000,
-        lostAt: "Jan 15 17:25",
+        lostAt: "Aug 20 17:25",
       },
       {
         id: "sov4",
@@ -1586,7 +1594,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -10_000,
-        lostAt: "Jan 15 12:40",
+        lostAt: "Aug 20 12:40",
       },
       {
         // Same product as lostBuyBox s3 — multi-issue demo
@@ -1597,7 +1605,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Hair Care",
         gapDollars: -8_000,
-        lostAt: "Jan 11 08:15",
+        lostAt: "Aug 16 08:15",
       },
     ],
   },
@@ -1617,7 +1625,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -8_000,
-        lostAt: "Jan 16 07:30",
+        lostAt: "Aug 21 07:30",
       },
       {
         // Same product as lostBuyBox s1 — multi-issue demo
@@ -1628,7 +1636,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -7_000,
-        lostAt: "Jan 15 20:10",
+        lostAt: "Aug 20 20:10",
       },
       {
         id: "kw3",
@@ -1638,7 +1646,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -5_000,
-        lostAt: "Jan 15 14:55",
+        lostAt: "Aug 20 14:55",
       },
       {
         id: "kw4",
@@ -1648,7 +1656,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -4_500,
-        lostAt: "Jan 15 11:20",
+        lostAt: "Aug 20 11:20",
       },
       {
         id: "kw5",
@@ -1658,7 +1666,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -3_000,
-        lostAt: "Jan 14 18:05",
+        lostAt: "Aug 19 18:05",
       },
       {
         id: "kw6",
@@ -1668,7 +1676,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -2_500,
-        lostAt: "Jan 13 09:30",
+        lostAt: "Aug 18 09:30",
       },
     ],
   },
@@ -1692,7 +1700,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "VacuMart_US",
         theirPrice: 279,
         ourPrice: 319,
-        lostAt: "Jan 16 10:15",
+        lostAt: "Aug 21 10:15",
       },
       {
         // Same product as lostBuyBox s2 — multi-issue demo
@@ -1706,7 +1714,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "VacuMart_US",
         theirPrice: 259,
         ourPrice: 279,
-        lostAt: "Jan 16 08:29",
+        lostAt: "Aug 21 08:29",
       },
       {
         id: "cp3",
@@ -1716,7 +1724,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -12_000,
-        lostAt: "Jan 15 16:45",
+        lostAt: "Aug 20 16:45",
       },
       {
         id: "cp4",
@@ -1726,7 +1734,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -8_000,
-        lostAt: "Jan 11 11:29",
+        lostAt: "Aug 16 11:29",
       },
     ],
   },
@@ -1749,7 +1757,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "DealHub_US",
         theirPrice: 289,
         ourPrice: 329,
-        lostAt: "Jan 16 09:40",
+        lostAt: "Aug 21 09:40",
       },
       {
         id: "cr2",
@@ -1759,7 +1767,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -14_000,
-        lostAt: "Jan 15 14:20",
+        lostAt: "Aug 20 14:20",
       },
       {
         id: "cr3",
@@ -1772,7 +1780,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         bbOwner: "VacuMart_US",
         theirPrice: 149,
         ourPrice: 179,
-        lostAt: "Jan 14 11:05",
+        lostAt: "Aug 19 11:05",
       },
     ],
   },
@@ -1792,7 +1800,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -16_000,
-        lostAt: "Jan 16 06:20",
+        lostAt: "Aug 21 06:20",
       },
       {
         id: "bsr2",
@@ -1802,7 +1810,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -12_000,
-        lostAt: "Jan 15 22:08",
+        lostAt: "Aug 20 22:08",
       },
       {
         id: "bsr3",
@@ -1812,7 +1820,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -8_000,
-        lostAt: "Jan 11 15:33",
+        lostAt: "Aug 16 15:33",
       },
     ],
   },
@@ -1832,7 +1840,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -10_000,
-        lostAt: "Jan 16 10:00",
+        lostAt: "Aug 21 10:00",
       },
       {
         id: "rr2",
@@ -1842,7 +1850,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "KitchenPro",
         category: "Kitchen Appliances",
         gapDollars: -6_000,
-        lostAt: "Jan 15 18:22",
+        lostAt: "Aug 20 18:22",
       },
       {
         id: "rr3",
@@ -1852,7 +1860,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care",
         gapDollars: -4_000,
-        lostAt: "Jan 11 16:40",
+        lostAt: "Aug 16 16:40",
       },
     ],
   },
@@ -1872,7 +1880,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -7_000,
-        lostAt: "Jan 16 08:45",
+        lostAt: "Aug 21 08:45",
       },
       {
         id: "cd2",
@@ -1882,7 +1890,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "CleanPro",
         category: "Floor Care Robotics",
         gapDollars: -5_000,
-        lostAt: "Jan 11 13:10",
+        lostAt: "Aug 16 13:10",
       },
     ],
   },
@@ -1902,7 +1910,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -3_000,
-        lostAt: "Jan 16 06:15",
+        lostAt: "Aug 21 06:15",
       },
       {
         id: "ms2",
@@ -1912,7 +1920,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -2_500,
-        lostAt: "Jan 15 19:40",
+        lostAt: "Aug 20 19:40",
       },
       {
         id: "ms3",
@@ -1922,7 +1930,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -1_500,
-        lostAt: "Jan 11 12:00",
+        lostAt: "Aug 16 12:00",
       },
       {
         id: "ms4",
@@ -1932,7 +1940,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         brand: "PlayMax",
         category: "Controllers",
         gapDollars: -1_000,
-        lostAt: "Jan 10 09:45",
+        lostAt: "Aug 15 09:45",
       },
     ],
   },
@@ -2147,7 +2155,10 @@ function buildTaxonomyInsightPrompts(
 ): TaxonomyRcaPrompt[] {
   // SKU nodes use getTaxonomySkuChips elsewhere — rolled-up panels only
   if (node.level === "sku") return [];
-  return getTaxonomyRolledUpChips(node.level as TaxonomyChipLevel);
+  return getTaxonomyRolledUpChips(
+    node.level as TaxonomyChipLevel,
+    node.name,
+  );
 }
 
 function countIssueOccurrences(node: AlertsTaxonomyNode): number {
@@ -2366,21 +2377,21 @@ function buildTaxonomyPerformanceKpis(
   return [
     {
       id: "last-week",
-      title: "Last Week (Jul 19–25)",
+      title: LAST_WEEK_KPI_TITLE,
       value: formatSignedMoney(lastWeekGap),
       tone: "negative",
       subtitle: `${formatMoneyCompact(lastWeekAchieved)} of ${formatMoneyCompact(planDollars)} plan · ${lastWeekAttainment.toFixed(1)}% attainment`,
     },
     {
       id: "wtd",
-      title: "WTD (Jul 26–29)",
+      title: WTD_KPI_TITLE,
       value: formatMoneyCompact(wtdSales),
       tone: "neutral",
       subtitle: `in sales · ${weekElapsedPct.toFixed(1)}% of week elapsed`,
     },
     {
       id: "eow",
-      title: "Projected EOW (Jul 26–Aug 1)",
+      title: EOW_KPI_TITLE,
       value: `${formatSignedMoney(projectedGap)} vs plan`,
       tone: "positive",
       subtitle: `${formatMoneyCompact(planDollars)} plan · ${formatMoneyCompact(projectedSales)} projected · ${eowAttainment.toFixed(1)}%`,
@@ -2740,7 +2751,7 @@ export function issueSkuFromHierarchyNode(node: HierarchyNode): IssueSku {
     brand: "CleanPro",
     category: "Floor Care",
     gapDollars: node.gapDollars,
-    lostAt: "Jan 16 09:20",
+    lostAt: "Aug 21 09:20",
   };
 }
 

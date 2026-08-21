@@ -1,12 +1,13 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { FullRcaAccordion } from "@/components/sku-rca/full-rca-accordion";
-import { FullRcaDataTable } from "@/components/sku-rca/full-rca-data-table";
+import { FullRcaEcommerceEquationSection } from "@/components/sku-rca/full-rca-ecommerce-equation";
+import { FullRcaPlanVsActualSection } from "@/components/sku-rca/full-rca-plan-vs-actual";
 import { FullRcaRecommendationsList } from "@/components/sku-rca/full-rca-recommendations";
-import { FullRcaRevenueChart } from "@/components/sku-rca/full-rca-revenue-chart";
+import { FullRcaRevenueTrendSection } from "@/components/sku-rca/full-rca-revenue-trend";
 import { FullRcaRootCausesList } from "@/components/sku-rca/full-rca-root-causes";
 import type { FullRcaReportData } from "@/lib/mock-full-rca-report";
 
@@ -21,19 +22,11 @@ type FullRcaReportProps = {
  * the title (common region + nesting), not a full-bleed peer block.
  */
 export function FullRcaReport({ report }: FullRcaReportProps) {
-  const [openPlan, setOpenPlan] = useState(false);
-  const [openEquation, setOpenEquation] = useState(false);
+  const [openPlan, setOpenPlan] = useState(true);
+  const [openEquation, setOpenEquation] = useState(true);
   const [openCauses, setOpenCauses] = useState(true);
   const [openRevenue, setOpenRevenue] = useState(true);
-  const [openRecs, setOpenRecs] = useState(false);
-
-  const causesSubtitle = useMemo(() => {
-    const openCount = report.rootCauses.filter(
-      (c) => c.status === "still-an-issue",
-    ).length;
-    const total = report.rootCauses.length;
-    return `${total} drivers · ${openCount} still an issue`;
-  }, [report.rootCauses]);
+  const [openRecs, setOpenRecs] = useState(true);
 
   return (
     <article className="rounded-xl border border-border bg-background">
@@ -45,10 +38,10 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
           </span>
         </div>
         <h2 className="text-sm font-semibold leading-snug text-foreground">
-          Amazon RCA · ASIN {report.asin}
+          {report.headerTitle}
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          {report.brand} · {report.weekLabel} · {report.periodLabel}
+          {report.headerSubtitle}
         </p>
       </header>
 
@@ -84,50 +77,45 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
         <div className="overflow-hidden rounded-lg border border-border bg-background">
           <FullRcaAccordion
             title="Plan vs Actual"
-            subtitle="Where this ASIN missed or beat plan"
             open={openPlan}
             onOpenChange={setOpenPlan}
             flushContent
           >
-            <FullRcaDataTable table={report.planVsActual} />
+            <FullRcaPlanVsActualSection data={report.planVsActual} />
           </FullRcaAccordion>
 
           <FullRcaAccordion
-            title="Ecommerce Equation"
-            subtitle="Week-over-Week Change: Traffic × Conversion × Price"
+            title="Quick Ecommerce Equation Breakdown"
             open={openEquation}
             onOpenChange={setOpenEquation}
             flushContent
           >
-            <FullRcaDataTable table={report.ecommerceEquation.table} />
-            <p className="max-w-prose px-4 py-4 text-sm leading-relaxed text-muted-foreground">
-              {report.ecommerceEquation.summary}
-            </p>
+            <FullRcaEcommerceEquationSection data={report.ecommerceEquation} />
           </FullRcaAccordion>
 
           <FullRcaAccordion
-            title="Root Causes"
-            subtitle={causesSubtitle}
+            title="Top Issues"
             open={openCauses}
             onOpenChange={setOpenCauses}
+            flushContent
           >
             <FullRcaRootCausesList causes={report.rootCauses} />
           </FullRcaAccordion>
 
           <FullRcaAccordion
-            title="8-Week Revenue Context"
-            subtitle="Actual revenue vs plan across the last 8 weeks"
+            title="Recent Trend — 8 Weeks"
             open={openRevenue}
             onOpenChange={setOpenRevenue}
+            flushContent
           >
-            <FullRcaRevenueChart data={report.revenueSeries} />
+            <FullRcaRevenueTrendSection data={report.revenueTrend} />
           </FullRcaAccordion>
 
           <FullRcaAccordion
             title="Recommendations"
-            subtitle={report.recommendationsUrgency}
             open={openRecs}
             onOpenChange={setOpenRecs}
+            flushContent
           >
             <FullRcaRecommendationsList items={report.recommendations} />
           </FullRcaAccordion>

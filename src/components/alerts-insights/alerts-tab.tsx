@@ -342,7 +342,10 @@ export function AlertsTab({
       ) : groupBy === "category" &&
         selectedTaxonomyNode &&
         selectedTaxonomyNode.level !== "sku" ? (
-        <TaxonomyRcaPanel node={selectedTaxonomyNode} />
+        <TaxonomyRcaPanel
+          key={selectedTaxonomyNode.id}
+          node={selectedTaxonomyNode}
+        />
       ) : (
         <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
           No alert selected. Adjust filters or Clear to see all alerts.

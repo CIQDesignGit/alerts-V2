@@ -367,9 +367,9 @@ function buildLastWeekIssuesSummary(
   return `${topName} dominated last week's issue trend on ${sku.name}, active ${top.daysPresent} of ${top.daysTotal} days.`;
 }
 
-function buildSkuSuggestedPrompts(_sku: IssueSku): AllyAiPrompt[] {
+function buildSkuSuggestedPrompts(sku: IssueSku): AllyAiPrompt[] {
   // Taxonomy · SKU: Gap to Plan chip only
-  return getTaxonomySkuChips();
+  return getTaxonomySkuChips(sku.name);
 }
 
 /** Build RCA payload for a selected alert SKU (mock narrative for layout). */
@@ -386,25 +386,25 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
     opsDollars: skuOpsDollars(sku),
     gapUnits: -150,
     summaryHeadline:
-      "Revenue collapsed after SAS price jumped to $529.99 on May 3, losing the buy box for the full week. Recovery has started this week, but a missing deal badge is still limiting conversion.",
+      "Revenue collapsed after SAS price jumped to $529.99 on Aug 9, losing the buy box for the full week. Recovery has started this week, but a missing deal badge is still limiting conversion.",
     kpis: [
       {
         id: "last-week",
-        title: "Last Week (May 3–9)",
+        title: "Last Week (Aug 9–15)",
         value: "−$227.7K",
         tone: "negative",
         subtitle: "$846 of $228.5K plan · 37.0% attainment",
       },
       {
         id: "wtd",
-        title: "WTD (May 10–13)",
+        title: "WTD (Aug 16–21)",
         value: "$126.3K",
         tone: "neutral",
         subtitle: "in sales · 49.2% of week elapsed",
       },
       {
         id: "eow",
-        title: "Projected EOW (May 10–16)",
+        title: "Projected EOW (Aug 16–22)",
         value: "+$29.6K vs plan",
         tone: "positive",
         subtitle: "$229K plan · $258.3K projected · 112.9%",
@@ -419,8 +419,8 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
     suggestedPrompts: buildSkuSuggestedPrompts(sku),
     analysis: [
       {
-        heading: "Primary cause — Lost Buy Box (May 3–9)",
-        body: "SAS price jumped to $529.99 on May 3 — ~$170 above 3P sellers at $344–$379. amazon.com lost the buy box all week; 3P captured ~$120K (~53% of the gap).",
+        heading: "Primary cause — Lost Buy Box (Aug 9–15)",
+        body: "SAS price jumped to $529.99 on Aug 9 — ~$170 above 3P sellers at $344–$379. amazon.com lost the buy box all week; 3P captured ~$120K (~53% of the gap).",
       },
       {
         heading: "Secondary cause — media spend cuts",
@@ -428,7 +428,7 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
       },
       {
         heading: "This week — recovery in progress",
-        body: "Buy box reclaimed at $349.99; RTS projects $258K (+13% vs plan). Deal badge still missing May 10–13, limiting conversion on the $180 price cut.",
+        body: "Buy box reclaimed at $349.99; RTS projects $258K (+13% vs plan). Deal badge still missing Aug 16–21, limiting conversion on the $180 price cut.",
       },
     ],
     recommendations: [

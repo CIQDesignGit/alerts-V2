@@ -40,7 +40,23 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
     );
   }, [node]);
 
-  const { messages, onPromptSelect } = useSkuAllyThread(reportSku);
+  // Overall / Brand / Category — header copy follows the selected level
+  const reportScope = useMemo(
+    () => ({
+      level:
+        node.level === "overall" ||
+        node.level === "brand" ||
+        node.level === "category"
+          ? node.level
+          : ("sku" as const),
+      entityName: node.name,
+    }),
+    [node.level, node.name],
+  );
+
+  const { messages, onPromptSelect } = useSkuAllyThread(reportSku, {
+    reportScope,
+  });
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
+import { LAST_WEEK_RANGE_LABEL } from "@/lib/mock-calendar";
 
-/** Shared last-week date range shown on taxonomy + SKU period chips */
-export const LAST_WEEK_RANGE_LABEL = "Jul 19–25";
+export { LAST_WEEK_RANGE_LABEL };
 
 type PeriodBadgeTone = "live" | "wtd" | "historical";
 

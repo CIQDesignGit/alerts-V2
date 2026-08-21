@@ -2,6 +2,7 @@ import {
   ISSUE_NAMES,
   type IssueKey,
 } from "@/components/alerts/issue-names";
+import { SCRAPE_HISTORY_DAY_LABELS } from "@/lib/mock-calendar";
 
 /** One day column in the 7-day scrape history grid */
 export type ScrapeHistoryDay = {
@@ -93,15 +94,7 @@ export function getScrapeHistoryData(
     asin,
     skuName,
     scrapesPerDay: SCRAPES_PER_DAY,
-    days: [
-      { label: "SUN 08/02" },
-      { label: "MON 08/03" },
-      { label: "TUE 08/04" },
-      { label: "WED 08/05" },
-      { label: "THU 07/30" },
-      { label: "FRI 07/31" },
-      { label: "SAT 08/01" },
-    ],
+    days: SCRAPE_HISTORY_DAY_LABELS.map((label) => ({ label })),
     issues: SCRAPE_ISSUE_ROWS.map((row) => ({
       issueKey: row.issueKey,
       issueLabel: ISSUE_NAMES[row.issueKey].filter,

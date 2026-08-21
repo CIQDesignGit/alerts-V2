@@ -19,7 +19,7 @@ const CSV_HEADERS = [
 ] as const;
 
 /**
- * Turn Lost At ("Jan 16 15:40") into sample-style "Since"
+ * Turn Lost At ("Aug 21 15:40") into sample-style "Since"
  * labels like "4 days ago" or "6 hr ago".
  */
 function formatSinceLabel(lostAt: string | undefined): string {
@@ -76,7 +76,7 @@ export function buildAlertsExportCsv(issues: IssueAlert[]): string {
   return `${lines.join("\n")}\n`;
 }
 
-/** e.g. Alert_Export_8_11_2026.csv — matches the attached sample naming */
+/** e.g. Alert_Export_8_21_2026.csv — matches the attached sample naming */
 function alertsExportFileName(now = new Date()): string {
   const month = now.getMonth() + 1;
   const day = now.getDate();

@@ -11,11 +11,11 @@ import {
   GAP_TO_PLAN_STEP_MS,
 } from "@/lib/ally-processing-steps";
 import {
-  FULL_RCA_LAST_WEEK_PROMPT,
+  isGapToPlanPrompt,
   type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
-import { getFullRcaReport } from "@/lib/mock-full-rca-report";
+import { getFullRcaReport, type FullRcaReportContext } from "@/lib/mock-full-rca-report";
 import {
   getLastWeekTrend,
   hasLastWeekTrendCard,
@@ -26,6 +26,8 @@ import {
 type UseSkuAllyThreadOptions = {
   /** When set (issue SKU pages), trend replies can target that issue */
   issueKey?: IssueKey;
+  /** Taxonomy Overall / Brand / Category — shapes the Gap to Plan header */
+  reportScope?: FullRcaReportContext;
 };
 
 /** Brief pause so the dots feel like Ally is thinking (non–Gap-to-Plan chips) */
@@ -37,7 +39,7 @@ const THINKING_MS = 750;
  */
 export function useSkuAllyThread(
   sku: IssueSku,
-  { issueKey }: UseSkuAllyThreadOptions = {},
+  { issueKey, reportScope }: UseSkuAllyThreadOptions = {},
 ) {
   const [messages, setMessages] = useState<SkuAllyChatMessage[]>([]);
   const thinkingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,6 +57,13 @@ export function useSkuAllyThread(
     }
   }, []);
 
+  // Clear Ally chat when you switch taxonomy / SKU so an old Gap to Plan
+  // title (e.g. CleanPro) does not stick around on Floor Care
+  useEffect(() => {
+    clearTimers();
+    setMessages([]);
+  }, [clearTimers, reportScope?.entityName, reportScope?.level, sku.id]);
+
   // Clear timers if this screen unmounts
   useEffect(() => {
     return () => clearTimers();
@@ -63,16 +72,14 @@ export function useSkuAllyThread(
   /** Build the Ally reply for this prompt (mock router — not a real model) */
   const buildReply = useCallback(
     (trimmed: string, stamp: number): SkuAllyChatMessage => {
-      const isFullRca =
-        trimmed === FULL_RCA_LAST_WEEK_PROMPT.prompt ||
-        /full root cause analysis/i.test(trimmed);
+      const isFullRca = isGapToPlanPrompt(trimmed);
 
       if (isFullRca) {
         return {
           id: `rca-${stamp}`,
           role: "assistant",
           kind: "full-rca",
-          report: getFullRcaReport(sku),
+          report: getFullRcaReport(sku, reportScope),
         };
       }
 
@@ -114,7 +121,7 @@ export function useSkuAllyThread(
           "Got it — I’m reviewing this alert. Ask a follow-up from Explore more above.",
       };
     },
-    [issueKey, sku],
+    [issueKey, reportScope, sku],
   );
 
   /** Gap to Plan: 5-step trail over 4s, then collapsed trail + full report */
@@ -192,9 +199,7 @@ export function useSkuAllyThread(
 
       clearTimers();
 
-      const isFullRca =
-        trimmed === FULL_RCA_LAST_WEEK_PROMPT.prompt ||
-        /full root cause analysis/i.test(trimmed);
+      const isFullRca = isGapToPlanPrompt(trimmed);
 
       if (isFullRca) {
         startGapToPlanProcessing(userMessage, stamp);

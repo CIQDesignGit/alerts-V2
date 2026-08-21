@@ -1,6 +1,10 @@
 import type { IssueSku } from "@/lib/mock-alerts-insights";
+import {
+  FULL_RCA_PRIOR_WEEK_RANGE,
+  FULL_RCA_WEEK_LABEL,
+} from "@/lib/mock-calendar";
 
-/** Status badge on a root-cause row */
+/** Status badge on a root-cause row — kept for older call sites if any */
 export type FullRcaCauseStatus = "still-an-issue" | "resolved";
 
 /** Confidence / priority chip next to status */
@@ -45,30 +49,78 @@ export type FullRcaCallout = {
 
 export type FullRcaRecommendation = {
   id: string;
-  urgency: "TODAY" | "THIS WEEK" | "THIS QUARTER";
   title: string;
   description: string;
 };
 
+/** One Top Issues card in the Gap to Plan report */
 export type FullRcaRootCause = {
   id: string;
-  /** Lucide icon name key resolved in the report UI */
-  icon: "megaphone" | "tag" | "cart";
   title: string;
-  status: FullRcaCauseStatus;
-  tag?: FullRcaCauseTag;
-  /** Optional metrics table (e.g. Ad Spend) */
-  table?: FullRcaCompareTable;
-  bullets: string[];
-  callout?: FullRcaCallout;
+  /** Expanded narrative under the title */
+  body: string;
+  /** Optional orange pill — secondary / monitor signals */
+  badge?: "worth-watching";
 };
 
 export type FullRcaWeekPoint = {
   week: string;
-  /** Plan $ in thousands */
+  /** Plan $ (absolute dollars) */
   plan: number;
-  /** Actual revenue $ in thousands */
+  /** Actual revenue $ (absolute dollars) */
   actual: number;
+};
+
+/** Recent Trend — 8 Weeks accordion */
+export type FullRcaRevenueTrend = {
+  series: FullRcaWeekPoint[];
+  narrative: string;
+};
+
+/** Plan vs Actual accordion — summary strip + period rows + narrative */
+export type FullRcaPlanVsActual = {
+  summary: {
+    plan: string;
+    actual: string;
+    gap: string;
+    attainment: string;
+  };
+  rows: Array<{
+    id: string;
+    period: string;
+    actual: string;
+    plan: string;
+    gap: string;
+  }>;
+  narrative: string;
+};
+
+/** Ecommerce Equation accordion — summary strip + lever table + narrative */
+export type FullRcaEcommerceEquation = {
+  summary: {
+    skusBehindPlan: string;
+    skusAheadOfPlan: string;
+    biggestMover: string;
+    primaryLever: string;
+  };
+  priorWeekLabel: string;
+  currentWeekLabel: string;
+  rows: Array<{
+    id: string;
+    lever: string;
+    priorWeek: string;
+    currentWeek: string;
+  }>;
+  narrative: string;
+};
+
+/** Where Gap to Plan was run — drives the report header copy. */
+export type FullRcaScopeLevel = "sku" | "overall" | "brand" | "category";
+
+export type FullRcaReportContext = {
+  level: FullRcaScopeLevel;
+  /** Overall / brand / category name from the taxonomy tree */
+  entityName?: string;
 };
 
 export type FullRcaReportData = {
@@ -76,231 +128,223 @@ export type FullRcaReportData = {
   brand: string;
   weekLabel: string;
   periodLabel: string;
+  /** Card title — portfolio/brand/category Gap to Plan, or ASIN line for SKU */
+  headerTitle: string;
+  /** Card subtitle — comparison period / scope line */
+  headerSubtitle: string;
   keyFinding: string;
-  planVsActual: FullRcaCompareTable;
-  ecommerceEquation: {
-    table: FullRcaCompareTable;
-    summary: string;
-  };
-  revenueSeries: FullRcaWeekPoint[];
+  planVsActual: FullRcaPlanVsActual;
+  ecommerceEquation: FullRcaEcommerceEquation;
+  revenueTrend: FullRcaRevenueTrend;
   rootCauses: FullRcaRootCause[];
-  recommendationsUrgency: string;
   recommendations: FullRcaRecommendation[];
 };
 
-const WEEK_COLS: FullRcaTableColumn[] = [
-  { key: "metric", label: "Metric", align: "left" },
-  { key: "prev", label: "Jul 19", sublabel: "Week of", align: "right" },
-  { key: "curr", label: "Jul 26", sublabel: "Week of", align: "right" },
-  { key: "change", label: "Change", align: "right" },
-];
+/** Analysis week + prior week (matches design reference). */
+const WEEK_LABEL = FULL_RCA_WEEK_LABEL;
+const PRIOR_WEEK_RANGE = FULL_RCA_PRIOR_WEEK_RANGE;
 
-const EQUATION_COLS: FullRcaTableColumn[] = [
-  { key: "metric", label: "Metric", align: "left" },
-  { key: "prev", label: "Jul 19", sublabel: "Week of", align: "right" },
-  { key: "curr", label: "Jul 26", sublabel: "Week of", align: "right" },
-  { key: "change", label: "Change", align: "right" },
-];
+function buildReportHeader(
+  sku: IssueSku,
+  context?: FullRcaReportContext,
+): Pick<FullRcaReportData, "headerTitle" | "headerSubtitle" | "weekLabel" | "periodLabel"> {
+  const level = context?.level ?? "sku";
+  // Prefer the taxonomy name you clicked (Floor Care, CleanPro, Overall, …)
+  const entity =
+    context?.entityName?.trim() ||
+    (level === "category" ? sku.category : undefined) ||
+    sku.brand;
+
+  if (level === "overall") {
+    return {
+      weekLabel: WEEK_LABEL,
+      periodLabel: "last week",
+      headerTitle: `${entity} — Gap to plan analysis`,
+      headerSubtitle: `${entity} vs. prior week (${PRIOR_WEEK_RANGE})`,
+    };
+  }
+
+  if (level === "brand") {
+    return {
+      weekLabel: WEEK_LABEL,
+      periodLabel: "last week",
+      headerTitle: `${entity} Brand — Gap to plan analysis`,
+      headerSubtitle: `${entity} vs. prior week (${PRIOR_WEEK_RANGE})`,
+    };
+  }
+
+  if (level === "category") {
+    return {
+      weekLabel: WEEK_LABEL,
+      periodLabel: "last week",
+      headerTitle: `${entity} — Gap to plan analysis`,
+      headerSubtitle: `${entity} vs. prior week (${PRIOR_WEEK_RANGE})`,
+    };
+  }
+
+  // SKU / issue detail — keep ASIN framing
+  return {
+    weekLabel: WEEK_LABEL,
+    periodLabel: "last week",
+    headerTitle: `Amazon RCA · ASIN ${sku.asin}`,
+    headerSubtitle: `${sku.brand} · ${WEEK_LABEL} · last week`,
+  };
+}
 
 /**
  * Full weekly Amazon RCA card — shown in AllyAI chat after
  * "Run Gap to Plan Analysis for the last week".
  */
-export function getFullRcaReport(sku: IssueSku): FullRcaReportData {
+export function getFullRcaReport(
+  sku: IssueSku,
+  context?: FullRcaReportContext,
+): FullRcaReportData {
+  const header = buildReportHeader(sku, context);
+
   return {
     asin: sku.asin,
     brand: sku.brand,
-    weekLabel: "Week of Jul 26 – Aug 1, 2026",
-    periodLabel: "last week",
+    ...header,
     keyFinding:
-      "Revenue collapsed –50% WoW ($228K → $114K). A 93% cut in ad spend ($6,538 → $483) was the dominant cause — it wiped out $118K of ad-attributed sales and pulled 30% of traffic off the page. A missing deal badge (likely: a promotional price that expired) and a one-day buy-box loss on Jul 29 added pressure but are secondary by a wide margin.",
+      "Revenue collapsed –50% WoW ($228K → $114K). A 93% cut in ad spend ($6,538 → $483) was the dominant cause — it wiped out $118K of ad-attributed sales and pulled 30% of traffic off the page. A missing deal badge (likely: a promotional price that expired) and a one-day buy-box loss on Aug 12 added pressure but are secondary by a wide margin.",
     planVsActual: {
-      columns: WEEK_COLS,
+      summary: {
+        plan: "$27.8M",
+        actual: "$26.1M",
+        gap: "−$1.7M",
+        attainment: "93.9%",
+      },
       rows: [
         {
-          id: "revenue",
-          label: "Revenue (Actual)",
-          cells: [
-            { text: "$227,666" },
-            { text: "$113,597" },
-            { text: "−$114,069 (−50.1%)", tone: "negative" },
-          ],
+          id: "last-week",
+          period: "Aug 9–15 (last week)",
+          actual: "$26,116,686",
+          plan: "$27,815,894",
+          gap: "−$1,699,208",
         },
         {
-          id: "plan",
-          label: "Plan",
-          cells: [
-            { text: "$528,911" },
-            { text: "$547,848" },
-            { text: "+$19K", tone: "positive" },
-          ],
+          id: "week-before",
+          period: "Aug 2–8 (week before)",
+          actual: "$27,145,090",
+          plan: "$28,157,468",
+          gap: "−$1,012,378",
         },
         {
-          id: "gap",
-          label: "Gap to Plan",
-          cells: [
-            { text: "−$301,245" },
-            { text: "−$434,251" },
-            { text: "−$133K wider", tone: "negative" },
-          ],
+          id: "this-week",
+          period: "Aug 16–21 (this week so far)",
+          actual: "—",
+          plan: "—",
+          gap: "—",
         },
       ],
+      narrative:
+        "Both complete weeks missed plan, and the gap widened by about $687K last week. Sales fell $1.0M versus the prior week while the plan also stepped down ~$342K — so most of the gap widening reflects real softness in demand, not a plan jump. This-week figures aren't yet available in the data.",
     },
     ecommerceEquation: {
-      table: {
-        columns: EQUATION_COLS,
-        rows: [
-          {
-            id: "traffic",
-            label: "Page Views (Traffic)",
-            cells: [
-              { text: "65,950" },
-              { text: "46,295" },
-              { text: "−29.8%", tone: "negative" },
-            ],
-          },
-          {
-            id: "cvr",
-            label: "Conversion Rate",
-            cells: [
-              { text: "2.17%" },
-              { text: "1.37%" },
-              { text: "−0.80 pp (−36.9%)", tone: "negative" },
-            ],
-          },
-          {
-            id: "asp",
-            label: "Avg Selling Price (ASP)",
-            cells: [
-              { text: "$159.10" },
-              { text: "$178.61" },
-              { text: "+$19.51 (+12.3%)", tone: "positive" },
-            ],
-          },
-          {
-            id: "units",
-            label: "Units Sold",
-            cells: [
-              { text: "1,431" },
-              { text: "636" },
-              { text: "−55.6%", tone: "negative" },
-            ],
-          },
-          {
-            id: "revenue",
-            label: "Revenue",
-            cells: [
-              { text: "$227,666" },
-              { text: "$113,597" },
-              { text: "−50.1%", tone: "negative" },
-            ],
-          },
-        ],
+      summary: {
+        skusBehindPlan: "474 / −$11.4M",
+        skusAheadOfPlan: "339 / +$9.7M",
+        biggestMover: "Ninja −$615K WoW",
+        primaryLever: "Conversion & price",
       },
-      summary:
-        "Both traffic and conversion fell sharply. The ASP increase partially offset the decline but also likely contributed to lower conversion (the product became ~$20 more expensive with no promotional badge). The price rise is consistent with a promotional discount expiring in the prior week.",
+      priorWeekLabel: "Aug 2–8",
+      currentWeekLabel: "Aug 9–15",
+      rows: [
+        {
+          id: "pdp-views",
+          lever: "PDP Views",
+          priorWeek: "5,784,675",
+          currentWeek: "5,883,648",
+        },
+        {
+          id: "cvr",
+          lever: "Conversion Rate",
+          priorWeek: "3.41%",
+          currentWeek: "3.29%",
+        },
+        {
+          id: "asp",
+          lever: "Avg Selling Price",
+          priorWeek: "$137.81",
+          currentWeek: "$135.07",
+        },
+      ],
+      narrative:
+        "Traffic actually rose slightly last week (+99K views, a +1.7% lift), so that wasn't the problem. Instead, conversion slipped from 3.41% to 3.29% — worth about −$963K in the decomposition — while average selling price dropped from $137.81 to $135.07, contributing roughly −$529K. Those two together account for more than the full $1.0M revenue decline, offset partially by the traffic tailwind. The shortfall is broad — 474 SKUs are behind plan at a combined −$11.4M, partially offset by 339 SKUs ahead at +$9.7M.",
     },
-    // Rough shape from the design screenshot (values in $K)
-    revenueSeries: [
-      { week: "Jun 7", plan: 480, actual: 140 },
-      { week: "Jun 14", plan: 420, actual: 280 },
-      { week: "Jun 21", plan: 180, actual: 520 },
-      { week: "Jun 28", plan: 760, actual: 160 },
-      { week: "Jul 5", plan: 560, actual: 200 },
-      { week: "Jul 12", plan: 500, actual: 210 },
-      { week: "Jul 19", plan: 540, actual: 190 },
-      { week: "Jul 26", plan: 520, actual: 114 },
-    ],
+    // Recent Trend — 8 weeks ending Aug 9 (portfolio-scale dollars)
+    revenueTrend: {
+      series: [
+        { week: "Jun 21", plan: 38_300_000, actual: 119_600_000 },
+        { week: "Jun 28", plan: 36_100_000, actual: 30_800_000 },
+        { week: "Jul 5", plan: 33_800_000, actual: 25_400_000 },
+        { week: "Jul 12", plan: 28_200_000, actual: 28_332_000 },
+        { week: "Jul 19", plan: 29_400_000, actual: 23_100_000 },
+        { week: "Jul 26", plan: 30_100_000, actual: 25_800_000 },
+        { week: "Aug 2", plan: 28_157_468, actual: 27_145_090 },
+        { week: "Aug 9", plan: 27_815_894, actual: 26_116_686 },
+      ],
+      narrative:
+        "Jun 21 was Prime Day — revenue hit $119.6M against a $38.3M plan, a massive event-driven spike. The Jun 28 lead-out week fell to $30.8M vs a $36.1M plan (a miss). From Jul 5 onward, revenue settled into a $23–27M band. Jul 12 was the only week to beat plan (+$132K), helped by a plan reset. Jul 19 dipped to $23.1M, the lowest post-Prime week. Aug 2 and Aug 9 both missed plan, with the gap widening as key competitors pulled back.",
+    },
     rootCauses: [
       {
-        id: "ad-spend",
-        icon: "megaphone",
-        title: "Ad Spend Collapse — ~$118K revenue lost",
-        status: "still-an-issue",
-        tag: "primary",
-        table: {
-          columns: WEEK_COLS,
-          rows: [
-            {
-              id: "spend",
-              label: "Ad Spend",
-              cells: [
-                { text: "$6,538" },
-                { text: "$483" },
-                { text: "−92.6%", tone: "negative" },
-              ],
-            },
-            {
-              id: "attr",
-              label: "Ad-Attributed Sales",
-              cells: [
-                { text: "$145,561" },
-                { text: "$26,882" },
-                { text: "−$118,679", tone: "negative" },
-              ],
-            },
-          ],
-        },
-        bullets: [
-          "The drop in ad-attributed sales (−$118,679) accounts for essentially all of the total revenue decline (−$114,069). Paid search was the primary sales engine.",
-          'A 93% spend cut pulled spend from five high-importance keywords: "kitchenpro air fryer", "glass air fryer", "compact air fryer", "crispy basket", and "air fryer glass".',
-          "Direct consequences: ~30% traffic drop and ~37% conversion drop on the page.",
-        ],
-        callout: {
-          label: "Finding:",
-          body: "'Espresso machine' shows $0 spend in both weeks — likely a miscategorised or mistargeted keyword. Flag for cleanup.",
-        },
+        id: "top-wow-swing",
+        title:
+          "The #1 brand by WoW swing moved from breakeven to −$615K gap — the single biggest week-over-week move",
+        body: "That brand was roughly flat to plan the week before, then deteriorated sharply in Aug 9–15. Dig into its SKU-level Gap to Plan to find which products drove the swing.",
       },
       {
-        id: "deal-badge",
-        icon: "tag",
-        title: "Missing Deal Badge / Price Normalisation — ~$10–30K",
-        status: "still-an-issue",
-        tag: "unconfirmed",
-        bullets: [
-          "The DEAL_BADGE_LIVE_MISSING alert fired. The promo calendar returned no scheduled deals — a contradiction.",
-          "Most likely explanation: a promotional price expired around Jul 19–26. Evidence: ASP jumped $20 ($159 → $179) with no other price change signal. A $20 dearer product with no badge drives lower conversion independently of the traffic drop.",
-        ],
-        callout: {
-          label: "Action required:",
-          body: "Cross-check with the promotions team. Was a Lightning Deal or Coupon submitted that isn't in the calendar? If a deal expired, evaluate resubmission.",
-        },
+        id: "second-wow-swing",
+        title:
+          "The #2 brand by WoW swing reversed from +$473K ahead of plan to −$47K behind — a $520K swing",
+        body: "A $520K week-over-week reversal is rare without a discrete event — often the end of a deal or promotional period. Confirm whether a promotion ended between Aug 2–8 and Aug 9–15.",
       },
       {
-        id: "buy-box",
-        icon: "cart",
-        title: "Buy Box Lost (Jul 29 only, recovered) — $7,123",
-        status: "resolved",
-        bullets: [
-          "Buy box lost for ~6 hours on Wednesday Jul 29 (25% of the day). Recovered by Jul 30.",
-          "Revenue lost: $7,123 — ~6% of the week's total decline. Single-day, resolved.",
-          "At the higher ASP ($179 vs $159), the product is more exposed to third-party undercutting. Monitor through this week.",
-        ],
+        id: "long-tail-gap",
+        title:
+          "'Other' brands carry the largest absolute gap at −$1.0M, though it improved from −$1.5M",
+        body: "The long-tail bucket improved by about $0.5M week-over-week, but it is still the largest absolute gap in the portfolio. Prioritize the worst SKUs inside this roll-up before chasing smaller brand swings.",
+      },
+      {
+        id: "broad-alerts",
+        title:
+          "Ad spend changes and delivery promise issues flag 300+ SKUs each — the two broadest alert signals",
+        body: "These two alert types touch more SKUs than any other signal this week. They are not always the largest dollar drivers, but their breadth makes them useful starting points for triage.",
+        badge: "worth-watching",
+      },
+      {
+        id: "supply-chain",
+        title:
+          "Supply chain is broadly healthy, though purchase order acceptance is running below ordered volume",
+        body: "Overall inventory and fulfillment look stable. The soft spot is PO acceptance lagging ordered volume — monitor so it does not turn into a stock or shipping-speed issue next week.",
+        badge: "worth-watching",
       },
     ],
-    recommendationsUrgency:
-      "Urgency: TODAY = do before EOD · THIS WEEK = resolve by Aug 8 · THIS QUARTER = structural",
     recommendations: [
       {
-        id: "restore-spend",
-        urgency: "TODAY",
-        title: "Restore ad spend",
+        id: "analyze-top-swing",
+        title: "Run a gap to plan analysis on the #1 brand by WoW swing",
         description:
-          "Reinstate sponsored product + brand spend on the five flagged keywords. Target ≥$6,500 budget (Jul 19 level). Confirm: was budget paused manually or by a budget cap?",
+          "That brand swung −$615K week-over-week and is now one of the portfolio’s largest drags — identify which categories or SKUs drove that move before it compounds further.",
       },
       {
-        id: "reconcile-badge",
-        urgency: "THIS WEEK",
-        title: "Reconcile the deal badge",
+        id: "verify-deal-end",
+        title: "Check whether a deal ended around Aug 8–9 for the #2 brand swing",
         description:
-          "Check with promotions: was a Lightning Deal or Coupon submitted but unrecorded in the calendar? The $20 ASP step-up strongly implies a deal expired. If resubmission is feasible, act now.",
+          "That brand reversed from +$473K ahead of plan to −$47K behind in one week; a deal ending at the wrong time is the most likely explanation, and verifying the promo calendar takes minutes.",
       },
       {
-        id: "monitor-bb",
-        urgency: "THIS WEEK",
-        title: "Monitor buy box at $179",
+        id: "missing-deal-badge",
+        title: "Investigate the 46 SKUs whose deal badge isn't showing",
         description:
-          "Jul 29 loss was one-day and recovered, but higher ASP increases exposure to undercutting. Set a price-floor alert or check daily buy-box status through this week.",
+          "A badge missing on a live deal suppresses conversion directly — confirm those deals are displaying at the right price, particularly on brands where the plan gap is already material.",
+      },
+      {
+        id: "monitor-po",
+        title: "Monitor PO fulfillment for high-velocity SKUs",
+        description:
+          "With 80% case acceptance and $11.7M unfulfilled, any SKU running below average cover is at near-term stock risk — pull weeks-of-cover at SKU grain for the top 20 revenue drivers.",
       },
     ],
   };
