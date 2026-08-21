@@ -61,7 +61,7 @@ export function OpsValue({
       )}
       <span
         className={cn(
-          "font-mono text-xs tabular-nums text-slate-800",
+          "font-mono text-xs tabular-nums text-neutral-800",
           matchMeta ? "font-medium leading-4" : "font-semibold",
           !showLabel && !matchMeta && "leading-5",
         )}

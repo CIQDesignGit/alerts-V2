@@ -10,7 +10,13 @@ import {
   type TaxonomyChipLevel,
 } from "@/lib/ally-chipsets";
 import { snapshotMetricLabel } from "@/lib/insights-metrics-config";
-import { skuOpsDollars, sumOpsDollars } from "@/lib/ops";
+import {
+  paintIssueAlertsOps,
+  paintTaxonomyOpsDescending,
+  skuOpsDollars,
+  sumOpsDollars,
+  withDescendingSkuOps,
+} from "@/lib/ops";
 
 export type { AllyAiPrompt } from "@/lib/ally-chipsets";
 export { FULL_RCA_LAST_WEEK_PROMPT };
@@ -35,6 +41,11 @@ export type IssueSku = {
   brand: string;
   /** Product category — used when Alerts are grouped by category */
   category: string;
+  /**
+   * Ordered Product Sales — stamped so left-pane lists already read
+   * high → low without re-sorting issues/SKUs.
+   */
+  opsDollars?: number;
   /** Buy Box / competitive fields when relevant to the issue */
   bbOwner?: string;
   theirPrice?: number;
@@ -1953,12 +1964,15 @@ function enrichSkuCompetitiveFields(sku: IssueSku): IssueSku {
   };
 }
 
-export const issueAlerts: IssueAlert[] = [...issueAlertsUnsorted]
-  .map((issue) => ({
-    ...issue,
-    skus: issue.skus.map(enrichSkuCompetitiveFields),
-  }))
-  .sort((a, b) => a.gapDollars - b.gapDollars);
+export const issueAlerts: IssueAlert[] = paintIssueAlertsOps(
+  [...issueAlertsUnsorted]
+    .map((issue) => ({
+      ...issue,
+      skus: issue.skus.map(enrichSkuCompetitiveFields),
+    }))
+    .sort((a, b) => a.gapDollars - b.gapDollars),
+  ISSUE_TYPE_SIDEBAR_ORDER,
+);
 
 export const alertsSummary = {
   count: issueAlerts.length,
@@ -2001,8 +2015,8 @@ export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
     }
   }
 
-  const groups: CategoryAlert[] = [...byCategory.entries()].map(
-    ([name, data]) => {
+  const groups: CategoryAlert[] = [...byCategory.entries()]
+    .map(([name, data]) => {
       const skus = [...data.skus].sort((a, b) => a.gapDollars - b.gapDollars);
       const issueList = [...data.issueKeys].map((key) => issueLabel(key));
       return {
@@ -2014,10 +2028,20 @@ export function buildCategoryAlerts(alerts: IssueAlert[]): CategoryAlert[] {
         aiSignal: `${name} has ${skus.length} SKUs with Gap across ${issueList.join(", ")}. Focus on the highest Gap SKUs first.`,
         skus,
       };
-    },
-  );
+    })
+    .sort((a, b) => a.gapDollars - b.gapDollars);
 
-  return groups.sort((a, b) => a.gapDollars - b.gapDollars);
+  // Keep category/SKU order; stamp OPS so each list already reads high → low
+  const topHeader = 2_800_000;
+  const headerStep = 320_000;
+  return groups.map((group, index) => ({
+    ...group,
+    skus: withDescendingSkuOps(
+      group.skus,
+      Math.max(280_000, topHeader - index * headerStep),
+      group.skuCount,
+    ),
+  }));
 }
 
 export const categoryAlerts: CategoryAlert[] = buildCategoryAlerts(issueAlerts);
@@ -2625,7 +2649,7 @@ export function buildAlertsTaxonomyTree(
     })
     .sort((a, b) => a.gapDollars - b.gapDollars);
 
-  return {
+  const tree: AlertsTaxonomyNode = {
     id: "overall",
     name: "Overall",
     level: "overall",
@@ -2636,6 +2660,9 @@ export function buildAlertsTaxonomyTree(
     skus,
     children: brandNodes,
   };
+
+  // Keep taxonomy order; stamp OPS so every sibling list reads high → low
+  return paintTaxonomyOpsDescending(tree);
 }
 
 export function findTaxonomyNode(
