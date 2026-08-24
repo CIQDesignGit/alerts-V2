@@ -55,7 +55,7 @@ export type TrendTableRow = {
 
 export type LastWeekTrendData = {
   issueKey: IssueKey;
-  /** Card title, e.g. "Last 7 Day Trend (Aug 9–15)" */
+  /** Card title, e.g. "Last Week Trend (Aug 9–15)" */
   title: string;
   vsPrevWeekTooltip: string;
   /** Hide the header “vs prev week” control (table-only designs) */

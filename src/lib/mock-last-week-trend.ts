@@ -36,11 +36,12 @@ export function hasLastWeekTrendCard(issueKey: IssueKey): boolean {
 
 /**
  * True when the user asked for the Issue Type · SKU
- * “See trends for Last 7 days for {Issue}” chip.
- * Matches both the current prompt and the older “evolved for…” wording.
+ * “See trends for last week for {Issue}” chip.
+ * Also accepts older “last 7 days” / “evolved for…” wording.
  */
 export function isLastSevenDayTrendPrompt(text: string): boolean {
   return (
+    /trends over the last week and highlight what changed/i.test(text) ||
     /trends over the last 7 days and highlight what changed/i.test(text) ||
     /evolved for .+ over the last 7 days and what changed most recently/i.test(
       text,
