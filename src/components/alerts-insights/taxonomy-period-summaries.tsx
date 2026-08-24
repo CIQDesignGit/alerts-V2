@@ -2,7 +2,10 @@
 
 import { CalendarRange } from "lucide-react";
 
-import { NumberedInsightList } from "@/components/alerts-insights/ally-ai-surface";
+import {
+  NumberedInsightList,
+  PrecomputedInsightFootnote,
+} from "@/components/alerts-insights/ally-ai-surface";
 import { LastCrawlBadge } from "@/components/shared/last-crawl-badge";
 import { LiveSignalDot } from "@/components/shared/live-signal-dot";
 import {
@@ -21,8 +24,9 @@ export function TaxonomyPeriodSummaries({
   lastWeekBullets,
 }: TaxonomyPeriodSummariesProps) {
   return (
-    <section className="flex flex-col gap-5">
-      <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+    <div className="flex flex-col gap-1.5">
+      <section className="flex flex-col gap-5">
+        <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-4 py-2.5">
           <div className="flex items-center gap-2.5">
             <LiveSignalDot />
@@ -61,6 +65,9 @@ export function TaxonomyPeriodSummaries({
           }))}
         />
       </div>
-    </section>
+      </section>
+
+      <PrecomputedInsightFootnote />
+    </div>
   );
 }

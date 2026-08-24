@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Info, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import {
   useEffect,
   useLayoutEffect,
@@ -22,6 +22,11 @@ import { AlertsTaxonomyTree } from "@/components/alerts-insights/alerts-taxonomy
 import { SkuDetailPanel } from "@/components/alerts-insights/sku-detail-panel";
 import { TaxonomyRcaPanel } from "@/components/alerts-insights/taxonomy-rca-panel";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   buildAlertsTaxonomyTree,
   buildIssueTypeSidebarAlerts,
   DEFAULT_ALERTS_TIME_WINDOW,
@@ -36,6 +41,14 @@ import {
   type AlertsGroupBy,
   type AlertsTaxonomyNode,
 } from "@/lib/mock-alerts-insights";
+
+/** Explains how the SKU count is calculated — differs by Group by mode. */
+const SKU_COUNT_TOOLTIP = {
+  issue:
+    "All SKUs contributing to alerts. SKUs can be repeated across issue types.",
+  category:
+    "Unique SKUs in the catalog. Each SKU is counted once across the catalog.",
+} as const;
 
 export function AlertsTab({
   filters,
@@ -216,13 +229,26 @@ export function AlertsTab({
         <aside className="flex w-92 shrink-0 flex-col border-r border-border bg-neutral-50">
           <div className="border-b border-border bg-background px-3 py-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 items-center gap-1.5">
                 <h2 className="text-sm font-semibold text-foreground">
-                  {listHeader.title}
+                  {listHeader.title}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    ({listHeader.count})
+                  </span>
                 </h2>
-                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-2 text-2xs font-medium text-neutral-600">
-                  {listHeader.count}
-                </span>
+                <Tooltip>
+                  <TooltipTrigger
+                    className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:text-neutral-600"
+                    aria-label="About SKU count"
+                  >
+                    <Info className="size-3.5" aria-hidden />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-left leading-snug">
+                    {groupBy === "category"
+                      ? SKU_COUNT_TOOLTIP.category
+                      : SKU_COUNT_TOOLTIP.issue}
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {onGroupByChange && (

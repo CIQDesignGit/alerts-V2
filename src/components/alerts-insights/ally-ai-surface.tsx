@@ -154,6 +154,15 @@ export function NumberedInsightList({
   );
 }
 
+/** Footnote under precomputed Ally insight cards — filters don’t refresh the copy. */
+export function PrecomputedInsightFootnote() {
+  return (
+    <p className="pl-0.5 text-2xs leading-snug text-muted-foreground">
+      Precomputed for this alert, doesn’t update with filters.
+    </p>
+  );
+}
+
 type AllyInsightContentProps = {
   bullets: AllyInsightBullet[];
   /** Card heading — e.g. Key insights for Lost Buy Box */
@@ -173,31 +182,30 @@ export function AllyInsightContent({
   if (bullets.length === 0) return null;
 
   return (
-    <div
-      className={cn(
-        "shrink-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm",
-        className,
-      )}
-    >
-      <header className="border-b border-neutral-100 px-4 py-2.5">
-        <h3 className="min-w-0 truncate text-sm font-semibold text-foreground">
-          {title}
-        </h3>
-      </header>
+    <div className={cn("flex shrink-0 flex-col gap-1.5", className)}>
+      <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <header className="border-b border-neutral-100 px-4 py-2.5">
+          <h3 className="min-w-0 truncate text-sm font-semibold text-foreground">
+            {title}
+          </h3>
+        </header>
 
-      <NumberedInsightList
-        label={title}
-        tone="brand"
-        items={bullets.map((bullet) => ({
-          id: bullet.id,
-          content: bullet.segments.map((segment, segmentIndex) => (
-            <InsightSegmentText
-              key={`${bullet.id}-${segmentIndex}`}
-              segment={segment}
-            />
-          )),
-        }))}
-      />
+        <NumberedInsightList
+          label={title}
+          tone="brand"
+          items={bullets.map((bullet) => ({
+            id: bullet.id,
+            content: bullet.segments.map((segment, segmentIndex) => (
+              <InsightSegmentText
+                key={`${bullet.id}-${segmentIndex}`}
+                segment={segment}
+              />
+            )),
+          }))}
+        />
+      </div>
+
+      <PrecomputedInsightFootnote />
     </div>
   );
 }
