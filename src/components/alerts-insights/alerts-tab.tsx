@@ -45,9 +45,9 @@ import {
 /** Explains how the SKU count is calculated — differs by Group by mode. */
 const SKU_COUNT_TOOLTIP = {
   issue:
-    "All SKUs contributing to alerts. SKUs can be repeated across issue types.",
+    "Count of Distinct SKUs with Alerts flagged",
   category:
-    "Unique SKUs in the catalog. Each SKU is counted once across the catalog.",
+    "Count of Distinct SKUs in 90th Percentile by OPS",
 } as const;
 
 export function AlertsTab({
