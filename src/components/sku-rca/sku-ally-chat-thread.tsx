@@ -6,9 +6,11 @@ import { ContentFeedback } from "@/components/shared/content-feedback";
 import { AllyProcessingTrail } from "@/components/sku-rca/ally-processing-trail";
 import { FullRcaReport } from "@/components/sku-rca/full-rca-report";
 import { LastWeekTrendCard } from "@/components/sku-rca/last-week-trend-card";
+import { ScrapeHistoryCard } from "@/components/sku-rca/scrape-history-modal";
 import type { AllyProcessingStep } from "@/lib/ally-processing-steps";
 import type { FullRcaReportData } from "@/lib/mock-full-rca-report";
 import type { LastWeekTrendData } from "@/lib/mock-last-week-trend";
+import type { ScrapeHistoryData } from "@/lib/mock-scrape-history";
 
 export type SkuAllyChatMessage =
   | { id: string; role: "user"; text: string }
@@ -23,6 +25,12 @@ export type SkuAllyChatMessage =
       role: "assistant";
       kind: "last-week-trend";
       trend: LastWeekTrendData;
+    }
+  | {
+      id: string;
+      role: "assistant";
+      kind: "scrape-history";
+      scrapeHistory: ScrapeHistoryData;
     }
   | { id: string; role: "assistant"; kind: "text"; text: string }
   | { id: string; role: "assistant"; kind: "thinking" }
@@ -120,6 +128,8 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
               </div>
             ) : message.kind === "last-week-trend" ? (
               <LastWeekTrendCard trend={message.trend} />
+            ) : message.kind === "scrape-history" ? (
+              <ScrapeHistoryCard data={message.scrapeHistory} />
             ) : (
               <div className="flex justify-start">
                 {/* Ally reply: plain text — no border / fill; sharp bottom-left */}

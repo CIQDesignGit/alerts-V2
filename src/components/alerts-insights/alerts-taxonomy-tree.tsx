@@ -53,11 +53,13 @@ function SkuMetadataLine({ node }: { node: AlertsTaxonomyNode }) {
   const issueText = `${issues} issue${issues === 1 ? "" : "s"}`;
 
   if (!asin) {
-    return <span>{issueText}</span>;
+    return (
+      <span className="font-medium text-neutral-600">{issueText}</span>
+    );
   }
 
   return (
-    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate">
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate font-medium text-neutral-600">
       <span className="shrink-0 font-mono">{skuShortCode(asin)}</span>
       <span
         className="size-0.5 shrink-0 rounded-full bg-neutral-600"

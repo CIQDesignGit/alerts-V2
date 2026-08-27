@@ -4,7 +4,6 @@ import { X } from "lucide-react";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
 import { OpsValue } from "@/components/shared/ops-value";
-import { ScrapeHistoryButton } from "@/components/sku-rca/scrape-history-modal";
 import {
   GapBadge,
   PdpPageLink,
@@ -22,16 +21,9 @@ type SkuRcaHeaderProps = {
   data: SkuRcaData;
   collapsed: boolean;
   onClose: () => void;
-  /** Issue-type aggregation SKU pages show scrape history in the header */
-  showScrapeHistory?: boolean;
 };
 
-export function SkuRcaHeader({
-  data,
-  collapsed,
-  onClose,
-  showScrapeHistory = false,
-}: SkuRcaHeaderProps) {
+export function SkuRcaHeader({ data, collapsed, onClose }: SkuRcaHeaderProps) {
   // Same Amazon URL as PDP Snapshots rows for this SKU
   const pdpUrl = getPdpUrlForSku(data.name);
 
@@ -64,12 +56,6 @@ export function SkuRcaHeader({
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
                 <PdpSnapshotsButton skuName={data.name} />
                 <PdpPageLink href={pdpUrl} />
-                {showScrapeHistory && (
-                  <ScrapeHistoryButton
-                    asin={data.asin}
-                    skuName={data.name}
-                  />
-                )}
                 <span className="inline-flex items-center gap-2">
                   <OpsValue dollars={data.opsDollars} variant="badge" />
                   <GapBadge dollars={data.gapDollars} />
@@ -103,13 +89,6 @@ export function SkuRcaHeader({
           <div className="flex shrink-0 items-center gap-1.5">
             <PdpSnapshotsButton skuName={data.name} compact />
             <PdpPageLink href={pdpUrl} compact />
-            {showScrapeHistory && (
-              <ScrapeHistoryButton
-                asin={data.asin}
-                skuName={data.name}
-                compact
-              />
-            )}
             <CloseButton
               onClose={onClose}
               className="size-7 shrink-0 rounded-lg border border-neutral-200 bg-background hover:bg-neutral-50"

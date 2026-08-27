@@ -12,6 +12,7 @@ import {
 } from "@/lib/ally-processing-steps";
 import {
   isGapToPlanPrompt,
+  isScrapeHistoryPrompt,
   type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
@@ -22,6 +23,7 @@ import {
   isLastSevenDayTrendPrompt,
   resolveTrendIssueFromPrompt,
 } from "@/lib/mock-last-week-trend";
+import { getScrapeHistoryData } from "@/lib/mock-scrape-history";
 
 type UseSkuAllyThreadOptions = {
   /** When set (issue SKU pages), trend replies can target that issue */
@@ -107,6 +109,16 @@ export function useSkuAllyThread(
           role: "assistant",
           kind: "text",
           text: `I don’t have a last-7-day trend card for ${issueLabel} yet. Try another issue’s “changed in 7 days” prompt, or pick a different Explore more suggestion.`,
+        };
+      }
+
+      // Same 7-day grid as the header modal — shown inline in the thread
+      if (isScrapeHistoryPrompt(trimmed)) {
+        return {
+          id: `scrape-${stamp}`,
+          role: "assistant",
+          kind: "scrape-history",
+          scrapeHistory: getScrapeHistoryData(sku.asin, sku.name),
         };
       }
 

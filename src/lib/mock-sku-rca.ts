@@ -368,7 +368,7 @@ function buildLastWeekIssuesSummary(
 }
 
 function buildSkuSuggestedPrompts(sku: IssueSku): AllyAiPrompt[] {
-  // Taxonomy · SKU: Gap to Plan chip only
+  // Taxonomy · SKU: Gap to Plan + scrape history chips
   return getTaxonomySkuChips(sku.name);
 }
 

@@ -56,7 +56,6 @@ export function IssueSkuDetailShell({
         data={headerData}
         collapsed={collapsed}
         onClose={onClose}
-        showScrapeHistory
       />
 
       <div

@@ -7,6 +7,7 @@ import {
   FULL_RCA_LAST_WEEK_PROMPT,
   getTaxonomyRolledUpChips,
   isGapToPlanPrompt,
+  isScrapeHistoryPrompt,
   type AllyAiPrompt,
   type TaxonomyChipLevel,
 } from "@/lib/ally-chipsets";
@@ -27,7 +28,7 @@ import {
 } from "@/lib/ops";
 
 export type { AllyAiPrompt } from "@/lib/ally-chipsets";
-export { FULL_RCA_LAST_WEEK_PROMPT, isGapToPlanPrompt };
+export { FULL_RCA_LAST_WEEK_PROMPT, isGapToPlanPrompt, isScrapeHistoryPrompt };
 
 export type BrandCard = {
   name: string;

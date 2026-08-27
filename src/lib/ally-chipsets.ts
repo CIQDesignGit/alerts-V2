@@ -40,6 +40,18 @@ export function isGapToPlanPrompt(text: string): boolean {
   );
 }
 
+/** Chip that opens the 7-day / last-week scrape history modal. */
+export const SHOW_SCRAPE_HISTORY_PROMPT: AllyAiPrompt = {
+  id: "scrape-history",
+  label: "Show Last week scrape history",
+  prompt: "Show Last week scrape history",
+};
+
+/** True when the chip should open scrape history (not a chat reply). */
+export function isScrapeHistoryPrompt(text: string): boolean {
+  return /show last week scrape history/i.test(text);
+}
+
 /** Taxonomy levels that show rolled-up Ally chips (not SKU). */
 export type TaxonomyChipLevel = "overall" | "brand" | "category";
 
@@ -125,23 +137,26 @@ function isSeeTrendsLastWeekLabel(label: string): boolean {
 }
 
 /**
- * Issue Type · SKU chips: only the “See trends for last week” chip.
- * Shipping Speed has no trends chip in the sheet — returns none.
+ * Issue Type · SKU chips: “See trends for last week” (when available) +
+ * scrape history. Shipping Speed has no trends chip — scrape history only.
  */
 export function getIssueSkuChips(issueKey: IssueKey): AllyAiPrompt[] {
   const [chip1] = ISSUE_SKU_CHIPS[issueKey];
-  if (!isSeeTrendsLastWeekLabel(chip1)) return [];
+  const chips: AllyAiPrompt[] = [];
 
-  const issueName = ISSUE_NAMES[issueKey].filter;
-  return [
-    {
+  if (isSeeTrendsLastWeekLabel(chip1)) {
+    const issueName = ISSUE_NAMES[issueKey].filter;
+    chips.push({
       id: `${issueKey}-trend`,
       label: chip1,
       // Detected by isLastSevenDayTrendPrompt → opens last-week trend card
       prompt: `Show ${issueName} trends over the last week and highlight what changed.`,
       variant: "primary",
-    },
-  ];
+    });
+  }
+
+  chips.push(SHOW_SCRAPE_HISTORY_PROMPT);
+  return chips;
 }
 
 /**
@@ -157,8 +172,11 @@ export function getTaxonomyRolledUpChips(
 
 /**
  * Taxonomy · SKU (multi-issue SkuRca):
- * only the Gap to Plan chip — same rule as rolled-up taxonomy levels.
+ * Gap to Plan + last-week scrape history.
  */
 export function getTaxonomySkuChips(skuName?: string): AllyAiPrompt[] {
-  return [buildGapToPlanLastWeekPrompt(skuName?.trim() || "this SKU")];
+  return [
+    buildGapToPlanLastWeekPrompt(skuName?.trim() || "this SKU"),
+    SHOW_SCRAPE_HISTORY_PROMPT,
+  ];
 }

@@ -1,208 +1,105 @@
 "use client";
 
-import { CalendarDays, Check, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { Check } from "lucide-react";
 
 import { ISSUE_SCRAPE_DETECTED_LABEL } from "@/components/alerts/issue-names";
 import {
   LAST_WEEK_RANGE_LABEL,
   PeriodBadge,
 } from "@/components/shared/period-badge";
-import { Button } from "@/components/ui/button";
-import {
-  getScrapeHistoryData,
-  type ScrapeHistoryData,
-} from "@/lib/mock-scrape-history";
+import type { ScrapeHistoryData } from "@/lib/mock-scrape-history";
 import { cn } from "@/lib/utils";
 
-type ScrapeHistoryButtonProps = {
-  asin: string;
-  skuName: string;
-  compact?: boolean;
-};
-
-/** Opens the 7-day scrape history modal — issue-aggregation SKU header only. */
-export function ScrapeHistoryButton({
-  asin,
-  skuName,
-  compact,
-}: ScrapeHistoryButtonProps) {
-  const [open, setOpen] = useState(false);
-  const data = getScrapeHistoryData(asin, skuName);
-
+/**
+ * AllyAI inline reply card — last-week scrape grid in Chat with Ally AI
+ * (same pattern as LastWeekTrendCard).
+ */
+export function ScrapeHistoryCard({ data }: { data: ScrapeHistoryData }) {
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={() => setOpen(true)}
-        aria-label="7-day scrape history"
-        className={cn(
-          "h-7 gap-1.5 rounded-lg border-neutral-200 bg-background px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-50",
-          compact && "size-7 shrink-0 gap-0 px-0",
-        )}
-      >
-        <CalendarDays className="size-3.5 text-neutral-500" />
-        {!compact && "7-day scrape history"}
-      </Button>
-
-      {open && (
-        <ScrapeHistoryModal data={data} onClose={() => setOpen(false)} />
-      )}
-    </>
-  );
-}
-
-function ScrapeHistoryModal({
-  data,
-  onClose,
-}: {
-  data: ScrapeHistoryData;
-  onClose: () => void;
-}) {
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose],
-  );
-
-  useEffect(() => {
-    const appShell = document.querySelector<HTMLElement>("[data-app-shell]");
-    const previousOverflow = document.body.style.overflow;
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
-    if (appShell) appShell.inert = true;
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      if (appShell) appShell.inert = false;
-    };
-  }, [handleKeyDown]);
-
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-4 sm:p-8">
-      <button
-        type="button"
-        aria-label="Close dialog"
-        className="absolute inset-0 bg-neutral-900/40"
-        onClick={onClose}
-      />
-
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="scrape-history-title"
-        className="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xl"
-      >
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-6 py-5">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h2
-                id="scrape-history-title"
-                className="text-lg font-bold text-foreground"
-              >
-                7-day scrape history · {data.skuName}
-              </h2>
-              <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Whether each issue was detected on that day (4 scrapes per day).
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Close"
-            onClick={onClose}
-            className="shrink-0"
-          >
-            <X className="size-4" />
-          </Button>
+    <div className="flex flex-col gap-3">
+      {/* Title row matching the product mock — SKU name + week badge */}
+      <header className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h3 className="min-w-0 text-sm font-semibold text-foreground">
+            Last week scrape history · {data.skuName}
+          </h3>
+          <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
         </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-          <ScrapeHistoryTable data={data} />
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
-function ScrapeHistoryTable({ data }: { data: ScrapeHistoryData }) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-border bg-background">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-neutral-50/80 px-3 py-2">
-        <p className="text-[11px] font-semibold tracking-wide text-neutral-600 uppercase">
-          7-day scrape history ·{" "}
-          <span className="font-mono normal-case">{data.asin}</span>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Whether each issue was detected on that day ({data.scrapesPerDay}{" "}
+          scrapes per day).
         </p>
-        <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-muted-foreground">
-          <span>
-            {data.scrapesPerDay} scrapes per day ·{" "}
-            {data.scrapesPerDay * data.days.length} total per week
-          </span>
-          <span className="inline-flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-1">
-              <DetectedDot size="sm" />
-              Detected
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Check className="size-3 text-success-600" aria-hidden />
-              No issue
-            </span>
-          </span>
-        </div>
-      </div>
+      </header>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-border bg-neutral-50/50">
-              <th className="sticky left-0 z-10 bg-neutral-50/95 px-4 py-2 text-left text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
-                Issue type
-              </th>
-              {data.days.map((day) => (
-                <th
-                  key={day.label}
-                  className="min-w-28 px-1.5 py-2 text-left"
-                >
-                  <span className="block text-[10px] font-semibold leading-tight text-neutral-700">
-                    {day.label}
-                  </span>
+      <section className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-neutral-50/80 px-3 py-2">
+          <p className="text-[11px] font-semibold tracking-wide text-neutral-600 uppercase">
+            Last week scrape history ·{" "}
+            <span className="font-mono normal-case">{data.asin}</span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-muted-foreground">
+            <span>
+              {data.scrapesPerDay} scrapes per day ·{" "}
+              {data.scrapesPerDay * data.days.length} total per week
+            </span>
+            <span className="inline-flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-1">
+                <DetectedDot size="sm" />
+                Detected
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Check className="size-3 text-success-600" aria-hidden />
+                No issue
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-160 border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-border bg-neutral-50/50">
+                <th className="sticky left-0 z-10 bg-neutral-50/95 px-4 py-2 text-left text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
+                  Issue type
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.issues.map((row) => (
-              <tr
-                key={row.issueKey}
-                className="border-b border-border last:border-b-0"
-              >
-                <td className="sticky left-0 z-10 bg-background px-4 py-2 text-xs font-medium leading-tight text-foreground">
-                  {row.issueLabel}
-                </td>
-                {row.detectedOnDay.map((detected, i) => (
-                  <td key={i} className="px-1.5 py-2 text-left">
-                    <ScrapeCell
-                      detected={detected}
-                      detectedLabel={ISSUE_SCRAPE_DETECTED_LABEL[row.issueKey]}
-                    />
-                  </td>
+                {data.days.map((day) => (
+                  <th
+                    key={day.label}
+                    className="min-w-28 px-1.5 py-2 text-left"
+                  >
+                    <span className="block text-[10px] font-semibold leading-tight text-neutral-700">
+                      {day.label}
+                    </span>
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+            </thead>
+            <tbody>
+              {data.issues.map((row) => (
+                <tr
+                  key={row.issueKey}
+                  className="border-b border-border last:border-b-0"
+                >
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-background px-4 py-3 text-xs font-medium leading-tight text-foreground">
+                    {row.issueLabel}
+                  </td>
+                  {row.detectedOnDay.map((detected, i) => (
+                    <td key={i} className="px-1.5 py-3 text-left">
+                      <ScrapeCell
+                        detected={detected}
+                        detectedLabel={
+                          ISSUE_SCRAPE_DETECTED_LABEL[row.issueKey]
+                        }
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   );
 }
 
