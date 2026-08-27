@@ -17,7 +17,7 @@ const toneText = {
 const toneBorder = {
   negative: "border-l-error-500",
   positive: "border-l-success-500",
-  neutral: "border-l-neutral-300",
+  neutral: "border-l-neutral-400",
 } as const;
 
 /** Single node in the horizontal RCA drill-down tree. */

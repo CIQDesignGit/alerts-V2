@@ -52,7 +52,7 @@ export function RcaDrillConnectors({
             d={path}
             fill="none"
             strokeWidth={1.5}
-            className="stroke-neutral-400"
+            className="stroke-neutral-300"
           />
         );
       })}
