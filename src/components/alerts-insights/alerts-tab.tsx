@@ -10,7 +10,6 @@ import {
   type MouseEvent,
 } from "react";
 
-import { AlertDetailPanel } from "@/components/alerts-insights/alert-detail-panel";
 import { IssueGroupCard } from "@/components/alerts-insights/alert-group-cards";
 import { AlertsGroupBySelect } from "@/components/alerts-insights/alerts-group-by-select";
 import {
@@ -36,11 +35,20 @@ import {
   findIssueForSku,
   findTaxonomyNode,
   issueAlerts,
-  issueLabel,
   type AlertsFilters,
   type AlertsGroupBy,
   type AlertsTaxonomyNode,
+  type IssueAlert,
 } from "@/lib/mock-alerts-insights";
+
+/**
+ * TEMPORARY (issue-type view): skip issue aggregate (`AlertDetailPanel`).
+ * Clicking an issue opens its first SKU. Revert notes in `instructions.md`.
+ * Keep `alert-detail-panel.tsx` — do not delete.
+ */
+function firstSkuIdForIssue(issue: IssueAlert | undefined): string | null {
+  return issue?.skus[0]?.id ?? null;
+}
 
 /** Explains how the SKU count is calculated — differs by Group by mode. */
 const SKU_COUNT_TOOLTIP = {
@@ -126,11 +134,13 @@ export function AlertsTab({
 
   useEffect(() => {
     if (groupBy === "issue") {
-      const first =
-        filteredIssues[0]?.issueKey ?? sidebarIssues[0]?.issueKey ?? null;
-      setExpandedId(first);
-      setSelectedGroupId(first ?? "");
-      setSelectedSkuId(null);
+      const firstIssue =
+        filteredIssues[0] ?? sidebarIssues[0] ?? undefined;
+      const firstKey = firstIssue?.issueKey ?? null;
+      setExpandedId(firstKey);
+      setSelectedGroupId(firstKey ?? "");
+      // TEMP: land on first SKU — skip issue aggregate panel
+      setSelectedSkuId(firstSkuIdForIssue(firstIssue));
       return;
     }
 
@@ -176,9 +186,12 @@ export function AlertsTab({
     if (card) {
       expandAnchorTopRef.current = card.getBoundingClientRect().top;
     }
+    const issue = sidebarIssues.find((i) => i.issueKey === id);
     setSelectedGroupId(id);
-    setSelectedSkuId(null);
-    setExpandedId((current) => (current === id ? null : id));
+    // Always expand so the SKU list is visible under the issue
+    setExpandedId(id);
+    // TEMP: open first SKU instead of issue aggregate (`AlertDetailPanel`)
+    setSelectedSkuId(firstSkuIdForIssue(issue));
   }
 
   useLayoutEffect(() => {
@@ -351,20 +364,21 @@ export function AlertsTab({
               ? selectedIssue?.issueKey
               : selectedSkuIssue.issueKey
           }
-          onBackToAlert={() => setSelectedSkuId(null)}
-        />
-      ) : groupBy === "issue" && selectedIssue ? (
-        <AlertDetailPanel
-          group={{
-            title: issueLabel(selectedIssue.issueKey),
-            feedbackKey: selectedIssue.issueKey,
-            issueKey: selectedIssue.issueKey,
-            skuCount: selectedIssue.skuCount,
-            gapDollars: selectedIssue.gapDollars,
-            aiSignal: selectedIssue.aiSignal,
-            skus: selectedIssue.skus,
+          onBackToAlert={() => {
+            // TEMP: issue aggregate is off — closing SKU keeps/reopens first SKU
+            if (groupBy === "issue") {
+              setSelectedSkuId(firstSkuIdForIssue(selectedIssue));
+              return;
+            }
+            setSelectedSkuId(null);
           }}
         />
+      ) : groupBy === "issue" && selectedIssue ? (
+        // TEMP: `AlertDetailPanel` skipped — see instructions.md “Temporary: issue-type view”
+        // If an issue has no SKUs, show empty state instead of aggregate insights.
+        <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
+          No SKUs under this alert yet.
+        </div>
       ) : groupBy === "category" &&
         selectedTaxonomyNode &&
         selectedTaxonomyNode.level !== "sku" ? (

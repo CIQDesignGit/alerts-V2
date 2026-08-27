@@ -59,6 +59,7 @@ export function IssueSkuDetailShell({
       />
 
       <div
+        data-sku-detail-scroll
         onScroll={onBodyScroll}
         className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
       >

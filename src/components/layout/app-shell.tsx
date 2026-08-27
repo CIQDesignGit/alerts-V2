@@ -22,9 +22,11 @@ export function AppShell({ children }: AppShellProps) {
         collapsed={collapsed}
         onToggle={() => setCollapsed((value) => !value)}
       />
-      <div className="relative flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <TopBar />
-        <main className="flex flex-1 flex-col overflow-y-auto">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </main>
       </div>
     </div>
   );

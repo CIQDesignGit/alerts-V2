@@ -43,9 +43,18 @@ export type SkuAllyChatMessage =
       status: "running" | "done";
     };
 
+const SKU_DETAIL_SCROLL_ATTR = "data-sku-detail-scroll";
+
 type SkuAllyChatThreadProps = {
   messages: SkuAllyChatMessage[];
 };
+
+/** Details-panel scroller only (marked with data-sku-detail-scroll). */
+function skuDetailScroller(from: HTMLElement): HTMLElement | null {
+  const marked = from.closest<HTMLElement>(`[${SKU_DETAIL_SCROLL_ATTR}]`);
+  if (marked) return marked;
+  return null;
+}
 
 /** Three bouncing dots — shown while Ally is “processing” a chip reply */
 function ThinkingDots() {
@@ -69,10 +78,27 @@ function ThinkingDots() {
 export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Keep the latest bubble / card in view when the reply changes
+  // Keep the latest reply in view inside the details panel only — never scroll main
+  // or the left issue list (see app-shell + data-sku-detail-scroll).
   useEffect(() => {
     if (messages.length === 0) return;
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const target = endRef.current;
+    if (!target) return;
+
+    const scroller = skuDetailScroller(target);
+    if (!scroller) return;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const targetRect = target.getBoundingClientRect();
+        const scrollerRect = scroller.getBoundingClientRect();
+        const pad = 16;
+        if (targetRect.bottom > scrollerRect.bottom - pad) {
+          scroller.scrollTop +=
+            targetRect.bottom - scrollerRect.bottom + pad;
+        }
+      });
+    });
   }, [messages.length, messages.at(-1)?.id, messages.at(-1)]);
 
   if (messages.length === 0) return null;

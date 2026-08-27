@@ -58,7 +58,10 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div
+        data-sku-detail-scroll
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+      >
         {/* Edge-to-edge header — border spans full panel width */}
         <header className="shrink-0 border-b border-border px-6">
           <div
