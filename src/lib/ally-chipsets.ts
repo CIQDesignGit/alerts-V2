@@ -24,7 +24,7 @@ export const FULL_RCA_LAST_WEEK_PROMPT: AllyAiPrompt = {
 /** Build the Gap to Plan chip with the selected entity in the label (e.g. CleanPro). */
 export function buildGapToPlanLastWeekPrompt(entityLabel: string): AllyAiPrompt {
   const name = entityLabel.trim() || "this view";
-  const label = `Run Gap to Plan for ${name} for the last week`;
+  const label = `Run Gap to Plan analysis for ${name} for the last week`;
   return {
     id: "full-rca",
     label,
