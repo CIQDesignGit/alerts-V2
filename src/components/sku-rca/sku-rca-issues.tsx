@@ -11,7 +11,6 @@ import {
   LAST_WEEK_RANGE_LABEL,
   PeriodBadge,
 } from "@/components/shared/period-badge";
-import { SkuRcaIssueAiSummary } from "@/components/sku-rca/sku-rca-issue-ai-summary";
 import { SkuRcaIssueRow } from "@/components/sku-rca/sku-rca-issue-row";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import {
@@ -27,16 +26,12 @@ type SkuRcaIssuesProps = {
   sku: IssueSku;
   groups: RcaIssueGroup[];
   lastWeekTopIssues: RcaLastWeekIssue[];
-  liveIssuesSummary: string;
-  lastWeekIssuesSummary: string;
 };
 
 export function SkuRcaIssues({
   sku,
   groups,
   lastWeekTopIssues,
-  liveIssuesSummary,
-  lastWeekIssuesSummary,
 }: SkuRcaIssuesProps) {
   const liveIssues = useMemo(
     () =>
@@ -73,7 +68,7 @@ export function SkuRcaIssues({
           <LastCrawlBadge variant="updated" />
         </header>
 
-        <SkuRcaIssueAiSummary summary={liveIssuesSummary} variant="live" />
+        {/* Live Ally AI narrative hidden on taxonomy SKU detail */}
 
         {liveIssues.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted-foreground">
@@ -140,10 +135,7 @@ export function SkuRcaIssues({
           <PeriodBadge tone="historical">{LAST_WEEK_RANGE_LABEL}</PeriodBadge>
         </header>
 
-        <SkuRcaIssueAiSummary
-          summary={lastWeekIssuesSummary}
-          variant="historical"
-        />
+        {/* Last-week Ally AI narrative hidden on taxonomy SKU detail */}
 
         {lastWeekTopIssues.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted-foreground">

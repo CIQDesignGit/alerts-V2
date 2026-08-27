@@ -3,9 +3,7 @@
 import { useMemo } from "react";
 
 import { SuggestedAiPrompts } from "@/components/alerts-insights/suggested-ai-prompts";
-import { TaxonomyPeriodSummaries } from "@/components/alerts-insights/taxonomy-period-summaries";
 import { RcaKpiTiles } from "@/components/shared/rca-kpi-tiles";
-import { ContentFeedback } from "@/components/shared/content-feedback";
 import { SkuAllyChatThread } from "@/components/sku-rca/sku-ally-chat-thread";
 import { SKU_RCA_CONTENT_WIDTH } from "@/components/sku-rca/sku-rca-header";
 import { useSkuAllyThread } from "@/components/sku-rca/use-sku-ally-thread";
@@ -99,17 +97,7 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
             <RcaKpiTiles kpis={view.performanceKpis} />
 
             <section className="shrink-0 space-y-3">
-              <TaxonomyPeriodSummaries
-                liveNowBullets={view.liveNowBullets}
-                lastWeekBullets={view.lastWeekBullets}
-              />
-              <ContentFeedback
-                variant="subtle"
-                feedbackKey={node.id}
-                surface="taxonomy-rca"
-                contextLabel={view.entityName}
-                title="Was this insight helpful?"
-              />
+              {/* Live / Last week period summaries hidden for Overall · Brand · Category */}
               <SuggestedAiPrompts
                 prompts={insightPrompts}
                 onSelect={onPromptSelect}
