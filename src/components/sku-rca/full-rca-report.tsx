@@ -9,6 +9,7 @@ import { FullRcaPlanVsActualSection } from "@/components/sku-rca/full-rca-plan-v
 import { FullRcaRecommendationsList } from "@/components/sku-rca/full-rca-recommendations";
 import { FullRcaRevenueTrendSection } from "@/components/sku-rca/full-rca-revenue-trend";
 import { FullRcaRootCausesList } from "@/components/sku-rca/full-rca-root-causes";
+import { RcaDrillTreeSection } from "@/components/sku-rca/rca-drill-tree/rca-drill-tree-section";
 import type { FullRcaReportData } from "@/lib/mock-full-rca-report";
 
 type FullRcaReportProps = {
@@ -22,6 +23,7 @@ type FullRcaReportProps = {
  * the title (common region + nesting), not a full-bleed peer block.
  */
 export function FullRcaReport({ report }: FullRcaReportProps) {
+  const [openDrill, setOpenDrill] = useState(true);
   const [openPlan, setOpenPlan] = useState(true);
   const [openEquation, setOpenEquation] = useState(true);
   const [openCauses, setOpenCauses] = useState(true);
@@ -75,6 +77,16 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-border bg-background">
+          <FullRcaAccordion
+            title="Root cause drill-down"
+            subtitle="Visual causal chain · metric deltas at each level"
+            open={openDrill}
+            onOpenChange={setOpenDrill}
+            flushContent
+          >
+            <RcaDrillTreeSection data={report.drillTree} />
+          </FullRcaAccordion>
+
           <FullRcaAccordion
             title="Plan vs Actual"
             open={openPlan}

@@ -3,6 +3,10 @@ import {
   FULL_RCA_PRIOR_WEEK_RANGE,
   FULL_RCA_WEEK_LABEL,
 } from "@/lib/mock-calendar";
+import {
+  getRcaDrillTreeForSku,
+  type RcaDrillTreeData,
+} from "@/lib/mock-rca-drill-tree";
 
 /** Status badge on a root-cause row — kept for older call sites if any */
 export type FullRcaCauseStatus = "still-an-issue" | "resolved";
@@ -138,6 +142,7 @@ export type FullRcaReportData = {
   revenueTrend: FullRcaRevenueTrend;
   rootCauses: FullRcaRootCause[];
   recommendations: FullRcaRecommendation[];
+  drillTree: RcaDrillTreeData;
 };
 
 /** Analysis week + prior week (matches design reference). */
@@ -321,6 +326,7 @@ export function getFullRcaReport(
         badge: "worth-watching",
       },
     ],
+    drillTree: getRcaDrillTreeForSku(sku.id),
     recommendations: [
       {
         id: "analyze-top-swing",

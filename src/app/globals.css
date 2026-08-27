@@ -117,6 +117,7 @@
   --color-info-700: #1d4ed8;
 
   /* Neutral — Tailwind slate (class name stays neutral-*; values are slate) */
+  --color-neutral-25: #fcfcfd;
   --color-neutral-50: #f8fafc;
   --color-neutral-100: #f1f5f9;
   --color-neutral-200: #e2e8f0;
