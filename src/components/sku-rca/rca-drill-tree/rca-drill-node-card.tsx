@@ -23,9 +23,10 @@ const toneEdge = {
 } as const;
 
 /**
- * Causal tree tile — italic purple “why” + metric headline.
- * Only **markdown** change values are semibold + red/green.
+ * Causal tree tile — main insight first, supporting narrative below.
+ * Only **markdown** change values are semibold + red/emerald.
  * Left edge matches the delta tone.
+ * Card width w-[14rem] must match RCA_DRILL_CARD_WIDTH in mock-rca-drill-tree.
  */
 export function RcaDrillNodeCard({ node, registerRef }: RcaDrillNodeCardProps) {
   return (
@@ -33,23 +34,15 @@ export function RcaDrillNodeCard({ node, registerRef }: RcaDrillNodeCardProps) {
       ref={(el) => registerRef?.(node.id, el)}
       data-rca-drill-node={node.id}
       className={cn(
-        "w-[11.5rem] shrink-0 rounded-lg border border-border border-l-2 bg-background px-3 py-2.5 shadow-sm",
+        // Keep w-[14rem] in sync with RCA_DRILL_CARD_WIDTH (224px)
+        "w-[14rem] shrink-0 rounded-l-xs rounded-r-lg border border-border border-l-[3px] bg-background px-3 py-2.5 shadow-sm",
         toneEdge[node.deltaTone],
       )}
     >
-      {node.context ? (
-        <p className="text-xs italic leading-snug text-brand-500">{node.context}</p>
-      ) : null}
-
       <ReactMarkdown
         components={{
           p: ({ children }) => (
-            <p
-              className={cn(
-                "text-sm font-medium leading-snug text-neutral-700",
-                node.context && "mt-1.5",
-              )}
-            >
+            <p className="text-sm font-medium leading-snug text-neutral-800">
               {children}
             </p>
           ),
@@ -60,6 +53,10 @@ export function RcaDrillNodeCard({ node, registerRef }: RcaDrillNodeCardProps) {
       >
         {node.headline}
       </ReactMarkdown>
+
+      {node.context ? (
+        <p className="mt-1.5 text-xs leading-snug text-neutral-700">{node.context}</p>
+      ) : null}
     </div>
   );
 }

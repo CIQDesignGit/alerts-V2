@@ -210,10 +210,11 @@ export type RcaDrillGridLayout = {
 };
 
 /** Grid unit sizes — keep in sync with card component. */
-export const RCA_DRILL_CARD_WIDTH = 184;
+export const RCA_DRILL_CARD_WIDTH = 224; // 14rem
 export const RCA_DRILL_NODE_GAP = 8;
 export const RCA_DRILL_FAN_GAP = 12;
-export const RCA_DRILL_COLUMN_STEP = 220;
+/** Column pitch = card width + gutter for connector trunk */
+export const RCA_DRILL_COLUMN_STEP = 260;
 
 function estimateNodeHeight(node: RcaDrillNode): number {
   if (!node.context) return 52;

@@ -93,7 +93,7 @@ export function RcaDrillConnectors({
               d={`M ${startX} ${startY} H ${trunkX}`}
               fill="none"
               strokeWidth={1.5}
-              className="stroke-neutral-300"
+              className="stroke-slate-400"
             />
 
             {/* Vertical bus when children span different Y */}
@@ -102,7 +102,7 @@ export function RcaDrillConnectors({
                 d={`M ${trunkX} ${busTop} V ${busBottom}`}
                 fill="none"
                 strokeWidth={1.5}
-                className="stroke-neutral-300"
+                className="stroke-slate-400"
               />
             ) : null}
 
@@ -116,7 +116,7 @@ export function RcaDrillConnectors({
                   d={`M ${trunkX} ${endY} H ${endX}`}
                   fill="none"
                   strokeWidth={1.5}
-                  className="stroke-neutral-300"
+                  className="stroke-slate-400"
                 />
               );
             })}
