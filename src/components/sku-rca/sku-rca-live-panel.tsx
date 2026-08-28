@@ -2,7 +2,6 @@
 
 import { RcaKpiTiles } from "@/components/shared/rca-kpi-tiles";
 import { SkuRcaAnalysis } from "@/components/sku-rca/sku-rca-analysis";
-import { SkuRcaFeedback } from "@/components/sku-rca/sku-rca-feedback";
 import { SkuRcaIssues } from "@/components/sku-rca/sku-rca-issues";
 import { SkuRcaRecommendations } from "@/components/sku-rca/sku-rca-recommendations";
 import { SkuRcaSuggestedPrompts } from "@/components/sku-rca/sku-rca-suggested-prompts";
@@ -15,7 +14,7 @@ type SkuRcaLivePanelProps = {
   onPromptSelect?: (prompt: AllyAiPrompt) => void;
 };
 
-/** Taxonomy SKU diagnosis — KPI tiles, issues, feedback, then suggested prompts. */
+/** Taxonomy SKU diagnosis — KPI tiles, issues, then suggested prompts. */
 export function SkuRcaLivePanel({
   data,
   sku,
@@ -32,7 +31,6 @@ export function SkuRcaLivePanel({
       />
       <SkuRcaAnalysis blocks={data.analysis} hidden />
       <SkuRcaRecommendations items={data.recommendations} hidden />
-      <SkuRcaFeedback feedbackKey={data.asin} />
 
       <SkuRcaSuggestedPrompts
         prompts={data.suggestedPrompts}

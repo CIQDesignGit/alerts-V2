@@ -1,23 +1,14 @@
 export type RcaDrillDeltaTone = "negative" | "positive" | "neutral";
 
-export type RcaDrillDetailLine = {
-  label: string;
-  prior: string;
-  current: string;
-};
-
 export type RcaDrillNode = {
   id: string;
-  label: string;
-  /** Current absolute metric — shown first, prominent */
-  absoluteValue: string;
-  /** Period change — smaller, color-coded beside absolute */
-  changePercent?: string;
+  /** Italic purple — causal link from parent (“why this followed”) */
+  context?: string;
+  /** Metric outcome — wrap change values in **markdown** for color */
+  headline: string;
   deltaTone: RcaDrillDeltaTone;
   /** Marks the main causal chain (layout / connectors only) */
   isPrimaryPath?: boolean;
-  footnote?: string;
-  detailLines?: RcaDrillDetailLine[];
   children?: RcaDrillNode[];
 };
 
@@ -28,53 +19,50 @@ export type RcaDrillTreeData = {
 };
 
 /** Shared traffic → paid → ad spend → keyword chain (Examples 1 & 2). */
-function buildTrafficChain(): RcaDrillNode {
+function buildTrafficChain(conversionAspFlat: boolean): RcaDrillNode {
+  const trafficContext = conversionAspFlat
+    ? "conversion and ASP held flat — the sales drop is traffic-driven"
+    : "traffic fell while conversion and ASP moved — primary drag is still paid traffic";
+
   return {
     id: "traffic",
-    label: "Traffic",
-    absoluteValue: "4.9M",
-    changePercent: "−15%",
+    context: trafficContext,
+    headline: "Traffic down **15%** WoW",
     deltaTone: "negative",
     isPrimaryPath: true,
     children: [
       {
         id: "paid-traffic",
-        label: "Paid traffic",
-        absoluteValue: "820K",
-        changePercent: "−40%",
+        context: "the traffic loss concentrated in paid sessions",
+        headline: "Paid traffic down **40%** WoW",
         deltaTone: "negative",
         isPrimaryPath: true,
         children: [
           {
             id: "ad-spends",
-            label: "Ad spends",
-            absoluteValue: "$483",
-            changePercent: "−50%",
+            context: "paid clicks fell after sponsored spend was cut",
+            headline: "Ad spend on 3 important keywords down **50%**",
             deltaTone: "negative",
             isPrimaryPath: true,
-            footnote: "3 important keywords",
             children: [
               {
                 id: "keyword-1",
-                label: "Keyword 1",
-                absoluteValue: "$20",
-                changePercent: "−80%",
+                context: "budget pulled from this high-intent keyword",
+                headline: "Keyword 1 spend cut from **$100** to **$20**",
                 deltaTone: "negative",
                 isPrimaryPath: true,
               },
               {
                 id: "keyword-2",
-                label: "Keyword 2",
-                absoluteValue: "$15",
-                changePercent: "−81%",
+                context: "budget pulled from this high-intent keyword",
+                headline: "Keyword 2 spend cut from **$80** to **$15**",
                 deltaTone: "negative",
                 isPrimaryPath: true,
               },
               {
                 id: "keyword-3",
-                label: "Keyword 3",
-                absoluteValue: "$10",
-                changePercent: "−83%",
+                context: "budget pulled from this high-intent keyword",
+                headline: "Keyword 3 spend cut from **$60** to **$10**",
                 deltaTone: "negative",
                 isPrimaryPath: true,
               },
@@ -94,23 +82,21 @@ function buildExample1Tree(): RcaDrillTreeData {
     rootMetricLabel: "Sales",
     root: {
       id: "sales",
-      label: "Sales",
-      absoluteValue: "$114K",
-      changePercent: "−5%",
+      headline: "Sales down **5%** WoW (conversion & ASP unchanged)",
       deltaTone: "negative",
       isPrimaryPath: true,
       children: [
-        buildTrafficChain(),
+        buildTrafficChain(true),
         {
           id: "conversion",
-          label: "Conversion",
-          absoluteValue: "3.4%",
+          context: "not driving the gap — held steady vs prior week",
+          headline: "Conversion unchanged",
           deltaTone: "neutral",
         },
         {
           id: "asp",
-          label: "ASP",
-          absoluteValue: "$135",
+          context: "not driving the gap — held steady vs prior week",
+          headline: "ASP unchanged",
           deltaTone: "neutral",
         },
       ],
@@ -126,34 +112,28 @@ function buildExample2Tree(): RcaDrillTreeData {
     rootMetricLabel: "Sales",
     root: {
       id: "sales",
-      label: "Sales",
-      absoluteValue: "$112K",
-      changePercent: "−2%",
+      headline: "Sales down **2%** WoW",
       deltaTone: "negative",
       isPrimaryPath: true,
       children: [
-        buildTrafficChain(),
+        buildTrafficChain(false),
         {
           id: "conversion",
-          label: "Conversion",
-          absoluteValue: "3.5%",
-          changePercent: "+5%",
+          context:
+            "lower ASP lifted purchase rate — historically ~5% conv upside when ASP drops ~$20",
+          headline: "Conversion up **5%** WoW",
           deltaTone: "positive",
-          footnote:
-            "Historical pattern: ~5% conversion upside when ASP drops ~$20",
         },
         {
           id: "asp",
-          label: "ASP",
-          absoluteValue: "$130",
-          changePercent: "−13%",
+          context: "promo pricing pulled average selling price down",
+          headline: "ASP down from **$150** to **$130**",
           deltaTone: "negative",
           children: [
             {
               id: "promo-started",
-              label: "Promo started",
-              absoluteValue: "Active",
-              changePercent: "New",
+              context: "a new promotional period started on shelf",
+              headline: "Promo started",
               deltaTone: "neutral",
             },
           ],
@@ -230,15 +210,15 @@ export type RcaDrillGridLayout = {
 };
 
 /** Grid unit sizes — keep in sync with card component. */
-export const RCA_DRILL_CARD_WIDTH = 148;
-export const RCA_DRILL_CARD_HEIGHT = 52;
-export const RCA_DRILL_CARD_HEIGHT_FOOTNOTE = 84;
+export const RCA_DRILL_CARD_WIDTH = 184;
 export const RCA_DRILL_NODE_GAP = 8;
-export const RCA_DRILL_FAN_GAP = 6;
-export const RCA_DRILL_COLUMN_STEP = 160;
+export const RCA_DRILL_FAN_GAP = 12;
+export const RCA_DRILL_COLUMN_STEP = 220;
 
 function estimateNodeHeight(node: RcaDrillNode): number {
-  return node.footnote ? RCA_DRILL_CARD_HEIGHT_FOOTNOTE : RCA_DRILL_CARD_HEIGHT;
+  if (!node.context) return 52;
+  const lines = node.headline.length > 42 ? 2 : 1;
+  return lines > 1 ? 88 : 72;
 }
 
 function isLeafNode(node: RcaDrillNode): boolean {
@@ -269,20 +249,29 @@ function layoutSubtree(node: RcaDrillNode, depth: number): SubtreeLayout {
   }
 
   if (children.every(isLeafNode)) {
+    const childHeights = children.map((child) => estimateNodeHeight(child));
+    const stagger = children.length > 1 ? 18 : 0;
+    const halfSpan = ((children.length - 1) / 2) * stagger;
     const bandHeight = Math.max(
       selfHeight,
-      ...children.map((child) => estimateNodeHeight(child)),
+      halfSpan * 2 + Math.max(...childHeights, selfHeight),
     );
+    const parentTop = Math.max(0, (bandHeight - selfHeight) / 2);
+
     return {
       height: bandHeight,
       placements: [
-        { node, depth, top: 0 },
-        ...children.map((child, index) => ({
-          node: child,
-          depth: depth + 1,
-          top: 0,
-          hIndex: index,
-        })),
+        { node, depth, top: parentTop },
+        ...children.map((child, index) => {
+          const childHeight = childHeights[index] ?? 72;
+          const centerY = bandHeight / 2 + (index - (children.length - 1) / 2) * stagger;
+          return {
+            node: child,
+            depth: depth + 1,
+            top: Math.max(0, centerY - childHeight / 2),
+            hIndex: index,
+          };
+        }),
       ],
     };
   }
@@ -317,7 +306,8 @@ export function layoutRcaDrillGrid(root: RcaDrillNode): RcaDrillGridLayout {
 
   let maxRight = RCA_DRILL_CARD_WIDTH;
   for (const { depth, hIndex = 0 } of placements) {
-    const left = depth * RCA_DRILL_COLUMN_STEP + hIndex * (RCA_DRILL_CARD_WIDTH + RCA_DRILL_FAN_GAP);
+    const left =
+      depth * RCA_DRILL_COLUMN_STEP + hIndex * (RCA_DRILL_CARD_WIDTH + RCA_DRILL_FAN_GAP);
     maxRight = Math.max(maxRight, left + RCA_DRILL_CARD_WIDTH);
   }
 
