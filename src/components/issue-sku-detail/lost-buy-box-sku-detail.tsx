@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  Check,
   CircleDollarSign,
   Info,
+  MapPin,
   Package,
   ShoppingCart,
   Star,
+  X,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -17,6 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import type {
   BuyBoxComparisonRow,
+  BuyBoxCrawlRow,
   BuyBoxWinCheckDay,
 } from "@/lib/mock-issue-sku-detail";
 import { getLostBuyBoxSkuDetail } from "@/lib/mock-issue-sku-detail";
@@ -75,9 +79,73 @@ export function LostBuyBoxSkuDetail({ sku }: LostBuyBoxSkuDetailProps) {
           {detail.rows.map((row) => (
             <ComparisonRow key={row.id} row={row} />
           ))}
+
+          {detail.crawlRows.map((row) => (
+            <CrawlRow key={row.id} row={row} />
+          ))}
         </div>
       </div>
     </div>
+  );
+}
+
+/** Crawl-time row — when + where the check happened, and who held the Buy Box */
+function CrawlRow({ row }: { row: BuyBoxCrawlRow }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]",
+        issueDetailTable.row,
+      )}
+    >
+      <div className="px-2 py-1">
+        <span className={cn(issueDetailTable.cell, "flex-wrap gap-2 pl-6")}>
+          <span className="text-xs font-medium text-foreground">
+            {row.whenLabel}
+          </span>
+          <LocationPill location={row.location} zip={row.zip} />
+        </span>
+      </div>
+      <div className="px-2 py-1">
+        <span className={issueDetailTable.cell}>
+          <WinMark won={row.brandWon} />
+        </span>
+      </div>
+      <div className="px-2 py-1">
+        <span className={issueDetailTable.cell}>
+          <WinMark won={!row.brandWon} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function WinMark({ won }: { won: boolean }) {
+  return won ? (
+    <Check
+      className="size-4 shrink-0 text-success-600"
+      strokeWidth={2.5}
+      aria-label="Held the Buy Box"
+    />
+  ) : (
+    <X
+      className="size-4 shrink-0 text-error-600"
+      strokeWidth={2.5}
+      aria-label="Did not hold the Buy Box"
+    />
+  );
+}
+
+function LocationPill({ location, zip }: { location: string; zip: string }) {
+  return (
+    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-0.5 text-2xs font-medium text-neutral-600">
+      <MapPin
+        className="size-3 shrink-0 text-neutral-500"
+        strokeWidth={1.75}
+        aria-hidden
+      />
+      {location} ({zip})
+    </span>
   );
 }
 

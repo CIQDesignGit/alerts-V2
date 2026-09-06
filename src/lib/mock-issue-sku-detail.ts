@@ -35,12 +35,25 @@ export type BuyBoxWinCheckDay = {
   checks: BuyBoxWinCheck[];
 };
 
+/** One recent crawl check in the Buy Box Comparison table — who held the Buy Box, where, and when. */
+export type BuyBoxCrawlRow = {
+  id: string;
+  /** e.g. "Today, 10:30 AM" */
+  whenLabel: string;
+  location: string;
+  zip: string;
+  /** true = brand held the Buy Box at this crawl, false = competitor did */
+  brandWon: boolean;
+};
+
 export type LostBuyBoxSkuDetail = {
   alertMessage: string;
   brandLabel: string;
   competitorLabel: string;
   competitorBadge: string;
   rows: BuyBoxComparisonRow[];
+  /** Most recent 6 crawls — same window as the Buy Box Win Rate fractions above */
+  crawlRows: BuyBoxCrawlRow[];
 };
 
 export type CouponTimelineRow = {
@@ -297,6 +310,39 @@ function buildBuyBoxWinCheckDays(
   return [...byDate.entries()].map(([date, checks]) => ({ date, checks }));
 }
 
+/** Crawl locations cycled behind the Buy Box comparison timeline (zips reused from other mock crawl data) */
+const BUY_BOX_CRAWL_LOCATIONS: Array<{ city: string; zip: string }> = [
+  { city: "New York", zip: "10019" },
+  { city: "Chicago", zip: "60601" },
+  { city: "Austin", zip: "78701" },
+  { city: "Seattle", zip: "98115" },
+  { city: "Los Angeles", zip: "90028" },
+];
+
+/**
+ * Most recent 6 crawls (same window as the "X/6" Win Rate fractions) with who held the
+ * Buy Box at each check. Deterministic per SKU so the winner order varies but stays stable.
+ */
+function buildBuyBoxCrawlRows(seed: number, ourWin: number): BuyBoxCrawlRow[] {
+  const entries = BUY_BOX_CRAWL_POOL.slice(0, 6);
+  const order = entries
+    .map((_, index) => index)
+    .sort((a, b) => ((a + seed) % 6) - ((b + seed) % 6));
+  const brandWonAt = new Set(order.slice(0, ourWin));
+
+  return entries.map((entry, index) => {
+    const place =
+      BUY_BOX_CRAWL_LOCATIONS[(seed + index) % BUY_BOX_CRAWL_LOCATIONS.length];
+    return {
+      id: `bb-crawl-${index}`,
+      whenLabel: `${entry.date === "21 Aug 2026" ? "Today" : "Yesterday"}, ${entry.time}`,
+      location: place.city,
+      zip: place.zip,
+      brandWon: brandWonAt.has(index),
+    };
+  });
+}
+
 /** Issue-scoped Ally prompts — Issue Type · SKU: L7D trends chip only. */
 export function getIssueSkuPrompts(
   issueKey: IssueKey,
@@ -312,7 +358,8 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
   const theirPrice = sku.theirPrice ?? 17.49;
   const seed = skuSeed(sku);
   const ourWin = 1 + (seed % 3);
-  const theirWin = 2 + (seed % 4);
+  // Tied to ourWin (out of the same 6 crawls below) so the two fractions always add up to 6
+  const theirWin = 6 - ourWin;
   const brandRating = 3.0 + (seed % 10) / 10;
   const competitorRating = Math.min(5, brandRating + 0.6 + (seed % 5) / 10);
 
@@ -357,6 +404,7 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
         competitorWinChecks: buildBuyBoxWinCheckDays(theirWin, "competitor"),
       },
     ],
+    crawlRows: buildBuyBoxCrawlRows(seed, ourWin),
   };
 }
 
