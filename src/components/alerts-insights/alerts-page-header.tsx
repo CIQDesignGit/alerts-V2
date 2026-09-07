@@ -23,6 +23,7 @@ export function AlertsPageHeader({
         onChange={onFiltersChange}
         groupBy={groupBy}
       />
+      <div className="h-4 w-px shrink-0 bg-border" aria-hidden />
       <ManagePlansTrigger />
     </div>
   );
