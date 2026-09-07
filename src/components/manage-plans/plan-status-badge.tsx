@@ -23,7 +23,7 @@ export function PlanStatusBadge({ status }: { status: PlanStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-2xs font-semibold",
+        "inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-2xs font-semibold",
         config.className,
       )}
     >

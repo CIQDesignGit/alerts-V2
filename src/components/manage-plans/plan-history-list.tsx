@@ -1,6 +1,12 @@
 "use client";
 
-import { AlertCircle, ChevronDown, Download, FileSpreadsheet } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  Loader2,
+} from "lucide-react";
 import { useState } from "react";
 
 import { PlanStatusBadge } from "@/components/manage-plans/plan-status-badge";
@@ -15,9 +21,14 @@ import { cn, controlFocusClass } from "@/lib/utils";
 type PlanHistoryListProps = {
   plans: SalesPlan[];
   onDownload: (plan: SalesPlan) => void;
+  downloadingId: string | null;
 };
 
-export function PlanHistoryList({ plans, onDownload }: PlanHistoryListProps) {
+export function PlanHistoryList({
+  plans,
+  onDownload,
+  downloadingId,
+}: PlanHistoryListProps) {
   if (plans.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
@@ -42,6 +53,7 @@ export function PlanHistoryList({ plans, onDownload }: PlanHistoryListProps) {
           key={plan.id}
           plan={plan}
           onDownload={() => onDownload(plan)}
+          isDownloading={plan.id === downloadingId}
         />
       ))}
     </ul>
@@ -51,9 +63,11 @@ export function PlanHistoryList({ plans, onDownload }: PlanHistoryListProps) {
 function PlanHistoryRow({
   plan,
   onDownload,
+  isDownloading,
 }: {
   plan: SalesPlan;
   onDownload: () => void;
+  isDownloading: boolean;
 }) {
   const isFailed = plan.status === "failed";
   const [showError, setShowError] = useState(false);
@@ -61,29 +75,26 @@ function PlanHistoryRow({
   return (
     <li
       className={cn(
-        "group px-4 py-3.5 transition-colors hover:bg-neutral-50/80",
+        "px-5 py-4 transition-colors hover:bg-neutral-50/80",
         isFailed && "bg-error-25/40",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3.5">
         <span
-          className={cn(
-            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-            isFailed ? "bg-error-100" : "bg-brand-50",
-          )}
+          className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100"
           aria-hidden
         >
           {isFailed ? (
-            <AlertCircle className="size-4 text-error-600" />
+            <AlertCircle className="size-4 text-neutral-500" />
           ) : (
-            <FileSpreadsheet className="size-4 text-brand-600" />
+            <FileSpreadsheet className="size-4 text-neutral-500" />
           )}
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
             <Tooltip>
-              <TooltipTrigger className="min-w-0 flex-1 truncate text-left text-sm font-medium text-foreground">
+              <TooltipTrigger className="min-w-0 flex-1 truncate text-left text-sm font-semibold text-foreground">
                 {plan.fileName}
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-sm break-all">
@@ -93,7 +104,7 @@ function PlanHistoryRow({
             <PlanStatusBadge status={plan.status} />
           </div>
 
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             {formatPlanDate(plan.uploadedAt)}
             <span className="mx-1.5 text-neutral-300" aria-hidden>
               ·
@@ -102,7 +113,7 @@ function PlanHistoryRow({
           </p>
 
           {isFailed && plan.errorMessage && (
-            <div className="mt-2">
+            <div className="mt-2.5">
               <button
                 type="button"
                 onClick={() => setShowError((open) => !open)}
@@ -122,12 +133,12 @@ function PlanHistoryRow({
                 />
               </button>
               {showError && (
-                <p className="mt-1.5 text-xs leading-relaxed text-error-700">
+                <div className="mt-2 rounded-md border border-error-100 bg-error-50 p-2.5 text-xs leading-relaxed text-error-700">
                   {plan.errorMessage}
-                  <span className="mt-0.5 block text-error-600/80">
+                  <span className="mt-1 block text-error-600/80">
                     Download the file to review row-level errors.
                   </span>
-                </p>
+                </div>
               )}
             </div>
           )}
@@ -137,13 +148,17 @@ function PlanHistoryRow({
           type="button"
           aria-label={`Download ${plan.fileName}`}
           onClick={onDownload}
+          disabled={isDownloading}
           className={cn(
-            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-neutral-50 hover:text-foreground focus-visible:opacity-100",
-            isFailed && "opacity-100",
+            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-neutral-50 hover:text-foreground disabled:pointer-events-none disabled:opacity-70",
             controlFocusClass,
           )}
         >
-          <Download className="size-4" />
+          {isDownloading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Download className="size-4" />
+          )}
         </button>
       </div>
     </li>

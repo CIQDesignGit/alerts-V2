@@ -4,6 +4,7 @@ import { Flag, Search, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { PlanHistoryList } from "@/components/manage-plans/plan-history-list";
+import { PlanHistoryPagination } from "@/components/manage-plans/plan-history-pagination";
 import { PlanUploadFlow } from "@/components/manage-plans/plan-upload-flow";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,8 @@ import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
 
 type PanelView = "list" | "upload";
 
+const PAGE_SIZE = 4;
+
 type ManagePlansPanelProps = {
   open: boolean;
   onClose: () => void;
@@ -27,6 +30,8 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
   const [plans, setPlans] = useState<SalesPlan[]>(() =>
     withLiveStatus(MOCK_SALES_PLANS),
   );
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!open) return;
@@ -41,8 +46,13 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
     if (!open) {
       setView("list");
       setSearch("");
+      setPage(1);
     }
   }, [open]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const sortedPlans = useMemo(() => {
     const normalized = search.trim().toLowerCase();
@@ -60,6 +70,13 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
     );
   }, [plans, search]);
 
+  const totalPages = Math.max(1, Math.ceil(sortedPlans.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedPlans = sortedPlans.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
   function handleUploadComplete(file: File, failed: boolean) {
     const newPlan: SalesPlan = {
       id: `plan-${Date.now()}`,
@@ -73,9 +90,13 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
     };
 
     setPlans((prev) => withLiveStatus([newPlan, ...prev]));
+    setPage(1);
   }
 
-  function handleDownload(plan: SalesPlan) {
+  async function handleDownload(plan: SalesPlan) {
+    setDownloadingId(plan.id);
+    await new Promise((resolve) => window.setTimeout(resolve, 700));
+
     const blob = new Blob(
       [`Mock export for ${plan.fileName}\nStatus: ${plan.status}`],
       { type: "text/csv" },
@@ -86,6 +107,8 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
     anchor.download = plan.fileName;
     anchor.click();
     URL.revokeObjectURL(url);
+
+    setDownloadingId(null);
   }
 
   if (!open) return null;
@@ -103,7 +126,7 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="manage-plans-title"
-        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-background shadow-xl animate-in slide-in-from-right duration-200"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-border bg-background shadow-xl animate-in slide-in-from-right duration-200"
       >
         {view === "upload" ? (
           <PlanUploadFlow
@@ -169,10 +192,21 @@ export function ManagePlansPanel({ open, onClose }: ManagePlansPanelProps) {
 
             <div className="min-h-0 flex-1 overflow-y-auto">
               <PlanHistoryList
-                plans={sortedPlans}
+                plans={pagedPlans}
                 onDownload={handleDownload}
+                downloadingId={downloadingId}
               />
             </div>
+
+            {sortedPlans.length > 0 && (
+              <PlanHistoryPagination
+                page={safePage}
+                totalPages={totalPages}
+                totalItems={sortedPlans.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            )}
           </>
         )}
       </aside>

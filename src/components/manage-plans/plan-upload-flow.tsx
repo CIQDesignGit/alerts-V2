@@ -4,16 +4,21 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
+  Clock,
+  Download,
   FileSpreadsheet,
+  Sparkles,
   Upload,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, controlFocusClass, fieldFocusClass } from "@/lib/utils";
 
 type UploadPhase = "idle" | "uploading" | "success" | "error";
+type PlanSource = "template" | "auto";
 
 type PlanUploadFlowProps = {
   onBack: () => void;
@@ -24,6 +29,19 @@ type PlanUploadFlowProps = {
 const ACCEPTED_TYPES = [".csv", ".xlsx", ".xls"];
 const MAX_SIZE_MB = 10;
 
+function downloadTemplate() {
+  const blob = new Blob(
+    ["SKU,Category,Target Units,Target Revenue\n"],
+    { type: "text/csv" },
+  );
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "sales-plan-template.csv";
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export function PlanUploadFlow({
   onBack,
   onComplete,
@@ -31,6 +49,7 @@ export function PlanUploadFlow({
 }: PlanUploadFlowProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [source, setSource] = useState<PlanSource>("template");
   const [file, setFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [progress, setProgress] = useState(0);
@@ -70,7 +89,17 @@ export function PlanUploadFlow({
   }
 
   function startUpload() {
-    if (!file) return;
+    const activeFile =
+      file ??
+      (source === "auto"
+        ? new File(
+            ["auto-generated-plan"],
+            "Auto_Generated_Sales_Plan.csv",
+            { type: "text/csv" },
+          )
+        : null);
+    if (!activeFile) return;
+    if (!file) setFile(activeFile);
     setPhase("uploading");
     setProgress(0);
     setError(null);
@@ -80,22 +109,24 @@ export function PlanUploadFlow({
     let tick = 0;
     const interval = window.setInterval(() => {
       tick += 1;
-      setProgress(Math.min(tick * 18, 100));
-      if (tick >= 6) {
+      setProgress(Math.min(tick * 10, 100));
+      if (tick >= 10) {
         window.clearInterval(interval);
         if (shouldFail) {
           setPhase("error");
           setError(
             "Row 142: Invalid SKU format. Row 891: Target units must be a positive number.",
           );
-          onComplete(file, true);
+          onComplete(activeFile, true);
         } else {
           setPhase("success");
-          onComplete(file, false);
+          onComplete(activeFile, false);
         }
       }
     }, 200);
   }
+
+  const canSubmit = source === "auto" || Boolean(file);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -127,26 +158,92 @@ export function PlanUploadFlow({
           />
         ) : (
           <>
-            <DropZone
-              inputId={inputId}
-              inputRef={inputRef}
-              file={file}
-              dragOver={dragOver}
-              disabled={phase === "uploading"}
-              onDragOver={() => setDragOver(true)}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(f) => {
-                setDragOver(false);
-                handleFile(f);
+            <Tabs
+              value={source}
+              onValueChange={(value) => {
+                if (value !== "template" && value !== "auto") return;
+                setSource(value);
+                reset();
               }}
-              onBrowse={(f) => handleFile(f)}
-              onClear={() => reset()}
-            />
+              className="gap-3"
+            >
+              <TabsList variant="line" className="w-full border-b border-border">
+                <TabsTrigger value="template" className="flex-1">
+                  Upload from template
+                </TabsTrigger>
+                <TabsTrigger value="auto" className="flex-1">
+                  Auto-generate plan
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {source === "template" ? (
+              <>
+                <DropZone
+                  inputId={inputId}
+                  inputRef={inputRef}
+                  file={file}
+                  dragOver={dragOver}
+                  disabled={phase === "uploading"}
+                  onDragOver={() => setDragOver(true)}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(f) => {
+                    setDragOver(false);
+                    handleFile(f);
+                  }}
+                  onBrowse={(f) => handleFile(f)}
+                  onClear={() => reset()}
+                />
+
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-neutral-50 p-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50">
+                    <FileSpreadsheet className="size-4 text-brand-600" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Template: Sales Plan
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Download this sheet, fill in your plan&rsquo;s details,
+                      then re-upload the completed file.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Download sales plan template"
+                    onClick={downloadTemplate}
+                    className={cn(
+                      "flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-neutral-100 hover:text-foreground",
+                      controlFocusClass,
+                    )}
+                  >
+                    <Download className="size-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-neutral-50/50 p-6 text-center">
+                <span className="flex size-11 items-center justify-center rounded-full bg-brand-50">
+                  <Sparkles className="size-5 text-brand-600" />
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Auto-generate from recent sales
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Build a plan from the last 90 days of sales
+                    performance — no file needed.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {phase === "uploading" && (
               <div className="rounded-lg border border-border bg-neutral-50/80 p-4">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-foreground">Uploading…</span>
+                  <span className="font-medium text-foreground">
+                    {source === "auto" ? "Generating…" : "Uploading…"}
+                  </span>
                   <span className="tabular-nums text-muted-foreground">
                     {progress}%
                   </span>
@@ -164,19 +261,33 @@ export function PlanUploadFlow({
               <ErrorBanner message={error} onDismiss={() => setPhase("idle")} />
             )}
 
-            <div className="mt-auto flex flex-col gap-2 pt-2">
-              <Button
-                type="button"
-                disabled={!file || phase === "uploading"}
-                onClick={startUpload}
-                className="w-full"
-              >
-                <Upload className="size-4" data-icon="inline-start" />
-                Upload and activate
-              </Button>
-              <p className="text-center text-2xs text-muted-foreground">
-                The new plan will become live and replace the current one.
+            <div className="mt-auto flex flex-col gap-3 pt-2">
+              <p className="flex items-center gap-1.5 text-2xs text-muted-foreground">
+                <Clock className="size-3.5 shrink-0" aria-hidden />
+                Plans take a few hours to update. We&rsquo;ll notify you by
+                email when it&rsquo;s ready.
               </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onBack}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={!canSubmit || phase === "uploading"}
+                  onClick={startUpload}
+                  className="flex-1"
+                >
+                  <Upload className="size-4" data-icon="inline-start" />
+                  {source === "auto"
+                    ? "Generate and activate"
+                    : "Upload and activate"}
+                </Button>
+              </div>
             </div>
           </>
         )}
