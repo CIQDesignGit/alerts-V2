@@ -48,6 +48,34 @@ function formatTooltipValue(value: number) {
 export function FullRcaRevenueTrendSection({
   data,
 }: FullRcaRevenueTrendSectionProps) {
+  const seriesMax = Math.max(
+    0,
+    ...data.series.map((point) => Math.max(point.plan, point.actual)),
+  );
+  const yMax = (data.yMax ?? Math.ceil(seriesMax * 1.12)) || 1;
+  const yTicks =
+    data.yTicks ??
+    (() => {
+      const magnitude = 10 ** Math.floor(Math.log10(yMax || 1));
+      const normalized = yMax / magnitude;
+      const stepNorm =
+        normalized <= 1.2
+          ? 0.2
+          : normalized <= 2.5
+            ? 0.5
+            : normalized <= 5
+              ? 1
+              : 2;
+      const step = stepNorm * magnitude;
+      const niceMax = Math.ceil(yMax / step) * step;
+      const ticks: number[] = [];
+      for (let value = 0; value <= niceMax + step / 2; value += step) {
+        ticks.push(Math.round(value));
+      }
+      return ticks;
+    })();
+  const domainMax = yTicks[yTicks.length - 1] ?? yMax;
+
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
       <div className="overflow-hidden rounded-lg border border-border bg-background px-2 pb-2 pt-4">
@@ -89,13 +117,8 @@ export function FullRcaRevenueTrendSection({
               tickLine={false}
               axisLine={false}
               width={72}
-              domain={[0, data.yMax ?? 120_000_000]}
-              ticks={
-                data.yTicks ?? [
-                  0, 20_000_000, 40_000_000, 60_000_000, 80_000_000,
-                  100_000_000, 120_000_000,
-                ]
-              }
+              domain={[0, domainMax]}
+              ticks={yTicks}
               tickFormatter={formatAxisValue}
               tick={{ fontSize: 10 }}
             />

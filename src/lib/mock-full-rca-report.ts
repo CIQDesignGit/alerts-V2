@@ -339,55 +339,88 @@ function syncEquationRevenuePlanRows(
   return { ...equation, rows };
 }
 
+/** Build evenly spaced Y ticks for a given max (includes 0). */
+function buildYAxisTicks(yMax: number): number[] {
+  if (yMax <= 0) return [0];
+  const rough = yMax;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const normalized = rough / magnitude;
+  const stepNorm =
+    normalized <= 1.2
+      ? 0.2
+      : normalized <= 2.5
+        ? 0.5
+        : normalized <= 5
+          ? 1
+          : normalized <= 8
+            ? 1
+            : 2;
+  const step = stepNorm * magnitude;
+  const niceMax = Math.ceil(rough / step) * step;
+  const ticks: number[] = [];
+  for (let value = 0; value <= niceMax + step / 2; value += step) {
+    ticks.push(Math.round(value));
+  }
+  return ticks;
+}
+
+/**
+ * Realistic 8-week plan vs actual series ending on the shared last/prior week
+ * anchors — visible WoW swings, one beat week, then a widening miss.
+ */
+function buildScaledRevenueTrend(
+  perf: ScaledLastWeekPerformance,
+): FullRcaRevenueTrend {
+  const runRate = Math.max(perf.priorPlanDollars, perf.planDollars, 1);
+  // Shape as multipliers of run-rate so every level (Overall → SKU) keeps motion
+  const early: Array<{ week: string; plan: number; actual: number }> = [
+    { week: "Jun 21", plan: 1.12, actual: 1.28 }, // event lift
+    { week: "Jun 28", plan: 1.08, actual: 0.94 }, // lead-out miss
+    { week: "Jul 5", plan: 1.02, actual: 0.9 },
+    { week: "Jul 12", plan: 0.96, actual: 0.98 }, // only beat
+    { week: "Jul 19", plan: 0.98, actual: 0.86 }, // demand dip
+    { week: "Jul 26", plan: 1.0, actual: 0.88 },
+  ];
+
+  const series: FullRcaWeekPoint[] = [
+    ...early.map((point) => ({
+      week: point.week,
+      plan: Math.round(runRate * point.plan),
+      actual: Math.round(runRate * point.actual),
+    })),
+    {
+      week: "Aug 2",
+      plan: Math.round(perf.priorPlanDollars),
+      actual: Math.round(perf.priorActualDollars),
+    },
+    {
+      week: "Aug 9",
+      plan: Math.round(perf.planDollars),
+      actual: Math.round(perf.actualDollars),
+    },
+  ];
+
+  const peak = Math.max(...series.map((p) => Math.max(p.plan, p.actual)));
+  const yMax = Math.ceil(peak * 1.12);
+  const yTicks = buildYAxisTicks(yMax);
+
+  return {
+    series,
+    yMax,
+    yTicks,
+    narrative: `Jul 12 was the only recent week to beat plan. From Jul 19 onward the view stayed under plan. Aug 2 closed at ${formatCompactMoney(perf.priorActualDollars)} vs a ${formatCompactMoney(perf.priorPlanDollars)} plan (${formatCompactMoney(perf.priorGapDollars, { signed: true })}). Aug 9–15 is the deepest miss in the window — ${formatCompactMoney(perf.actualDollars)} actual vs ${formatCompactMoney(perf.planDollars)} plan (${formatCompactMoney(perf.gapDollars, { signed: true })}, ${perf.attainmentPct.toFixed(1)}% attainment).`,
+  };
+}
+
 function applyTaxonomyPerformanceAnchors(
   body: FullRcaBody,
   perf: ScaledLastWeekPerformance,
 ): FullRcaBody {
-  const series = body.revenueTrend.series.map((point, index, arr) => {
-    // Keep relative shape; pin the last two weeks to prior / last-week anchors
-    if (index === arr.length - 2) {
-      return {
-        ...point,
-        plan: perf.priorPlanDollars,
-        actual: perf.priorActualDollars,
-      };
-    }
-    if (index === arr.length - 1) {
-      return {
-        ...point,
-        plan: perf.planDollars,
-        actual: perf.actualDollars,
-      };
-    }
-    if (perf.scale !== 1) {
-      return {
-        ...point,
-        plan: point.plan * perf.scale,
-        actual: point.actual * perf.scale,
-      };
-    }
-    return point;
-  });
-
-  const yMax =
-    perf.scale !== 1
-      ? Math.max(
-          perf.planDollars,
-          perf.actualDollars,
-          ...series.map((p) => Math.max(p.plan, p.actual)),
-        ) * 1.15
-      : body.revenueTrend.yMax;
-
   return {
     ...body,
     planVsActual: buildPlanVsActualFromPerformance(perf),
     ecommerceEquation: syncEquationRevenuePlanRows(body.ecommerceEquation, perf),
-    revenueTrend: {
-      ...body.revenueTrend,
-      series,
-      yMax,
-      yTicks: undefined,
-    },
+    revenueTrend: buildScaledRevenueTrend(perf),
   };
 }
 
@@ -396,6 +429,7 @@ function buildOverallReportBody(): FullRcaBody {
   const last = OVERALL_LAST_WEEK;
   const prior = OVERALL_PRIOR_WEEK;
   const wtd = OVERALL_WTD;
+  const perf = getScaledLastWeekPerformance("overall");
 
   return {
     keyFinding:
@@ -489,33 +523,7 @@ function buildOverallReportBody(): FullRcaBody {
       narrative:
         "Traffic rose slightly last week (+99K views), so volume wasn't the full story. Conversion slipped from 3.41% to 3.29% and ASP dropped from $137.81 to $135.07 — together explaining most of the revenue decline from the prior week. The shortfall is concentrated: 38 SKUs are behind plan at a combined −$18.5M, partially offset by 14 SKUs ahead at +$6.2M (net −$12.3M, matching the portfolio gap).",
     },
-    revenueTrend: {
-      series: [
-        { week: "Jun 21", plan: 38_300_000, actual: 28_600_000 },
-        { week: "Jun 28", plan: 36_100_000, actual: 24_800_000 },
-        { week: "Jul 5", plan: 33_800_000, actual: 22_400_000 },
-        { week: "Jul 12", plan: 28_200_000, actual: 28_332_000 },
-        { week: "Jul 19", plan: 26_600_000, actual: 23_100_000 },
-        { week: "Jul 26", plan: 24_900_000, actual: 20_100_000 },
-        {
-          week: "Aug 2",
-          plan: prior.planDollars,
-          actual: prior.actualDollars,
-        },
-        {
-          week: "Aug 9",
-          plan: last.planDollars,
-          actual: last.actualDollars,
-        },
-      ],
-      yMax: 40_000_000,
-      yTicks: [
-        0, 5_000_000, 10_000_000, 15_000_000, 20_000_000, 25_000_000,
-        30_000_000, 35_000_000, 40_000_000,
-      ],
-      narrative:
-        `Jul 12 was the only recent week to beat plan (+$132K). From Jul 19 onward the portfolio stayed under plan. Aug 2 closed at ${formatCompactMoney(prior.actualDollars)} vs a ${formatCompactMoney(prior.planDollars)} plan (${formatCompactMoney(prior.gapDollars, { signed: true })}). Aug 9–15 is the deepest miss in the window — ${formatCompactMoney(last.actualDollars)} actual vs ${formatCompactMoney(last.planDollars)} plan (${formatCompactMoney(last.gapDollars, { signed: true })}, ${last.attainmentPct.toFixed(1)}% attainment) — driven by PlayMax and CleanPro floor care.`,
-    },
+    revenueTrend: buildScaledRevenueTrend(perf),
     rootCauses: [
       {
         id: "playmax",
