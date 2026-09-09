@@ -11,6 +11,35 @@ import {
   type ScaledLastWeekPerformance,
 } from "@/lib/mock-calendar";
 
+/**
+ * Absolute alert-tree gaps (Overall → brand → category → hero SKUs).
+ * Must match `buildAlertsTaxonomyTree` rollups so Gap to Plan copy composes
+ * across levels when scaled through `getScaledLastWeekPerformance`.
+ */
+const TREE_GAP = {
+  cleanPro: 639_000,
+  kitchenPro: 145_000,
+  playMax: 86_000,
+  floorCare: 295_500,
+  floorCareRobotics: 191_500,
+  hairCare: 66_000,
+  homeComfort: 59_000,
+  cleanProKitchen: 27_000,
+  controllers: 86_000,
+  controllersBundle: 18_000,
+  proUpright: 48_000,
+  robotVacR900: 62_000,
+} as const;
+
+/** Last-week Gap $ for an alert-tree node (same math as Plan vs Actual). */
+function treePerf(treeGapAbs: number): ScaledLastWeekPerformance {
+  return getScaledLastWeekPerformance("brand", -treeGapAbs);
+}
+
+function treeGapDollars(treeGapAbs: number): number {
+  return treePerf(treeGapAbs).gapDollars;
+}
+
 /** Status badge on a root-cause row — kept for older call sites if any */
 export type FullRcaCauseStatus =
   | "still-an-issue"
@@ -244,9 +273,9 @@ function formatCompactMoney(value: number, opts?: { signed?: boolean }): string 
   const abs = Math.abs(value);
   const body =
     abs >= 1_000_000
-      ? `$${(abs / 1_000_000).toFixed(1)}M`
+      ? `$${(Math.round(abs / 100_000) / 10).toFixed(1)}M`
       : abs >= 1_000
-        ? `$${(abs / 1_000).toFixed(1)}K`
+        ? `$${(Math.round(abs / 100) / 10).toFixed(1)}K`
         : `$${Math.round(abs).toLocaleString("en-US")}`;
   if (!opts?.signed) return body;
   if (value < 0) return `−${body}`;
@@ -430,10 +459,17 @@ function buildOverallReportBody(): FullRcaBody {
   const prior = OVERALL_PRIOR_WEEK;
   const wtd = OVERALL_WTD;
   const perf = getScaledLastWeekPerformance("overall");
+  const cleanProGap = treeGapDollars(TREE_GAP.cleanPro);
+  const kitchenProGap = treeGapDollars(TREE_GAP.kitchenPro);
+  const playMaxGap = treeGapDollars(TREE_GAP.playMax);
+  const floorCareGap = treeGapDollars(TREE_GAP.floorCare);
+  // Portfolio SKU split: behind + ahead = last-week gap (−$12.3M)
+  const skusBehindGap = -18_500_000;
+  const skusAheadGap = 6_200_000;
 
   return {
     keyFinding:
-      `The overall portfolio recorded ${formatCompactMoney(last.actualDollars)} in actual sales against a ${formatCompactMoney(last.planDollars)} plan last week (${LAST_WEEK_RANGE_LABEL}) — a ${formatCompactMoney(last.gapDollars, { signed: true })} miss (${last.attainmentPct.toFixed(1)}% attainment). That's a sharp deterioration from the prior week (${PRIOR_WEEK_RANGE}), when the gap was ${formatCompactMoney(prior.gapDollars, { signed: true })}. PlayMax was the single biggest drag at about −$8.2M under plan, CleanPro followed at about −$5.3M, while KitchenPro partially offset at about +$1.2M. The overall number hides SKU-level pressure: 38 SKUs are behind plan by a combined −$18.5M, offset by 14 SKUs ahead by +$6.2M.`,
+      `The overall portfolio recorded ${formatCompactMoney(last.actualDollars)} in actual sales against a ${formatCompactMoney(last.planDollars)} plan last week (${LAST_WEEK_RANGE_LABEL}) — a ${formatCompactMoney(last.gapDollars, { signed: true })} miss (${last.attainmentPct.toFixed(1)}% attainment). That's a sharp deterioration from the prior week (${PRIOR_WEEK_RANGE}), when the gap was ${formatCompactMoney(prior.gapDollars, { signed: true })}. CleanPro was the single biggest drag at ${formatCompactMoney(cleanProGap, { signed: true })} under plan, KitchenPro followed at ${formatCompactMoney(kitchenProGap, { signed: true })}, and PlayMax at ${formatCompactMoney(playMaxGap, { signed: true })}. The overall number hides SKU-level pressure: 38 SKUs are behind plan by a combined ${formatCompactMoney(skusBehindGap, { signed: true })}, offset by 14 SKUs ahead by ${formatCompactMoney(skusAheadGap, { signed: true })}.`,
     planVsActual: {
       summary: {
         plan: formatCompactMoney(last.planDollars),
@@ -475,9 +511,9 @@ function buildOverallReportBody(): FullRcaBody {
     },
     ecommerceEquation: {
       summary: {
-        skusBehindPlan: "38 / −$18.5M",
-        skusAheadOfPlan: "14 / +$6.2M",
-        biggestMover: "PlayMax −$8.2M",
+        skusBehindPlan: `38 / ${formatCompactMoney(skusBehindGap, { signed: true })}`,
+        skusAheadOfPlan: `14 / ${formatCompactMoney(skusAheadGap, { signed: true })}`,
+        biggestMover: `CleanPro ${formatCompactMoney(cleanProGap, { signed: true })}`,
         primaryLever: "3.29% (from 3.41%)",
       },
       summaryLabels: {
@@ -521,50 +557,45 @@ function buildOverallReportBody(): FullRcaBody {
         },
       ],
       narrative:
-        "Traffic rose slightly last week (+99K views), so volume wasn't the full story. Conversion slipped from 3.41% to 3.29% and ASP dropped from $137.81 to $135.07 — together explaining most of the revenue decline from the prior week. The shortfall is concentrated: 38 SKUs are behind plan at a combined −$18.5M, partially offset by 14 SKUs ahead at +$6.2M (net −$12.3M, matching the portfolio gap).",
+        `Traffic rose slightly last week (+99K views), so volume wasn't the full story. Conversion slipped from 3.41% to 3.29% and ASP dropped from $137.81 to $135.07 — together explaining most of the revenue decline from the prior week. The shortfall is concentrated: 38 SKUs are behind plan at a combined ${formatCompactMoney(skusBehindGap, { signed: true })}, partially offset by 14 SKUs ahead at ${formatCompactMoney(skusAheadGap, { signed: true })} (net ${formatCompactMoney(last.gapDollars, { signed: true })}, matching the portfolio gap).`,
     },
     revenueTrend: buildScaledRevenueTrend(perf),
     rootCauses: [
       {
-        id: "playmax",
-        title:
-          "PlayMax finished about −$8.2M under plan — the largest brand shortfall",
-        body: "Controllers and Headsets dominate the PlayMax miss. Keyword rank and share-of-voice losses after media cuts are the primary story — dig into those category Gap to Plans before the swing compounds.",
-        status: "still-an-issue",
-      },
-      {
         id: "cleanpro",
-        title:
-          "CleanPro finished about −$5.3M under plan, concentrated in floor care",
-        body: "Floor Care Robotics flipped into a deep miss as Buy Box losses piled up on robot vacuums. Confirm whether a deal or promo window ended between Aug 2–8 and Aug 9–15.",
+        title: `CleanPro finished ${formatCompactMoney(cleanProGap, { signed: true })} under plan — the largest brand shortfall`,
+        body: `Floor Care alone is ${formatCompactMoney(floorCareGap, { signed: true })} and Floor Care Robotics is next. Buy Box losses on uprights and robots are the primary story — dig into those category Gap to Plans before the swing compounds.`,
         status: "still-an-issue",
       },
       {
         id: "kitchenpro",
-        title:
-          "KitchenPro stays ahead at about +$1.2M and partially offsets, but cannot cover PlayMax + CleanPro",
-        body: "Kitchen Appliances and Blenders remain the bright spots. Use KitchenPro strength in portfolio rollups, but do not treat it as a fix for the two brands driving the miss.",
-        status: "resolved",
+        title: `KitchenPro finished ${formatCompactMoney(kitchenProGap, { signed: true })} under plan across Kitchen Appliances`,
+        body: "DualZone Air Fryer and cookware SKUs drive most of the KitchenPro miss. Confirm Buy Box and promo coverage before treating the brand as an offset.",
+        status: "still-an-issue",
+      },
+      {
+        id: "playmax",
+        title: `PlayMax finished ${formatCompactMoney(playMaxGap, { signed: true })} under plan — Controllers only`,
+        body: "Keyword rank and share-of-voice losses after media cuts are the primary Controllers story. Smaller dollar drag than CleanPro, but still material at portfolio scale.",
+        status: "still-an-issue",
       },
     ],
     recommendations: [
       {
-        id: "playmax-deep-dive",
-        title: "Run a brand deep dive on PlayMax",
-        description:
-          "PlayMax is carrying the largest dollar shortfall in the portfolio last week — identifying which categories and SKUs are driving the ~−$8.2M miss is the highest-priority next step.",
+        id: "cleanpro-deep-dive",
+        title: "Run a brand deep dive on CleanPro",
+        description: `CleanPro is carrying the largest dollar shortfall last week (${formatCompactMoney(cleanProGap, { signed: true })}) — identifying which categories and SKUs are driving Floor Care and Robotics is the highest-priority next step.`,
       },
       {
         id: "conversion-decline",
         title: "Investigate the portfolio-wide conversion decline",
         description:
-          "Conversion slipped from 3.41% (prior week) to 3.29% last week while traffic grew slightly — diagnose at the category level (Controllers, Floor Care Robotics) before the gap compounds further.",
+          "Conversion slipped from 3.41% (prior week) to 3.29% last week while traffic grew slightly — diagnose at the category level (Floor Care, Floor Care Robotics, Controllers) before the gap compounds further.",
       },
       {
         id: "cleanpro-floor-care",
-        title: "Run a category Gap to Plan on Floor Care Robotics",
-        description:
-          "CleanPro's miss is concentrated in floor care. Confirm Buy Box, deal badge, and media spend on the highest-OPS ASINs before treating the brand recovery as durable.",
+        title: "Run a category Gap to Plan on Floor Care",
+        description: `Floor Care is CleanPro’s heaviest category miss (${formatCompactMoney(floorCareGap, { signed: true })}). Confirm Buy Box, deal badge, and media spend on the highest-OPS ASINs before treating brand recovery as durable.`,
       },
     ],
   };
@@ -578,47 +609,17 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
   const isKitchenPro = /kitchenpro/i.test(brand);
 
   if (isPlayMax) {
+    const perf = treePerf(TREE_GAP.playMax);
+    const controllersGap = treeGapDollars(TREE_GAP.controllers);
+    const behindGap = perf.gapDollars * 1.15;
     return {
-      keyFinding:
-        "PlayMax’s gap deepened from −$1.9M to −$2.8M week over week. Controllers (−$1.45M) and Headsets (−$780K) dominate — keyword rank and share-of-voice losses after media cuts are the primary story, not a plan reset.",
-      planVsActual: {
-        summary: {
-          plan: "$11.7M",
-          actual: "$8.9M",
-          gap: "−$2.8M",
-          attainment: "76.0%",
-        },
-        rows: [
-          {
-            id: "last-week",
-            period: "Aug 9–15 (last week)",
-            actual: "$8,900,000",
-            plan: "$11,700,000",
-            gap: "−$2,800,000",
-          },
-          {
-            id: "week-before",
-            period: "Aug 2–8 (week before)",
-            actual: "$9,650,000",
-            plan: "$11,550,000",
-            gap: "−$1,900,000",
-          },
-          {
-            id: "this-week",
-            period: "Aug 16–21 (this week so far)",
-            actual: "—",
-            plan: "—",
-            gap: "—",
-          },
-        ],
-        narrative:
-          "Gap widened −$1.9M → −$2.8M WoW on a flat plan. Attainment: 76%.",
-      },
+      keyFinding: `PlayMax’s gap is ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan (${perf.attainmentPct.toFixed(1)}% attainment) last week — entirely Controllers (${formatCompactMoney(controllersGap, { signed: true })}). Keyword rank and share-of-voice losses after media cuts are the primary story, not a plan reset.`,
+      planVsActual: buildPlanVsActualFromPerformance(perf),
       ecommerceEquation: {
         summary: {
-          skusBehindPlan: "38 / −$3.1M",
-          skusAheadOfPlan: "11 / +$310K",
-          biggestMover: "Controllers −$420K WoW",
+          skusBehindPlan: `11 / ${formatCompactMoney(behindGap, { signed: true })}`,
+          skusAheadOfPlan: `0 / $0`,
+          biggestMover: `Controllers ${formatCompactMoney(controllersGap, { signed: true })}`,
           primaryLever: "Traffic & keyword rank",
         },
         priorWeekLabel: "Aug 2–8",
@@ -627,14 +628,14 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
           {
             id: "revenue",
             metric: "Revenue",
-            priorWeek: "$9,650,000",
-            currentWeek: "$8,900,000",
+            priorWeek: formatExactDollars(perf.priorActualDollars),
+            currentWeek: formatExactDollars(perf.actualDollars),
           },
           {
             id: "plan",
             metric: "Plan",
-            priorWeek: "$11,550,000",
-            currentWeek: "$11,700,000",
+            priorWeek: formatExactDollars(perf.priorPlanDollars),
+            currentWeek: formatExactDollars(perf.planDollars),
           },
           {
             id: "page-views",
@@ -656,57 +657,40 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
           },
         ],
         narrative:
-          "Traffic did most of the damage — PDP views fell ~18% WoW after media and keyword-rank losses. Conversion and ASP held nearly flat, so the Gap is a traffic story concentrated in Controllers and Headsets.",
+          "Traffic did most of the damage — PDP views fell ~18% WoW after media and keyword-rank losses. Conversion and ASP held nearly flat, so the Gap is a traffic story concentrated in Controllers.",
       },
-      revenueTrend: {
-        series: [
-          { week: "Jun 21", plan: 14_200_000, actual: 22_400_000 },
-          { week: "Jun 28", plan: 13_800_000, actual: 12_100_000 },
-          { week: "Jul 5", plan: 12_900_000, actual: 11_200_000 },
-          { week: "Jul 12", plan: 12_100_000, actual: 11_800_000 },
-          { week: "Jul 19", plan: 12_400_000, actual: 10_600_000 },
-          { week: "Jul 26", plan: 12_200_000, actual: 10_900_000 },
-          { week: "Aug 2", plan: 11_550_000, actual: 9_650_000 },
-          { week: "Aug 9", plan: 11_700_000, actual: 8_900_000 },
-        ],
-        narrative:
-          "Post–Prime Day, PlayMax settled below plan and the miss widened into August. Controllers remain the heaviest drag; Headsets deteriorated after SOV dropped on top keywords.",
-      },
+      revenueTrend: buildScaledRevenueTrend(perf),
       rootCauses: [
         {
           id: "controllers",
-          title:
-            "Controllers are −$1.45M vs plan — competitive pricing and keyword rank losses are the top drivers",
+          title: `Controllers are ${formatCompactMoney(controllersGap, { signed: true })} vs plan — keyword rank losses are the top driver`,
           body: "Rank losses on hero keywords after media cuts pulled traffic off Controllers PDPs. Run a category Gap to Plan and restore coverage on the highest-OPS ASINs first.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
         {
-          id: "headsets",
-          title:
-            "Headsets are −$780K as share of voice dropped on top keywords after media cuts",
+          id: "bundle-bb",
+          title: "PlayMax Controllers Bundle lost Buy Box mid-week",
+          body: "B04MNO1122 shows an active Buy Box loss — price and 3P competition are compounding the traffic miss.",
+          status: "still-an-issue",
+        },
+        {
+          id: "sov",
+          title: "Share of voice dropped on Controllers hero keywords after media cuts",
           body: "SOV and traffic moved together. Confirm whether spend was cut intentionally or lost to auction pressure before restoring budget.",
-        status: "still-an-issue",
-        },
-        {
-          id: "charging",
-          title:
-            "Charging & Cables (−$420K) show ASP pressure from 3P sellers",
-          body: "Bundle attach rates are soft and 3P pricing is undercutting. Worth watching, but Controllers and Headsets are the priority dollar levers.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
       ],
       recommendations: [
         {
           id: "controllers-gtp",
           title: "Run a category gap to plan on Controllers",
-          description:
-            "Controllers alone are −$1.45M — identify which ASINs lost keyword rank and whether media spend recovered on the hero SKUs.",
+          description: `Controllers alone are ${formatCompactMoney(controllersGap, { signed: true })} — identify which ASINs lost keyword rank and whether media spend recovered on the hero SKUs.`,
         },
         {
           id: "restore-sov",
-          title: "Restore share of voice on Headsets hero keywords",
+          title: "Restore share of voice on Controllers hero keywords",
           description:
-            "SOV dropped after last week’s media cut and is tied directly to the −$780K Headsets miss.",
+            "SOV dropped after last week’s media cut and is tied directly to the Controllers miss.",
         },
         {
           id: "controller-skus",
@@ -719,48 +703,17 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
   }
 
   if (isKitchenPro) {
+    const perf = treePerf(TREE_GAP.kitchenPro);
+    const behindGap = perf.gapDollars * 1.12;
     return {
-      keyFinding:
-        "KitchenPro is ahead of plan at +$400K (104% attainment). Kitchen Appliances lead the win; cookware is flat-positive. Use this strength to offset CleanPro and PlayMax misses in portfolio rollups — not as a reason to ignore those brands.",
-      planVsActual: {
-        summary: {
-          plan: "$9.6M",
-          actual: "$10.0M",
-          gap: "+$400K",
-          attainment: "104.2%",
-        },
-        rows: [
-          {
-            id: "last-week",
-            period: "Aug 9–15 (last week)",
-            actual: "$10,000,000",
-            plan: "$9,600,000",
-            gap: "+$400,000",
-          },
-          {
-            id: "week-before",
-            period: "Aug 2–8 (week before)",
-            actual: "$9,820,000",
-            plan: "$9,550,000",
-            gap: "+$270,000",
-          },
-          {
-            id: "this-week",
-            period: "Aug 16–21 (this week so far)",
-            actual: "—",
-            plan: "—",
-            gap: "—",
-          },
-        ],
-        narrative:
-          "Beat widened +$270K → +$400K WoW. Attainment: 104%.",
-      },
+      keyFinding: `KitchenPro is ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan (${perf.attainmentPct.toFixed(1)}% attainment) last week — Kitchen Appliances is the only category in the alert tree and accounts for the full brand miss. DualZone Air Fryer and cookware SKUs lead the Gap.`,
+      planVsActual: buildPlanVsActualFromPerformance(perf),
       ecommerceEquation: {
         summary: {
-          skusBehindPlan: "9 / −$180K",
-          skusAheadOfPlan: "22 / +$580K",
-          biggestMover: "Kitchen Appliances +$95K WoW",
-          primaryLever: "Conversion",
+          skusBehindPlan: `12 / ${formatCompactMoney(behindGap, { signed: true })}`,
+          skusAheadOfPlan: `0 / $0`,
+          biggestMover: `Kitchen Appliances ${formatCompactMoney(perf.gapDollars, { signed: true })}`,
+          primaryLever: "Conversion & Buy Box",
         },
         priorWeekLabel: "Aug 2–8",
         currentWeekLabel: "Aug 9–15",
@@ -768,90 +721,75 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
           {
             id: "revenue",
             metric: "Revenue",
-            priorWeek: "$9,820,000",
-            currentWeek: "$10,000,000",
+            priorWeek: formatExactDollars(perf.priorActualDollars),
+            currentWeek: formatExactDollars(perf.actualDollars),
           },
           {
             id: "plan",
             metric: "Plan",
-            priorWeek: "$9,550,000",
-            currentWeek: "$9,600,000",
+            priorWeek: formatExactDollars(perf.priorPlanDollars),
+            currentWeek: formatExactDollars(perf.planDollars),
           },
           {
             id: "page-views",
             metric: "Page Views",
             priorWeek: "980,000",
-            currentWeek: "1,015,000",
+            currentWeek: "910,000",
           },
           {
             id: "cvr",
             metric: "Conversion Rate",
             priorWeek: "3.55%",
-            currentWeek: "3.72%",
+            currentWeek: "3.38%",
           },
           {
             id: "asp",
             metric: "Avg Selling Price",
             priorWeek: "$89.40",
-            currentWeek: "$90.10",
+            currentWeek: "$88.20",
           },
         ],
         narrative:
-          "Traffic, conversion, and ASP all moved slightly in KitchenPro’s favor. The beat is broad across Kitchen Appliances and Blenders — keep Buy Box and promo coverage intact so the offset holds.",
+          "Traffic and conversion both softened WoW. The miss is broad across Kitchen Appliances — recover Buy Box and promo coverage on DualZone Air Fryer and MultiCooker before the Gap compounds.",
       },
-      revenueTrend: {
-        series: [
-          { week: "Jun 21", plan: 11_200_000, actual: 18_500_000 },
-          { week: "Jun 28", plan: 10_800_000, actual: 10_200_000 },
-          { week: "Jul 5", plan: 10_100_000, actual: 9_900_000 },
-          { week: "Jul 12", plan: 9_700_000, actual: 10_050_000 },
-          { week: "Jul 19", plan: 9_800_000, actual: 9_750_000 },
-          { week: "Jul 26", plan: 9_700_000, actual: 9_900_000 },
-          { week: "Aug 2", plan: 9_550_000, actual: 9_820_000 },
-          { week: "Aug 9", plan: 9_600_000, actual: 10_000_000 },
-        ],
-        narrative:
-          "After Prime Day, KitchenPro returned to a steady beat. Jul 12 onward shows consistent attainment above plan — protect conversion and Buy Box rather than chasing growth experiments this week.",
-      },
+      revenueTrend: buildScaledRevenueTrend(perf),
       rootCauses: [
         {
-          id: "appliances-win",
-          title:
-            "Kitchen Appliances (+$280K) lead on promo conversion and Buy Box hold",
-          body: "Hold rates and deal display look healthy. Keep monitoring Buy Box on DualZone Air Fryer and MultiCooker so the beat does not reverse.",
-        status: "resolved",
+          id: "appliances-miss",
+          title: `Kitchen Appliances are ${formatCompactMoney(perf.gapDollars, { signed: true })} — Buy Box and conversion softness on hero SKUs`,
+          body: "DualZone Air Fryer and cookware rows concentrate the Gap. Confirm hold rates and deal display before expanding triage.",
+          status: "still-an-issue",
         },
         {
-          id: "blenders-win",
-          title: "Blenders & Smoothies remain +$95K on seasonal lift",
-          body: "Seasonal demand is still supporting the category. No action required beyond standard alert triage.",
-        status: "resolved",
+          id: "air-fryer",
+          title: "DualZone Air Fryer is the largest KitchenPro Gap SKU",
+          body: "Highest OPS row in the category with recurring Buy Box pressure — diagnose price vs 3P and whether a deal badge should be live.",
+          status: "still-an-issue",
         },
         {
-          id: "long-tail-miss",
-          title: "A small set of SKUs still miss plan (−$180K combined)",
-          body: "These do not threaten the brand beat, but worth a light scan for Buy Box or stock alerts so they do not grow.",
-        status: "still-an-issue",
+          id: "cookware",
+          title: "NonStick Cookware Set adds secondary Gap pressure",
+          body: "Multiple cookware ASINs are behind plan. Worth a light scan for Buy Box or stock alerts so they do not grow.",
+          status: "still-an-issue",
         },
       ],
       recommendations: [
         {
           id: "protect-bb",
-          title: "Protect Buy Box on Kitchen Appliances hero SKUs",
+          title: "Recover Buy Box on Kitchen Appliances hero SKUs",
           description:
-            "The brand beat depends on hold rates — alert if DualZone Air Fryer or MultiCooker loses Buy Box this week.",
+            "Alert if DualZone Air Fryer or MultiCooker loses Buy Box this week — hold rates are the fastest lever.",
         },
         {
           id: "keep-promo",
-          title: "Keep live deal badges intact on winning ASINs",
+          title: "Confirm deal badges are live on top OPS ASINs",
           description:
-            "Promo conversion is carrying Kitchen Appliances. Confirm deal-page visibility stays green on the top OPS SKUs.",
+            "Missing promo display suppresses conversion on ASINs already missing plan.",
         },
         {
           id: "scan-misses",
-          title: "Light-touch triage the 9 SKUs still behind plan",
-          description:
-            "Small dollar drag (−$180K). Clear any Buy Box or stock alerts so they do not erode the brand beat.",
+          title: "Triage the KitchenPro SKUs behind plan by Gap $",
+          description: `Work the largest Gap ASINs first — the brand miss is ${formatCompactMoney(perf.gapDollars, { signed: true })} and concentrated in Kitchen Appliances.`,
         },
       ],
     };
@@ -859,49 +797,27 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
 
   // Default + CleanPro — brand traffic/price story patterned on the Shark reference
   const label = isCleanPro ? "CleanPro" : brand;
+  const perf = isCleanPro
+    ? treePerf(TREE_GAP.cleanPro)
+    : getScaledLastWeekPerformance("brand", -TREE_GAP.cleanPro);
+  const floorCareGap = treeGapDollars(TREE_GAP.floorCare);
+  const roboticsGap = treeGapDollars(TREE_GAP.floorCareRobotics);
+  const hairGap = treeGapDollars(TREE_GAP.hairCare);
+  const homeGap = treeGapDollars(TREE_GAP.homeComfort);
+  const uprightGap = treeGapDollars(TREE_GAP.proUpright);
+  const behindGap = perf.gapDollars * 1.12;
+
   return {
     keyFinding: isCleanPro
-      ? "CleanPro’s gap widened from −$1.1M to −$1.8M week over week as traffic softened across floor care. Floor Care Robotics flipped from a +$120K beat to a −$940K miss — largely Lost Buy Box on robot vacuums — while Hair Care stayed ahead at +$260K and only partially offsets. CleanPro’s average offer sits ~$30 above VacuMart_US on key uprights and robots."
-      : `${label}’s gap widened week over week as sales fell while the plan held relatively flat. Dig into the heaviest category miss first — that is where Gap $ and alert density concentrate.`,
-    planVsActual: {
-      summary: {
-        plan: "$10.0M",
-        actual: "$8.2M",
-        gap: "−$1.8M",
-        attainment: "82.0%",
-      },
-      rows: [
-        {
-          id: "last-week",
-          period: "Aug 9–15 (last week)",
-          actual: "$8,200,000",
-          plan: "$10,000,000",
-          gap: "−$1,800,000",
-        },
-        {
-          id: "week-before",
-          period: "Aug 2–8 (week before)",
-          actual: "$8,900,000",
-          plan: "$10,000,000",
-          gap: "−$1,100,000",
-        },
-        {
-          id: "this-week",
-          period: "Aug 16–21 (this week so far)",
-          actual: "—",
-          plan: "—",
-          gap: "—",
-        },
-      ],
-      narrative:
-        "Gap widened −$1.1M → −$1.8M WoW; plan held flat at $10.0M. Attainment: 82%.",
-    },
+      ? `${label}’s gap is ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan (${perf.attainmentPct.toFixed(1)}% attainment) last week — down from ${formatCompactMoney(perf.priorGapDollars, { signed: true })} the week before. Floor Care (${formatCompactMoney(floorCareGap, { signed: true })}) and Floor Care Robotics (${formatCompactMoney(roboticsGap, { signed: true })}) dominate; Hair Care (${formatCompactMoney(hairGap, { signed: true })}) and Home Comfort (${formatCompactMoney(homeGap, { signed: true })}) add secondary pressure. CleanPro’s average offer sits ~$30 above VacuMart_US on key uprights and robots.`
+      : `${label}’s gap is ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan last week. Dig into the heaviest category miss first — that is where Gap $ and alert density concentrate.`,
+    planVsActual: buildPlanVsActualFromPerformance(perf),
     ecommerceEquation: {
       summary: {
-        skusBehindPlan: "22 / −$2.1M",
-        skusAheadOfPlan: "7 / +$310K",
-        biggestMover: "Floor Care Robotics −$940K",
-        primaryLever: "Traffic (−$1.1M effect)",
+        skusBehindPlan: `29 / ${formatCompactMoney(behindGap, { signed: true })}`,
+        skusAheadOfPlan: `0 / $0`,
+        biggestMover: `Floor Care ${formatCompactMoney(floorCareGap, { signed: true })}`,
+        primaryLever: "Traffic & Buy Box",
       },
       priorWeekLabel: "Aug 2–8",
       currentWeekLabel: "Aug 9–15",
@@ -909,14 +825,14 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
         {
           id: "revenue",
           metric: "Revenue",
-          priorWeek: "$8,900,000",
-          currentWeek: "$8,200,000",
+          priorWeek: formatExactDollars(perf.priorActualDollars),
+          currentWeek: formatExactDollars(perf.actualDollars),
         },
         {
           id: "plan",
           metric: "Plan",
-          priorWeek: "$10,000,000",
-          currentWeek: "$10,000,000",
+          priorWeek: formatExactDollars(perf.priorPlanDollars),
+          currentWeek: formatExactDollars(perf.planDollars),
         },
         {
           id: "page-views",
@@ -937,23 +853,9 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
           currentWeek: "$211.80",
         },
       ],
-      narrative:
-        "Traffic did almost all the damage — PDP views fell ~17% WoW (−$1.1M effect). Conversion rose slightly and ASP held, which softened the blow but could not offset the traffic collapse. Buy Box losses on robotics SKUs are the most plausible traffic/conversion funnel break.",
+      narrative: `Traffic did almost all the damage — PDP views fell ~17% WoW. Conversion rose slightly and ASP held, which softened the blow but could not offset the traffic collapse. Floor Care (${formatCompactMoney(floorCareGap, { signed: true })}) and Floor Care Robotics (${formatCompactMoney(roboticsGap, { signed: true })}) explain most of the ${formatCompactMoney(perf.gapDollars, { signed: true })} brand miss.`,
     },
-    revenueTrend: {
-      series: [
-        { week: "Jun 21", plan: 12_400_000, actual: 19_800_000 },
-        { week: "Jun 28", plan: 11_900_000, actual: 10_600_000 },
-        { week: "Jul 5", plan: 11_200_000, actual: 9_800_000 },
-        { week: "Jul 12", plan: 10_400_000, actual: 10_550_000 },
-        { week: "Jul 19", plan: 10_600_000, actual: 9_400_000 },
-        { week: "Jul 26", plan: 10_500_000, actual: 9_700_000 },
-        { week: "Aug 2", plan: 10_000_000, actual: 8_900_000 },
-        { week: "Aug 9", plan: 10_000_000, actual: 8_200_000 },
-      ],
-      narrative:
-        "Post–Prime Day, CleanPro settled below plan. Jul 12 briefly beat after a soft plan week; August shows a widening miss as Floor Care Robotics Buy Box losses compounded and Hair Care’s offset was not enough.",
-    },
+    revenueTrend: buildScaledRevenueTrend(perf),
     rootCauses: [
       {
         id: "traffic-price",
@@ -963,17 +865,16 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
         status: "still-an-issue",
       },
       {
-        id: "robotics-flip",
-        title:
-          "Floor Care Robotics flipped from a +$120K beat to a −$940K miss — the brand’s single largest swing",
-        body: "Robot Vac R900, AI Robot R2010, and DetectPro lost Buy Box mid-week. Run a category Gap to Plan on Floor Care Robotics before chasing smaller category misses.",
+        id: "floor-care",
+        title: `Floor Care is ${formatCompactMoney(floorCareGap, { signed: true })} — the brand’s single largest category miss`,
+        body: `Pro Upright alone is ${formatCompactMoney(uprightGap, { signed: true })}. Run a category Gap to Plan on Floor Care before chasing smaller category misses.`,
         status: "still-an-issue",
       },
       {
-        id: "hair-offset",
-        title: "Hair Care stays ahead at +$260K and partially offsets the miss",
-        body: "StylePro and dryers are converting well. Protect Buy Box and deal badges here so the offset does not disappear while floor care is repaired.",
-        status: "resolved",
+        id: "robotics",
+        title: `Floor Care Robotics is ${formatCompactMoney(roboticsGap, { signed: true })} after clustered Buy Box losses`,
+        body: "Robot Vac R900, AI Robot R2010, and DetectPro lost Buy Box mid-week. Confirm price vs VacuMart_US before treating robotics as a secondary issue.",
+        status: "still-an-issue",
       },
       {
         id: "deal-page",
@@ -985,34 +886,25 @@ function buildBrandReportBody(entityName: string): FullRcaBody {
     ],
     recommendations: [
       {
+        id: "floor-care-gtp",
+        title: "Run a category gap to plan on Floor Care",
+        description: `Floor Care alone is ${formatCompactMoney(floorCareGap, { signed: true })} and drove the largest share of CleanPro’s miss — identify which ASINs lost Buy Box and whether price vs VacuMart_US needs a response.`,
+      },
+      {
+        id: "diagnose-upright",
+        title: "Diagnose B09ABC5678 (CleanPro Pro Upright) immediately",
+        description: `Largest Gap SKU in Floor Care (${formatCompactMoney(uprightGap, { signed: true })}). VacuMart_US holds Buy Box at $248 vs CleanPro $279 — confirm MAP, stock, and whether a deal badge should be live.`,
+      },
+      {
         id: "robotics-gtp",
         title: "Run a category gap to plan on Floor Care Robotics",
-        description:
-          "Robotics alone is −$940K and drove almost all of CleanPro’s WoW widening — identify which ASINs lost Buy Box and whether price vs VacuMart_US needs a response.",
-      },
-      {
-        id: "diagnose-r900",
-        title: "Diagnose B08XYZ1234 (CleanPro Robot Vac R900) immediately",
-        description:
-          "Largest Gap SKU in robotics (−$62K, 48% attainment). VacuMart_US holds Buy Box at $289 vs CleanPro $319 — confirm map, stock, and whether a deal badge should be live.",
-      },
-      {
-        id: "upright-bb",
-        title: "Recover Buy Box on CleanPro Pro Upright (B09ABC5678)",
-        description:
-          "−$48K Gap with VacuMart_US at $248 vs CleanPro $279. Closing the Buy Box loss is the fastest lever inside Floor Care.",
+        description: `Robotics is ${formatCompactMoney(roboticsGap, { signed: true })} after clustered Buy Box losses — coordinate price/MAP response on R900, R2010, and DetectPro.`,
       },
       {
         id: "deal-badges",
         title: "Restore deal-page visibility on the 8 Floor Care ASINs flagged",
         description:
           "Missing deal badges suppress conversion on ASINs already missing plan. Confirm those deals are displaying at the right price before the weekend.",
-      },
-      {
-        id: "protect-hair",
-        title: "Protect Hair Care Buy Box so the +$260K offset holds",
-        description:
-          "Hair Care is the only CleanPro category ahead of plan. Alert immediately if StylePro S440 loses Buy Box or deal badge.",
       },
     ],
   };
@@ -1030,47 +922,16 @@ function buildCategoryReportBody(
   const isControllers = /controllers/i.test(category);
 
   if (isControllers) {
+    const perf = treePerf(TREE_GAP.controllers);
+    const behindGap = perf.gapDollars;
     return {
-      keyFinding:
-        "Controllers are −$1.45M vs plan (68% attainment) — the heaviest PlayMax category miss. Keyword rank losses and competitive pricing on hero ASINs drove traffic down; conversion held roughly flat.",
-      planVsActual: {
-        summary: {
-          plan: "$4.5M",
-          actual: "$3.05M",
-          gap: "−$1.45M",
-          attainment: "68.0%",
-        },
-        rows: [
-          {
-            id: "last-week",
-            period: "Aug 9–15 (last week)",
-            actual: "$3,050,000",
-            plan: "$4,500,000",
-            gap: "−$1,450,000",
-          },
-          {
-            id: "week-before",
-            period: "Aug 2–8 (week before)",
-            actual: "$3,470,000",
-            plan: "$4,500,000",
-            gap: "−$1,030,000",
-          },
-          {
-            id: "this-week",
-            period: "Aug 16–21 (this week so far)",
-            actual: "—",
-            plan: "—",
-            gap: "—",
-          },
-        ],
-        narrative:
-          "Gap widened −$1.03M → −$1.45M WoW on a flat $4.5M plan. Attainment: 68%.",
-      },
+      keyFinding: `Controllers are ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan (${perf.attainmentPct.toFixed(1)}% attainment) — PlayMax’s only alerted category. Keyword rank losses and competitive pricing on hero ASINs drove traffic down; conversion held roughly flat.`,
+      planVsActual: buildPlanVsActualFromPerformance(perf),
       ecommerceEquation: {
         summary: {
-          skusBehindPlan: "14 / −$1.6M",
-          skusAheadOfPlan: "3 / +$150K",
-          biggestMover: "Controllers Bundle −$85K WoW",
+          skusBehindPlan: `11 / ${formatCompactMoney(behindGap, { signed: true })}`,
+          skusAheadOfPlan: `0 / $0`,
+          biggestMover: `Controllers Bundle ${formatCompactMoney(treeGapDollars(TREE_GAP.controllersBundle), { signed: true })}`,
           primaryLever: "Traffic & keyword rank",
         },
         priorWeekLabel: "Aug 2–8",
@@ -1079,14 +940,14 @@ function buildCategoryReportBody(
           {
             id: "revenue",
             metric: "Revenue",
-            priorWeek: "$3,470,000",
-            currentWeek: "$3,050,000",
+            priorWeek: formatExactDollars(perf.priorActualDollars),
+            currentWeek: formatExactDollars(perf.actualDollars),
           },
           {
             id: "plan",
             metric: "Plan",
-            priorWeek: "$4,500,000",
-            currentWeek: "$4,500,000",
+            priorWeek: formatExactDollars(perf.priorPlanDollars),
+            currentWeek: formatExactDollars(perf.planDollars),
           },
           {
             id: "page-views",
@@ -1110,32 +971,19 @@ function buildCategoryReportBody(
         narrative:
           "PDP views fell ~23% WoW after keyword-rank and media losses. Conversion and ASP barely moved — restore rank and coverage on the top OPS ASINs first.",
       },
-      revenueTrend: {
-        series: [
-          { week: "Jun 21", plan: 5_800_000, actual: 9_200_000 },
-          { week: "Jun 28", plan: 5_400_000, actual: 4_600_000 },
-          { week: "Jul 5", plan: 5_100_000, actual: 4_200_000 },
-          { week: "Jul 12", plan: 4_800_000, actual: 4_500_000 },
-          { week: "Jul 19", plan: 4_700_000, actual: 3_900_000 },
-          { week: "Jul 26", plan: 4_600_000, actual: 4_000_000 },
-          { week: "Aug 2", plan: 4_500_000, actual: 3_470_000 },
-          { week: "Aug 9", plan: 4_500_000, actual: 3_050_000 },
-        ],
-        narrative:
-          "Controllers have missed plan every post–Prime week, with August the weakest stretch. Rank recovery on hero keywords is the gating action.",
-      },
+      revenueTrend: buildScaledRevenueTrend(perf),
       rootCauses: [
         {
           id: "keyword-rank",
           title: "Keyword rank drops on hero terms pulled traffic off Controllers PDPs",
           body: "Rank losses align with the media cut window. Re-bid on the top revenue keywords before expanding into new terms.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
         {
           id: "bundle-bb",
           title: "PlayMax Controllers Bundle lost Buy Box mid-week",
           body: "B04MNO1122 shows an active Buy Box loss — price and 3P competition are compounding the traffic miss.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
       ],
       recommendations: [
@@ -1143,7 +991,7 @@ function buildCategoryReportBody(
           id: "restore-rank",
           title: "Restore keyword rank on Controllers hero terms",
           description:
-            "Traffic is the primary lever (−$420K WoW). Fix rank on the top 5 revenue keywords before chasing secondary ASINs.",
+            "Traffic is the primary lever. Fix rank on the top 5 revenue keywords before chasing secondary ASINs.",
         },
         {
           id: "bundle",
@@ -1156,47 +1004,17 @@ function buildCategoryReportBody(
   }
 
   if (isFloorCareRobotics) {
+    const perf = treePerf(TREE_GAP.floorCareRobotics);
+    const r900Gap = treeGapDollars(TREE_GAP.robotVacR900);
+    const behindGap = perf.gapDollars * 1.1;
     return {
-      keyFinding:
-        "Floor Care Robotics is −$940K vs plan (61% attainment). Lost Buy Box on robot vacuums is the main driver; conversion and deal visibility are secondary. Robot Vac R900 alone is −$62K at 48% attainment.",
-      planVsActual: {
-        summary: {
-          plan: "$2.41M",
-          actual: "$1.47M",
-          gap: "−$940K",
-          attainment: "61.0%",
-        },
-        rows: [
-          {
-            id: "last-week",
-            period: "Aug 9–15 (last week)",
-            actual: "$1,470,000",
-            plan: "$2,410,000",
-            gap: "−$940,000",
-          },
-          {
-            id: "week-before",
-            period: "Aug 2–8 (week before)",
-            actual: "$2,180,000",
-            plan: "$2,060,000",
-            gap: "+$120,000",
-          },
-          {
-            id: "this-week",
-            period: "Aug 16–21 (this week so far)",
-            actual: "—",
-            plan: "—",
-            gap: "—",
-          },
-        ],
-        narrative:
-          "Flipped +$120K → −$940K WoW ($1.06M swing). Attainment: 61%.",
-      },
+      keyFinding: `Floor Care Robotics is ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan (${perf.attainmentPct.toFixed(1)}% attainment). Lost Buy Box on robot vacuums is the main driver; conversion and deal visibility are secondary. Robot Vac R900 alone is ${formatCompactMoney(r900Gap, { signed: true })}.`,
+      planVsActual: buildPlanVsActualFromPerformance(perf),
       ecommerceEquation: {
         summary: {
-          skusBehindPlan: "11 / −$1.05M",
-          skusAheadOfPlan: "2 / +$110K",
-          biggestMover: "Robot Vac R900 −$62K",
+          skusBehindPlan: `8 / ${formatCompactMoney(behindGap, { signed: true })}`,
+          skusAheadOfPlan: `0 / $0`,
+          biggestMover: `Robot Vac R900 ${formatCompactMoney(r900Gap, { signed: true })}`,
           primaryLever: "Buy Box / traffic",
         },
         priorWeekLabel: "Aug 2–8",
@@ -1205,14 +1023,14 @@ function buildCategoryReportBody(
           {
             id: "revenue",
             metric: "Revenue",
-            priorWeek: "$2,180,000",
-            currentWeek: "$1,470,000",
+            priorWeek: formatExactDollars(perf.priorActualDollars),
+            currentWeek: formatExactDollars(perf.actualDollars),
           },
           {
             id: "plan",
             metric: "Plan",
-            priorWeek: "$2,060,000",
-            currentWeek: "$2,410,000",
+            priorWeek: formatExactDollars(perf.priorPlanDollars),
+            currentWeek: formatExactDollars(perf.planDollars),
           },
           {
             id: "page-views",
@@ -1236,47 +1054,33 @@ function buildCategoryReportBody(
         narrative:
           "PDP views fell ~28% and conversion slipped 55 bps as VacuMart_US took Buy Box on multiple robots. ASP also softened ~$11 — traffic and Buy Box explain nearly the full category swing.",
       },
-      revenueTrend: {
-        series: [
-          { week: "Jun 21", plan: 3_100_000, actual: 5_400_000 },
-          { week: "Jun 28", plan: 2_900_000, actual: 2_600_000 },
-          { week: "Jul 5", plan: 2_700_000, actual: 2_300_000 },
-          { week: "Jul 12", plan: 2_400_000, actual: 2_450_000 },
-          { week: "Jul 19", plan: 2_350_000, actual: 2_100_000 },
-          { week: "Jul 26", plan: 2_300_000, actual: 2_200_000 },
-          { week: "Aug 2", plan: 2_060_000, actual: 2_180_000 },
-          { week: "Aug 9", plan: 2_410_000, actual: 1_470_000 },
-        ],
-        narrative:
-          "Aug 2 was still a beat; Aug 9 collapsed after clustered Buy Box losses. Recovering Buy Box on the top 5 robots is the gating action for category recovery.",
-      },
+      revenueTrend: buildScaledRevenueTrend(perf),
       rootCauses: [
         {
           id: "buy-box-cluster",
           title:
             "VacuMart_US holds Buy Box on Robot Vac R900, AI Robot R2010, and DetectPro",
           body: "Price gaps of $20–30 below CleanPro list are winning Buy Box. Until ownership returns, traffic and conversion will stay suppressed on those ASINs.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
         {
           id: "r900",
-          title: "Robot Vac R900 is the largest Gap SKU (−$62K, 48% attainment)",
+          title: `Robot Vac R900 is the largest Gap SKU (${formatCompactMoney(r900Gap, { signed: true })})`,
           body: "Single-ASIN diagnosis should lead — map compliance, stock cover, and whether a deal badge should be live at the competitive price.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
         {
           id: "deal-visibility",
           title: "Deal-page visibility dropped on DetectPro Auto-Empty",
           body: "Secondary to Buy Box, but compounding conversion loss on an already-missed ASIN.",
-        status: "still-an-issue",
+          status: "still-an-issue",
         },
       ],
       recommendations: [
         {
           id: "r900",
           title: "Diagnose B08XYZ1234 (CleanPro Robot Vac R900) immediately",
-          description:
-            "Majority of the robotics Gap. Confirm Buy Box vs VacuMart_US ($289 vs $319), stock, and plan accuracy before expanding triage.",
+          description: `Largest robotics Gap (${formatCompactMoney(r900Gap, { signed: true })}). Confirm Buy Box vs VacuMart_US ($289 vs $319), stock, and plan accuracy before expanding triage.`,
         },
         {
           id: "bb-cluster",
@@ -1296,48 +1100,25 @@ function buildCategoryReportBody(
 
   // Floor Care (and generic category fallback) — SKU-dense, category-scoped
   const label = isFloorCare ? "Floor Care" : category;
+  const perf = isFloorCare
+    ? treePerf(TREE_GAP.floorCare)
+    : getScaledLastWeekPerformance(
+        "category",
+        sku.gapDollars ? sku.gapDollars * 6 : -TREE_GAP.floorCare,
+      );
+  const uprightGap = treeGapDollars(TREE_GAP.proUpright);
+  const behindGap = perf.gapDollars * 1.08;
+
   return {
     keyFinding: isFloorCare
-      ? "Floor Care is behind plan with the miss concentrated in uprights and cordless sticks. CleanPro Pro Upright (B09ABC5678) is the largest Gap SKU (−$48K); deal-page and Buy Box alerts cluster on the same ASINs. Traffic soft, conversion slightly down — not a plan-reset story."
-      : `${label} missed plan last week. The Gap concentrates in a handful of SKUs — start with the largest Gap ASIN (${sku.name}, ${sku.asin}) before spreading effort across the full category.`,
-    planVsActual: {
-      summary: {
-        plan: "$520K",
-        actual: "$400K",
-        gap: "−$120K",
-        attainment: "76.9%",
-      },
-      rows: [
-        {
-          id: "last-week",
-          period: "Aug 9–15 (last week)",
-          actual: "$400,000",
-          plan: "$520,000",
-          gap: "−$120,000",
-        },
-        {
-          id: "week-before",
-          period: "Aug 2–8 (week before)",
-          actual: "$455,000",
-          plan: "$510,000",
-          gap: "−$55,000",
-        },
-        {
-          id: "this-week",
-          period: "Aug 16–21 (this week so far)",
-          actual: "—",
-          plan: "—",
-          gap: "—",
-        },
-      ],
-      narrative:
-        "Gap more than doubled −$55K → −$120K WoW. Attainment: 77%.",
-    },
+      ? `Floor Care is ${formatCompactMoney(perf.gapDollars, { signed: true })} vs plan (${perf.attainmentPct.toFixed(1)}% attainment) — CleanPro’s heaviest category miss. CleanPro Pro Upright (B09ABC5678) is the largest Gap SKU (${formatCompactMoney(uprightGap, { signed: true })}); deal-page and Buy Box alerts cluster on the same ASINs. Traffic soft, conversion slightly down — not a plan-reset story.`
+      : `${label} missed plan last week (${formatCompactMoney(perf.gapDollars, { signed: true })}). The Gap concentrates in a handful of SKUs — start with the largest Gap ASIN (${sku.name}, ${sku.asin}) before spreading effort across the full category.`,
+    planVsActual: buildPlanVsActualFromPerformance(perf),
     ecommerceEquation: {
       summary: {
-        skusBehindPlan: "11 / −$155K",
-        skusAheadOfPlan: "4 / +$35K",
-        biggestMover: "Pro Upright −$48K",
+        skusBehindPlan: `15 / ${formatCompactMoney(behindGap, { signed: true })}`,
+        skusAheadOfPlan: `0 / $0`,
+        biggestMover: `Pro Upright ${formatCompactMoney(uprightGap, { signed: true })}`,
         primaryLever: "Conversion & Buy Box",
       },
       priorWeekLabel: "Aug 2–8",
@@ -1346,14 +1127,14 @@ function buildCategoryReportBody(
         {
           id: "revenue",
           metric: "Revenue",
-          priorWeek: "$455,000",
-          currentWeek: "$400,000",
+          priorWeek: formatExactDollars(perf.priorActualDollars),
+          currentWeek: formatExactDollars(perf.actualDollars),
         },
         {
           id: "plan",
           metric: "Plan",
-          priorWeek: "$510,000",
-          currentWeek: "$520,000",
+          priorWeek: formatExactDollars(perf.priorPlanDollars),
+          currentWeek: formatExactDollars(perf.planDollars),
         },
         {
           id: "page-views",
@@ -1374,29 +1155,14 @@ function buildCategoryReportBody(
           currentWeek: "$262.00",
         },
       ],
-      narrative:
-        "Traffic dipped ~8%, but conversion did more damage (−27 bps, roughly −$55K effect) as Buy Box and deal-badge losses hit uprights and cordless sticks. ASP also softened ~$6. The 11 SKUs behind plan (−$155K) swamp the 4 ahead (+$35K).",
+      narrative: `Traffic dipped ~8%, but conversion did more damage (−27 bps) as Buy Box and deal-badge losses hit uprights and cordless sticks. ASP also softened ~$6. All 15 alerted Floor Care SKUs are behind plan (combined ${formatCompactMoney(behindGap, { signed: true })}), led by Pro Upright at ${formatCompactMoney(uprightGap, { signed: true })}.`,
     },
-    revenueTrend: {
-      series: [
-        { week: "Jun 21", plan: 680_000, actual: 1_120_000 },
-        { week: "Jun 28", plan: 640_000, actual: 580_000 },
-        { week: "Jul 5", plan: 600_000, actual: 520_000 },
-        { week: "Jul 12", plan: 560_000, actual: 570_000 },
-        { week: "Jul 19", plan: 550_000, actual: 490_000 },
-        { week: "Jul 26", plan: 540_000, actual: 510_000 },
-        { week: "Aug 2", plan: 510_000, actual: 455_000 },
-        { week: "Aug 9", plan: 520_000, actual: 400_000 },
-      ],
-      narrative:
-        "Floor Care beat only once post–Prime (Jul 12). August shows a clear miss widening — recover Buy Box and deal visibility on Pro Upright and cordless sticks before the Gap compounds further.",
-    },
+    revenueTrend: buildScaledRevenueTrend(perf),
     rootCauses: [
       {
         id: "pro-upright",
-        title:
-          "CleanPro Pro Upright (B09ABC5678) is the #1 Gap SKU — VacuMart_US holds Buy Box at $248 vs $279",
-        body: "−$48K Gap with recurring Buy Box loss. Closing ownership on this ASIN is the single fastest dollar recovery inside Floor Care.",
+        title: `CleanPro Pro Upright (B09ABC5678) is the #1 Gap SKU (${formatCompactMoney(uprightGap, { signed: true })}) — VacuMart_US holds Buy Box at $248 vs $279`,
+        body: "Recurring Buy Box loss. Closing ownership on this ASIN is the single fastest dollar recovery inside Floor Care.",
         status: "still-an-issue",
       },
       {
@@ -1417,8 +1183,7 @@ function buildCategoryReportBody(
       {
         id: "diagnose-upright",
         title: "Diagnose B09ABC5678 (CleanPro Pro Upright) immediately",
-        description:
-          "Largest Gap in Floor Care (−$48K). VacuMart_US holds Buy Box at $248 vs CleanPro $279 — confirm MAP, stock, and whether a deal badge should be live.",
+        description: `Largest Gap in Floor Care (${formatCompactMoney(uprightGap, { signed: true })}). VacuMart_US holds Buy Box at $248 vs CleanPro $279 — confirm MAP, stock, and whether a deal badge should be live.`,
       },
       {
         id: "deal-badges",
@@ -1445,45 +1210,23 @@ function buildCategoryReportBody(
 
 /** Single-SKU diagnosis — ad spend / listing events on one ASIN. */
 function buildSkuReportBody(sku: IssueSku): FullRcaBody {
+  const treeGapAbs =
+    /pro upright/i.test(sku.name)
+      ? TREE_GAP.proUpright
+      : /r900|robot vac/i.test(sku.name)
+        ? TREE_GAP.robotVacR900
+        : Math.max(5_000, Math.abs(sku.gapDollars));
+  const perf = treePerf(treeGapAbs);
+  const wowDelta = perf.actualDollars - perf.priorActualDollars;
+
   return {
-    keyFinding: `Revenue on ${sku.name} (${sku.asin}) collapsed –50% WoW ($228K → $114K). A 93% cut in ad spend ($6,538 → $483) was the dominant cause — it wiped out $118K of ad-attributed sales and pulled 30% of traffic off the page. A missing deal badge and a one-day Buy Box loss on Aug 12 added pressure but are secondary by a wide margin.`,
-    planVsActual: {
-      summary: {
-        plan: "$190K",
-        actual: "$114K",
-        gap: "−$76K",
-        attainment: "60.0%",
-      },
-      rows: [
-        {
-          id: "last-week",
-          period: "Aug 9–15 (last week)",
-          actual: "$114,000",
-          plan: "$190,000",
-          gap: "−$76,000",
-        },
-        {
-          id: "week-before",
-          period: "Aug 2–8 (week before)",
-          actual: "$228,000",
-          plan: "$195,000",
-          gap: "+$33,000",
-        },
-        {
-          id: "this-week",
-          period: "Aug 16–21 (this week so far)",
-          actual: "—",
-          plan: "—",
-          gap: "—",
-        },
-      ],
-      narrative: `Flipped +$33K → −$76K WoW; plan barely moved. Attainment: 60%.`,
-    },
+    keyFinding: `Revenue on ${sku.name} (${sku.asin}) fell from ${formatCompactMoney(perf.priorActualDollars)} to ${formatCompactMoney(perf.actualDollars)} WoW (${formatCompactMoney(wowDelta, { signed: true })}). Last week closed ${formatCompactMoney(perf.gapDollars, { signed: true })} vs a ${formatCompactMoney(perf.planDollars)} plan (${perf.attainmentPct.toFixed(1)}% attainment). A 93% cut in ad spend ($6,538 → $483) was the dominant cause — it wiped out most ad-attributed sales and pulled ~30% of traffic off the page. A missing deal badge and a one-day Buy Box loss on Aug 12 added pressure but are secondary by a wide margin.`,
+    planVsActual: buildPlanVsActualFromPerformance(perf),
     ecommerceEquation: {
       summary: {
-        skusBehindPlan: "1 / −$76K",
+        skusBehindPlan: `1 / ${formatCompactMoney(perf.gapDollars, { signed: true })}`,
         skusAheadOfPlan: "0 / $0",
-        biggestMover: `${sku.name} −$114K WoW`,
+        biggestMover: `${sku.name} ${formatCompactMoney(wowDelta, { signed: true })} WoW`,
         primaryLever: "Ad spend / traffic",
       },
       priorWeekLabel: "Aug 2–8",
@@ -1492,26 +1235,32 @@ function buildSkuReportBody(sku: IssueSku): FullRcaBody {
         {
           id: "revenue",
           metric: "Revenue",
-          priorWeek: "$228,000",
-          currentWeek: "$114,000",
+          priorWeek: formatExactDollars(perf.priorActualDollars),
+          currentWeek: formatExactDollars(perf.actualDollars),
         },
         {
           id: "plan",
           metric: "Plan",
-          priorWeek: "$195,000",
-          currentWeek: "$190,000",
+          priorWeek: formatExactDollars(perf.priorPlanDollars),
+          currentWeek: formatExactDollars(perf.planDollars),
+        },
+        {
+          id: "ad-spend",
+          metric: "Ad Spend",
+          priorWeek: "$6,538",
+          currentWeek: "$483",
         },
         {
           id: "page-views",
           metric: "Page Views",
-          priorWeek: "42,800",
-          currentWeek: "29,960",
+          priorWeek: "48,200",
+          currentWeek: "33,700",
         },
         {
           id: "cvr",
           metric: "Conversion Rate",
-          priorWeek: "3.90%",
-          currentWeek: "3.55%",
+          priorWeek: "3.55%",
+          currentWeek: "3.28%",
         },
         {
           id: "asp",
@@ -1520,33 +1269,20 @@ function buildSkuReportBody(sku: IssueSku): FullRcaBody {
           currentWeek: `$${(sku.ourPrice ?? 279) - 8}`,
         },
       ],
-      narrative:
-        "Traffic fell ~30% after the ad-spend cut and explains most of the revenue drop. Conversion dipped modestly; a missing deal badge and a one-day Buy Box loss on Aug 12 were secondary.",
+      narrative: `Ad spend collapsed 93% and PDP views fell ~30%. Revenue moved from ${formatCompactMoney(perf.priorActualDollars)} to ${formatCompactMoney(perf.actualDollars)} while plan held near ${formatCompactMoney(perf.planDollars)} — producing a ${formatCompactMoney(perf.gapDollars, { signed: true })} miss. Restore paid coverage first, then confirm deal badge and Buy Box.`,
     },
-    revenueTrend: {
-      series: [
-        { week: "Jun 21", plan: 240_000, actual: 410_000 },
-        { week: "Jun 28", plan: 220_000, actual: 198_000 },
-        { week: "Jul 5", plan: 210_000, actual: 185_000 },
-        { week: "Jul 12", plan: 200_000, actual: 205_000 },
-        { week: "Jul 19", plan: 195_000, actual: 178_000 },
-        { week: "Jul 26", plan: 192_000, actual: 188_000 },
-        { week: "Aug 2", plan: 195_000, actual: 228_000 },
-        { week: "Aug 9", plan: 190_000, actual: 114_000 },
-      ],
-      narrative: `${sku.name} was ahead of plan on Aug 2; Aug 9 collapsed after paid coverage was pulled. Restoring spend to the prior-week level is the first recovery test.`,
-    },
+    revenueTrend: buildScaledRevenueTrend(perf),
     rootCauses: [
       {
         id: "ad-spend",
         title: "Ad spend cut 93% ($6,538 → $483) — dominant cause of the traffic collapse",
-        body: "Ad-attributed sales fell ~$118K. Confirm whether the cut was intentional budget reallocation or an automation / campaign status error.",
+        body: "Paid coverage explains most of the WoW revenue drop. Re-enable campaigns and watch PDP views over the next 48 hours before chasing secondary listing issues.",
         status: "still-an-issue",
       },
       {
         id: "deal-badge",
         title: "Missing deal badge (likely an expired promotional price)",
-        body: "Secondary pressure on conversion while traffic was already down. Confirm the promo calendar vs live PDP state.",
+        body: "Suppresses conversion while traffic recovers — verify promo calendar vs scrape state.",
         status: "still-an-issue",
       },
       {

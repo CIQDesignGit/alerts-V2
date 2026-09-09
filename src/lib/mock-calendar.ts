@@ -58,10 +58,11 @@ export const OVERALL_PRIOR_WEEK = {
 } as const;
 
 /**
- * Portfolio gap used to scale brand/category KPI tiles + Gap to Plan RCA.
- * Must stay in sync with `portfolioGap.gapDollars` in mock-alerts-insights.
+ * Alerts taxonomy Overall |gap| — scales brand/category/SKU last-week Plan vs
+ * Actual so child gaps compose to the Overall −$12.3M miss.
+ * Must stay in sync with `buildAlertsTaxonomyTree` overall |gapDollars|.
  */
-export const TAXONOMY_SCALE_GAP_REF = 4_200_000;
+export const TAXONOMY_SCALE_GAP_REF = 870_000;
 
 export type ScaledLastWeekPerformance = {
   planDollars: number;
@@ -92,18 +93,27 @@ export function getScaledLastWeekPerformance(
           Math.max(0.004, Math.abs(entityGapDollars) / TAXONOMY_SCALE_GAP_REF),
         );
 
+  // Preserve entity sign so a beat stays a beat after scaling.
+  const gapSign =
+    entityGapDollars == null || level === "overall"
+      ? Math.sign(OVERALL_LAST_WEEK.gapDollars)
+      : Math.sign(entityGapDollars || OVERALL_LAST_WEEK.gapDollars);
+
   return {
-    planDollars: OVERALL_LAST_WEEK.planDollars * scale,
-    actualDollars: OVERALL_LAST_WEEK.actualDollars * scale,
-    gapDollars: OVERALL_LAST_WEEK.gapDollars * scale,
+    planDollars: Math.round(OVERALL_LAST_WEEK.planDollars * scale),
+    actualDollars: Math.round(OVERALL_LAST_WEEK.actualDollars * scale),
+    gapDollars: Math.round(Math.abs(OVERALL_LAST_WEEK.gapDollars) * scale) * gapSign,
     attainmentPct: OVERALL_LAST_WEEK.attainmentPct,
-    priorPlanDollars: OVERALL_PRIOR_WEEK.planDollars * scale,
-    priorActualDollars: OVERALL_PRIOR_WEEK.actualDollars * scale,
-    priorGapDollars: OVERALL_PRIOR_WEEK.gapDollars * scale,
-    wtdSalesDollars: OVERALL_WTD.salesDollars * scale,
+    priorPlanDollars: Math.round(OVERALL_PRIOR_WEEK.planDollars * scale),
+    priorActualDollars: Math.round(OVERALL_PRIOR_WEEK.actualDollars * scale),
+    priorGapDollars:
+      Math.round(Math.abs(OVERALL_PRIOR_WEEK.gapDollars) * scale) * gapSign,
+    wtdSalesDollars: Math.round(OVERALL_WTD.salesDollars * scale),
     weekElapsedPct: OVERALL_WTD.weekElapsedPct,
-    eowProjectedGapVsPlan: OVERALL_EOW.projectedGapVsPlan * scale,
-    eowProjectedSalesDollars: OVERALL_EOW.projectedSalesDollars * scale,
+    eowProjectedGapVsPlan: Math.round(OVERALL_EOW.projectedGapVsPlan * scale),
+    eowProjectedSalesDollars: Math.round(
+      OVERALL_EOW.projectedSalesDollars * scale,
+    ),
     eowAttainmentPct: OVERALL_EOW.attainmentPct,
     scale,
   };
@@ -119,8 +129,8 @@ export type ScaledPerformanceKpiCard = {
 
 function formatKpiMoney(value: number): string {
   const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `$${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `$${(abs / 1_000).toFixed(1)}K`;
+  if (abs >= 1_000_000) return `$${(Math.round(abs / 100_000) / 10).toFixed(1)}M`;
+  if (abs >= 1_000) return `$${(Math.round(abs / 100) / 10).toFixed(1)}K`;
   return `$${Math.round(abs).toLocaleString("en-US")}`;
 }
 

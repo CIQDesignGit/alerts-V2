@@ -136,7 +136,7 @@ export function useSkuAllyThread(
     [issueKey, reportScope, sku],
   );
 
-  /** Gap to Plan: 5-step trail over 4s, then collapsed trail + full report */
+  /** Gap to Plan: 5-step trail over 2s, then collapsed trail + full report */
   const startGapToPlanProcessing = useCallback(
     (
       userMessage: Extract<SkuAllyChatMessage, { role: "user" }>,

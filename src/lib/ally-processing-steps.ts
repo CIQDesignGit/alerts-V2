@@ -41,8 +41,8 @@ export const GAP_TO_PLAN_PROCESSING_STEPS: AllyProcessingStep[] = [
   },
 ];
 
-/** Total mock processing time for Gap to Plan (5 × 2s). Temp 10s for review — revert to 4000 before push. */
-export const GAP_TO_PLAN_PROCESSING_MS = 10000;
+/** Total mock processing time for Gap to Plan (5 steps). */
+export const GAP_TO_PLAN_PROCESSING_MS = 2000;
 
 /** Time each step stays “active” before advancing. */
 export const GAP_TO_PLAN_STEP_MS =
