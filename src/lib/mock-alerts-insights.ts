@@ -13,11 +13,10 @@ import {
 } from "@/lib/ally-chipsets";
 import { snapshotMetricLabel } from "@/lib/insights-metrics-config";
 import {
-  EOW_KPI_TITLE,
-  LAST_WEEK_KPI_TITLE,
   MOCK_NOW,
+  buildScaledPerformanceKpiCards,
+  getScaledLastWeekPerformance,
   PORTFOLIO_WTD_RANGE,
-  WTD_KPI_TITLE,
 } from "@/lib/mock-calendar";
 import {
   paintIssueAlertsOps,
@@ -2346,58 +2345,12 @@ function buildTaxonomyIssuePrompts(
   return topIssues.slice(0, 3).map((issue, index) => templates[index](issue));
 }
 
-/** Performance tiles for taxonomy RCA — scaled from portfolio anchors in the design reference */
+/** Performance tiles for taxonomy RCA — scaled from shared Overall anchors */
 function buildTaxonomyPerformanceKpis(
   node: AlertsTaxonomyNode,
 ): TaxonomyPerformanceKpi[] {
-  const portfolioGapRef = Math.abs(portfolioGap.gapDollars);
-  const scale =
-    node.level === "overall"
-      ? 1
-      : Math.min(1, Math.max(0.004, Math.abs(node.gapDollars) / portfolioGapRef));
-
-  const planDollars = 23_100_000 * scale;
-  const lastWeekGap = -12_300_000 * scale;
-  const lastWeekAchieved = 11_800_000 * scale;
-  const lastWeekAttainment = 51.0;
-
-  const wtdSales = 5_000_000 * scale;
-  const weekElapsedPct = 49.2;
-
-  const projectedGap = 3_200_000 * scale;
-  const projectedSales = 26_400_000 * scale;
-  const eowAttainment = 114.0;
-
-  const formatSignedMoney = (value: number) => {
-    const base = formatMoneyCompact(Math.abs(value));
-    if (value > 0) return `+${base}`;
-    if (value < 0) return `−${base}`;
-    return base;
-  };
-
-  return [
-    {
-      id: "last-week",
-      title: LAST_WEEK_KPI_TITLE,
-      value: formatSignedMoney(lastWeekGap),
-      tone: "negative",
-      subtitle: `${formatMoneyCompact(lastWeekAchieved)} of ${formatMoneyCompact(planDollars)} plan · ${lastWeekAttainment.toFixed(1)}% attainment`,
-    },
-    {
-      id: "wtd",
-      title: WTD_KPI_TITLE,
-      value: formatMoneyCompact(wtdSales),
-      tone: "neutral",
-      subtitle: `in sales · ${weekElapsedPct.toFixed(1)}% of week elapsed`,
-    },
-    {
-      id: "eow",
-      title: EOW_KPI_TITLE,
-      value: `${formatSignedMoney(projectedGap)} vs plan`,
-      tone: "positive",
-      subtitle: `${formatMoneyCompact(planDollars)} plan · ${formatMoneyCompact(projectedSales)} projected · ${eowAttainment.toFixed(1)}%`,
-    },
-  ];
+  const perf = getScaledLastWeekPerformance(node.level, node.gapDollars);
+  return buildScaledPerformanceKpiCards(perf);
 }
 
 /** Build portfolio / brand / category RCA copy from taxonomy node SKUs */

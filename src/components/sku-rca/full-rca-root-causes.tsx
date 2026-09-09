@@ -15,7 +15,14 @@ type FullRcaRootCausesProps = {
 
 const STATUS_LABEL: Record<FullRcaCauseStatus, string> = {
   "still-an-issue": "Still an Issue",
+  "worth-watching": "Worth Watching",
   resolved: "Resolved",
+};
+
+const STATUS_CLASS: Record<FullRcaCauseStatus, string> = {
+  "still-an-issue": "bg-error-50 text-error-700",
+  "worth-watching": "bg-warning-100 text-warning-600",
+  resolved: "bg-success-50 text-success-700",
 };
 
 /**
@@ -42,7 +49,6 @@ function TopIssueCard({
   defaultOpen: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const isStillAnIssue = cause.status === "still-an-issue";
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background">
@@ -70,9 +76,7 @@ function TopIssueCard({
         <span
           className={cn(
             "mt-0.5 inline-flex shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold tracking-wide",
-            isStillAnIssue
-              ? "bg-error-50 text-error-700"
-              : "bg-success-50 text-success-700",
+            STATUS_CLASS[cause.status],
           )}
         >
           {STATUS_LABEL[cause.status]}

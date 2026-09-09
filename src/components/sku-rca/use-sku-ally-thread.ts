@@ -64,7 +64,7 @@ export function useSkuAllyThread(
   useEffect(() => {
     clearTimers();
     setMessages([]);
-  }, [clearTimers, reportScope?.entityName, reportScope?.level, sku.id]);
+  }, [clearTimers, reportScope?.entityName, reportScope?.level, reportScope?.entityGapDollars, sku.id]);
 
   // Clear timers if this screen unmounts
   useEffect(() => {

@@ -14,15 +14,32 @@ type FullRcaPlanVsActualSectionProps = {
 export function FullRcaPlanVsActualSection({
   data,
 }: FullRcaPlanVsActualSectionProps) {
-  const summaryItems = [
-    { id: "plan", label: "Plan", value: data.summary.plan },
-    { id: "actual", label: "Actual", value: data.summary.actual },
+  const planItem = {
+    id: "plan",
+    label: data.summaryLabels?.plan ?? "Plan",
+    value: data.summary.plan,
+  };
+  const actualItem = {
+    id: "actual",
+    label: data.summaryLabels?.actual ?? "Actual",
+    value: data.summary.actual,
+  };
+  const restItems = [
     { id: "gap", label: "Gap", value: data.summary.gap },
     { id: "attainment", label: "Attainment", value: data.summary.attainment },
   ];
+  const summaryItems = data.leadWithActual
+    ? [actualItem, planItem, ...restItems]
+    : [planItem, actualItem, ...restItems];
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
+      {data.summaryCaption ? (
+        <p className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+          {data.summaryCaption}
+        </p>
+      ) : null}
+
       {/* Four-up last-week rollup */}
       <div className="overflow-hidden rounded-lg border border-border">
         <dl className="grid grid-cols-2 sm:grid-cols-4">
@@ -103,7 +120,7 @@ export function FullRcaPlanVsActualSection({
         </table>
       </div>
 
-      <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+      <p className="w-full text-sm leading-relaxed text-muted-foreground">
         {data.narrative}
       </p>
     </div>

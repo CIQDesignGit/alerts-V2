@@ -120,7 +120,7 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
             {message.role === "user" ? (
               <div className="flex justify-end">
                 {/* User ask: keep boxed bubble; sharp top-right corner */}
-                <p className="max-w-[90%] rounded-2xl rounded-br-sm border border-brand-200/80 bg-brand-50 px-3.5 py-2.5 text-sm text-foreground">
+                <p className="max-w-[75%] rounded-2xl rounded-br-sm border border-brand-200/80 bg-brand-50 px-3.5 py-2.5 text-sm text-foreground">
                   {message.text}
                 </p>
               </div>
@@ -164,7 +164,7 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
             ) : (
               <div className="flex justify-start">
                 {/* Ally reply: plain text — no border / fill; sharp bottom-left */}
-                <p className="max-w-[90%] whitespace-pre-line rounded-2xl rounded-bl-sm px-0 py-1 text-sm text-foreground">
+                <p className="max-w-[75%] whitespace-pre-line rounded-2xl rounded-bl-sm px-0 py-1 text-sm text-foreground">
                   {message.text}
                 </p>
               </div>

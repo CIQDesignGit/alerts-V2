@@ -38,7 +38,7 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
     );
   }, [node]);
 
-  // Overall / Brand / Category — header copy follows the selected level
+  // Overall / Brand / Category — header copy + gap $ for KPI-aligned Plan vs Actual
   const reportScope = useMemo(
     () => ({
       level:
@@ -48,8 +48,9 @@ export function TaxonomyRcaPanel({ node }: TaxonomyRcaPanelProps) {
           ? node.level
           : ("sku" as const),
       entityName: node.name,
+      entityGapDollars: node.gapDollars,
     }),
-    [node.level, node.name],
+    [node.level, node.name, node.gapDollars],
   );
 
   const { messages, onPromptSelect } = useSkuAllyThread(reportSku, {

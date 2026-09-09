@@ -89,11 +89,13 @@ export function FullRcaRevenueTrendSection({
               tickLine={false}
               axisLine={false}
               width={72}
-              domain={[0, 120_000_000]}
-              ticks={[
-                0, 20_000_000, 40_000_000, 60_000_000, 80_000_000, 100_000_000,
-                120_000_000,
-              ]}
+              domain={[0, data.yMax ?? 120_000_000]}
+              ticks={
+                data.yTicks ?? [
+                  0, 20_000_000, 40_000_000, 60_000_000, 80_000_000,
+                  100_000_000, 120_000_000,
+                ]
+              }
               tickFormatter={formatAxisValue}
               tick={{ fontSize: 10 }}
             />
@@ -134,7 +136,7 @@ export function FullRcaRevenueTrendSection({
         </ChartContainer>
       </div>
 
-      <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+      <p className="w-full whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
         {data.narrative}
       </p>
     </div>

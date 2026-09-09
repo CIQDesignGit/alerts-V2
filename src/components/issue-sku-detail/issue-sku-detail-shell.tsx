@@ -40,8 +40,19 @@ export function IssueSkuDetailShell({
     [issueKey, sku],
   );
   const [collapsed, setCollapsed] = useState(false);
+  const reportScope = useMemo(
+    () => ({
+      level: "sku" as const,
+      entityName: sku.name,
+      entityGapDollars: sku.gapDollars,
+    }),
+    [sku.gapDollars, sku.name],
+  );
   // Pass issueKey so the “changed in 7 days” chip can open the right trend card
-  const { messages, onPromptSelect } = useSkuAllyThread(sku, { issueKey });
+  const { messages, onPromptSelect } = useSkuAllyThread(sku, {
+    issueKey,
+    reportScope,
+  });
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     const top = e.currentTarget.scrollTop;

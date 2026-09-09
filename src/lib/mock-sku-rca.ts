@@ -9,6 +9,10 @@ import {
   type AllyAiPrompt,
   type IssueSku,
 } from "@/lib/mock-alerts-insights";
+import {
+  buildScaledPerformanceKpiCards,
+  getScaledLastWeekPerformance,
+} from "@/lib/mock-calendar";
 import { skuOpsDollars } from "@/lib/ops";
 
 export type RcaLiveStatus = "ok" | "warning" | "bad";
@@ -387,29 +391,9 @@ export function getSkuRcaData(sku: IssueSku): SkuRcaData {
     gapUnits: -150,
     summaryHeadline:
       "Revenue collapsed after SAS price jumped to $529.99 on Aug 9, losing the buy box for the full week. Recovery has started this week, but a missing deal badge is still limiting conversion.",
-    kpis: [
-      {
-        id: "last-week",
-        title: "Last Week (Aug 9–15)",
-        value: "−$227.7K",
-        tone: "negative",
-        subtitle: "$846 of $228.5K plan · 37.0% attainment",
-      },
-      {
-        id: "wtd",
-        title: "WTD (Aug 16–21)",
-        value: "$126.3K",
-        tone: "neutral",
-        subtitle: "in sales · 49.2% of week elapsed",
-      },
-      {
-        id: "eow",
-        title: "Projected EOW (Aug 16–22)",
-        value: "+$29.6K vs plan",
-        tone: "positive",
-        subtitle: "$229K plan · $258.3K projected · 112.9%",
-      },
-    ],
+    kpis: buildScaledPerformanceKpiCards(
+      getScaledLastWeekPerformance("sku", sku.gapDollars),
+    ),
     // Same clock as Alerts “Last crawl” (ALERTS_LAST_CRAWL_LABEL)
     issuesLastUpdated: `Last updated ${ALERTS_LAST_CRAWL_LABEL}`,
     issueGroups,

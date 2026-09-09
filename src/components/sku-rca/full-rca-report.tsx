@@ -48,7 +48,7 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
       {/* Primary — key takeaway */}
       <section className="border-b border-border bg-neutral-50/50 px-5 py-6">
         <h3 className="text-sm font-semibold text-foreground">Key finding</h3>
-        <p className="mt-3 max-w-prose text-sm leading-relaxed text-neutral-800">
+        <p className="mt-3 w-full text-sm leading-relaxed text-neutral-800">
           {report.keyFinding}
         </p>
       </section>
@@ -94,7 +94,11 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
           </FullRcaAccordion>
 
           <FullRcaAccordion
-            title="Top Issues"
+            title={
+              report.level === "overall"
+                ? "Top Issues — Brand Breakdown"
+                : "Top Issues"
+            }
             open={openCauses}
             onOpenChange={setOpenCauses}
             flushContent
@@ -103,7 +107,11 @@ export function FullRcaReport({ report }: FullRcaReportProps) {
           </FullRcaAccordion>
 
           <FullRcaAccordion
-            title="Recent Trend — 8 Weeks"
+            title={
+              report.level === "overall"
+                ? "8-Week Revenue Trend"
+                : "Recent Trend — 8 Weeks"
+            }
             open={openRevenue}
             onOpenChange={setOpenRevenue}
             flushContent

@@ -29,7 +29,15 @@ const EXPAND_AT = 8;
 export function SkuRca({ sku, onClose }: SkuRcaProps) {
   const data = useMemo(() => getSkuRcaData(sku), [sku]);
   const [collapsed, setCollapsed] = useState(false);
-  const { messages, onPromptSelect } = useSkuAllyThread(sku);
+  const reportScope = useMemo(
+    () => ({
+      level: "sku" as const,
+      entityName: sku.name,
+      entityGapDollars: sku.gapDollars,
+    }),
+    [sku.gapDollars, sku.name],
+  );
+  const { messages, onPromptSelect } = useSkuAllyThread(sku, { reportScope });
 
   function onBodyScroll(e: UIEvent<HTMLDivElement>) {
     const top = e.currentTarget.scrollTop;

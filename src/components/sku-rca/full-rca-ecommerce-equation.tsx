@@ -27,15 +27,22 @@ export function FullRcaEcommerceEquationSection({
     },
     {
       id: "mover",
-      label: "Biggest mover",
+      label: data.summaryLabels?.biggestMover ?? "Biggest mover",
       value: data.summary.biggestMover,
     },
     {
       id: "lever",
-      label: "Primary lever",
+      label: data.summaryLabels?.primaryLever ?? "Primary lever",
       value: data.summary.primaryLever,
     },
   ];
+
+  const firstWeekLabel = data.currentWeekFirst
+    ? data.currentWeekLabel
+    : data.priorWeekLabel;
+  const secondWeekLabel = data.currentWeekFirst
+    ? data.priorWeekLabel
+    : data.currentWeekLabel;
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
@@ -68,19 +75,19 @@ export function FullRcaEcommerceEquationSection({
                 scope="col"
                 className="px-4 py-2.5 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase"
               >
-                Metric
+                {data.metricColumnLabel ?? "Metric"}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2.5 text-right text-2xs font-medium tracking-wide text-muted-foreground uppercase"
               >
-                {data.priorWeekLabel}
+                {firstWeekLabel}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2.5 text-right text-2xs font-medium tracking-wide text-muted-foreground uppercase"
               >
-                {data.currentWeekLabel}
+                {secondWeekLabel}
               </th>
             </tr>
           </thead>
@@ -97,10 +104,10 @@ export function FullRcaEcommerceEquationSection({
                   {row.metric}
                 </th>
                 <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                  {row.priorWeek}
+                  {data.currentWeekFirst ? row.currentWeek : row.priorWeek}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                  {row.currentWeek}
+                  {data.currentWeekFirst ? row.priorWeek : row.currentWeek}
                 </td>
               </tr>
             ))}
@@ -108,7 +115,7 @@ export function FullRcaEcommerceEquationSection({
         </table>
       </div>
 
-      <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+      <p className="w-full text-sm leading-relaxed text-muted-foreground">
         {data.narrative}
       </p>
     </div>
