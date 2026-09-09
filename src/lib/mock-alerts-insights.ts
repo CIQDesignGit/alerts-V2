@@ -2703,9 +2703,9 @@ export function defaultTaxonomyExpandedIds(
   return ids;
 }
 
-/** Default selected taxonomy node — first brand (matches design mock). */
+/** Default selected taxonomy node — Overall (portfolio RCA landing). */
 export function defaultTaxonomySelection(root: AlertsTaxonomyNode): string {
-  return root.children[0]?.id ?? root.id;
+  return root.id;
 }
 
 /** Find a taxonomy node by SKU id (leaf). */

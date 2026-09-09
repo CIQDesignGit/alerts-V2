@@ -78,10 +78,15 @@ function ThinkingDots() {
 export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Keep the latest reply in view inside the details panel only — never scroll main
-  // or the left issue list (see app-shell + data-sku-detail-scroll).
+  const lastMessage = messages.at(-1);
+  const lastIsFullRca =
+    lastMessage?.role === "assistant" && lastMessage.kind === "full-rca";
+
+  // Keep short replies / processing in view inside the details panel only.
+  // Gap to Plan is tall — do not chase endRef or the user lands at the bottom
+  // of the report; leave scroll where it is so they read from the top.
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0 || lastIsFullRca) return;
     const target = endRef.current;
     if (!target) return;
 
@@ -99,7 +104,7 @@ export function SkuAllyChatThread({ messages }: SkuAllyChatThreadProps) {
         }
       });
     });
-  }, [messages.length, messages.at(-1)?.id, messages.at(-1)]);
+  }, [messages.length, lastMessage?.id, lastMessage, lastIsFullRca]);
 
   if (messages.length === 0) return null;
 

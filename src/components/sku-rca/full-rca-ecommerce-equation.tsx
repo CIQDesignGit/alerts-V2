@@ -68,7 +68,7 @@ export function FullRcaEcommerceEquationSection({
                 scope="col"
                 className="px-4 py-2.5 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase"
               >
-                Lever
+                Metric
               </th>
               <th
                 scope="col"
@@ -94,7 +94,7 @@ export function FullRcaEcommerceEquationSection({
                   scope="row"
                   className="px-4 py-3 text-left font-medium text-foreground"
                 >
-                  {row.lever}
+                  {row.metric}
                 </th>
                 <td className="px-4 py-3 text-right tabular-nums text-foreground">
                   {row.priorWeek}

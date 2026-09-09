@@ -3,11 +3,19 @@
 import { ChevronDown, MessageSquareText } from "lucide-react";
 import { useState } from "react";
 
-import type { FullRcaRootCause } from "@/lib/mock-full-rca-report";
+import type {
+  FullRcaCauseStatus,
+  FullRcaRootCause,
+} from "@/lib/mock-full-rca-report";
 import { cn } from "@/lib/utils";
 
 type FullRcaRootCausesProps = {
   causes: FullRcaRootCause[];
+};
+
+const STATUS_LABEL: Record<FullRcaCauseStatus, string> = {
+  "still-an-issue": "Still an Issue",
+  resolved: "Resolved",
 };
 
 /**
@@ -34,6 +42,7 @@ function TopIssueCard({
   defaultOpen: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const isStillAnIssue = cause.status === "still-an-issue";
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background">
@@ -58,11 +67,16 @@ function TopIssueCard({
           {cause.title}
         </span>
 
-        {cause.badge === "worth-watching" ? (
-          <span className="mt-0.5 inline-flex shrink-0 rounded-full border border-warning-600/35 bg-warning-50 px-2 py-0.5 text-2xs font-semibold tracking-wide text-warning-700 uppercase">
-            Worth Watching
-          </span>
-        ) : null}
+        <span
+          className={cn(
+            "mt-0.5 inline-flex shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold tracking-wide",
+            isStillAnIssue
+              ? "bg-error-50 text-error-700"
+              : "bg-success-50 text-success-700",
+          )}
+        >
+          {STATUS_LABEL[cause.status]}
+        </span>
 
         <ChevronDown
           className={cn(
