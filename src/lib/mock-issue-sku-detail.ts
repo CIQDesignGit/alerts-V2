@@ -15,7 +15,7 @@ export type BuyBoxComparisonRow = {
   /** Star rating 0–5 when icon is ratings */
   brandRating?: number;
   competitorRating?: number;
-  /** Win rate fraction e.g. 1/6 — rendered as link */
+  /** Win rate fraction e.g. 1/4 — rendered as link */
   brandWinRate?: string;
   competitorWinRate?: string;
   /** Crawl times when this side owned the Buy Box (winRate rows) */
@@ -274,9 +274,12 @@ function gapLabel(sku: IssueSku): string {
   return formatGapDollars(sku.gapDollars);
 }
 
+/** Crawl window for Lost Buy Box win-rate fractions (X/4) and comparison timeline. */
+const BUY_BOX_CRAWL_COUNT = 4;
+
 /**
  * Recent scrape times (newest first) used to fill Buy Box Wins tooltips.
- * Count of returned checks matches the win numerator (e.g. 2 for 2/6).
+ * Count of returned checks matches the win numerator (e.g. 2 for 2/4).
  */
 const BUY_BOX_CRAWL_POOL: Array<BuyBoxWinCheck & { date: string }> = [
   { date: "21 Aug 2026", time: "4:36 AM", relative: "6h ago" },
@@ -320,14 +323,17 @@ const BUY_BOX_CRAWL_LOCATIONS: Array<{ city: string; zip: string }> = [
 ];
 
 /**
- * Most recent 6 crawls (same window as the "X/6" Win Rate fractions) with who held the
+ * Most recent crawls (same window as the "X/4" Win Rate fractions) with who held the
  * Buy Box at each check. Deterministic per SKU so the winner order varies but stays stable.
  */
 function buildBuyBoxCrawlRows(seed: number, ourWin: number): BuyBoxCrawlRow[] {
-  const entries = BUY_BOX_CRAWL_POOL.slice(0, 6);
+  const entries = BUY_BOX_CRAWL_POOL.slice(0, BUY_BOX_CRAWL_COUNT);
   const order = entries
     .map((_, index) => index)
-    .sort((a, b) => ((a + seed) % 6) - ((b + seed) % 6));
+    .sort(
+      (a, b) =>
+        ((a + seed) % BUY_BOX_CRAWL_COUNT) - ((b + seed) % BUY_BOX_CRAWL_COUNT),
+    );
   const brandWonAt = new Set(order.slice(0, ourWin));
 
   return entries.map((entry, index) => {
@@ -358,8 +364,8 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
   const theirPrice = sku.theirPrice ?? 17.49;
   const seed = skuSeed(sku);
   const ourWin = 1 + (seed % 3);
-  // Tied to ourWin (out of the same 6 crawls below) so the two fractions always add up to 6
-  const theirWin = 6 - ourWin;
+  // Tied to ourWin (out of the same 4 crawls below) so the two fractions always add up to 4
+  const theirWin = BUY_BOX_CRAWL_COUNT - ourWin;
   const brandRating = 3.0 + (seed % 10) / 10;
   const competitorRating = Math.min(5, brandRating + 0.6 + (seed % 5) / 10);
 
@@ -396,10 +402,10 @@ export function getLostBuyBoxSkuDetail(sku: IssueSku): LostBuyBoxSkuDetail {
         id: "winRate",
         label: "Buy Box Win Rate",
         icon: "winRate",
-        brandValue: `${ourWin}/6`,
-        competitorValue: `${theirWin}/6`,
-        brandWinRate: `${ourWin}/6`,
-        competitorWinRate: `${theirWin}/6`,
+        brandValue: `${ourWin}/${BUY_BOX_CRAWL_COUNT}`,
+        competitorValue: `${theirWin}/${BUY_BOX_CRAWL_COUNT}`,
+        brandWinRate: `${ourWin}/${BUY_BOX_CRAWL_COUNT}`,
+        competitorWinRate: `${theirWin}/${BUY_BOX_CRAWL_COUNT}`,
         brandWinChecks: buildBuyBoxWinCheckDays(ourWin, "brand"),
         competitorWinChecks: buildBuyBoxWinCheckDays(theirWin, "competitor"),
       },
