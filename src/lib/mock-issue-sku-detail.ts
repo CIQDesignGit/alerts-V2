@@ -592,8 +592,8 @@ export function getStockAvailabilitySkuDetail(
 ): StockAvailabilitySkuDetail {
   return {
     summary:
-      "24 units on hand. 76% page unavailability. 0% rep OOS. Listing issue — not inventory.",
-    statusLabel: "Currently unavailable",
+      "SKU is currently Out of Stock, and has been unavailable at least once a day for 1 of the last 7 days.",
+    statusLabel: "Currently out of stock",
     location: "Los Angeles",
     zip: "90028",
     timestamp: "Today, 4:00 PM",
