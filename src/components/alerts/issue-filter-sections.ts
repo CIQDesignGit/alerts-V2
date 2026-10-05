@@ -32,6 +32,6 @@ export const ISSUE_FILTER_SECTIONS: IssueFilterSection[] = [
   {
     id: "search-traffic",
     label: "Search & Traffic",
-    issues: ["sponsoredSov", "keywordRank", "conversionDrop", "mediaSpend"],
+    issues: ["keywordRank", "conversionDrop", "mediaSpend"],
   },
 ];

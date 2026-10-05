@@ -982,7 +982,6 @@ export const ISSUE_TYPE_SIDEBAR_ORDER: IssueKey[] = [
   "ratingReviews",
   "stockAvailability",
   "shippingSpeed",
-  "sponsoredSov",
   "keywordRank",
   "conversionDrop",
   "mediaSpend",
@@ -1187,9 +1186,9 @@ export const aiBrief = {
  *
  * Shared SKU ids (same product under multiple issues) — used so Issue “Alerts”
  * count can double-count, while Taxonomy “SKUs” count stays unique:
- * - s1 CleanPro Robot Vac R900 → Lost Buy Box, SOV, Keyword Rank, Coupon
- * - s2 CleanPro Pro Upright → Lost Buy Box, SOV, Coupon
- * - s3 CleanPro StylePro S440 → Lost Buy Box, SOV
+ * - s1 CleanPro Robot Vac R900 → Lost Buy Box, Keyword Rank, Coupon
+ * - s2 CleanPro Pro Upright → Lost Buy Box, Coupon
+ * - s3 CleanPro StylePro S440 → Lost Buy Box
  */
 const issueAlertsUnsorted: IssueAlert[] = [
   {
@@ -1201,7 +1200,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
       "VacuMart_US holds Buy Box on several high-gap SKUs at $20–30 below list. Damage spans robotics, uprights, hair care, and more — not a single-category problem.",
     skus: [
       {
-        // Also listed under sponsoredSov, keywordRank, coupon (same id)
+        // Also listed under keywordRank, coupon (same id)
         id: "s1",
         name: "CleanPro Robot Vac R900",
         asin: "B08XYZ1234",
@@ -1216,7 +1215,7 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Aug 21 15:40",
       },
       {
-        // Also listed under sponsoredSov + coupon (same id)
+        // Also listed under coupon (same id)
         id: "s2",
         name: "CleanPro Pro Upright",
         asin: "B09ABC5678",
@@ -1232,7 +1231,6 @@ const issueAlertsUnsorted: IssueAlert[] = [
         lostAt: "Aug 21 09:20",
       },
       {
-        // Also listed under sponsoredSov (same id)
         id: "s3",
         name: "CleanPro StylePro S440",
         asin: "B07DEF9012",
@@ -1543,69 +1541,6 @@ const issueAlertsUnsorted: IssueAlert[] = [
         category: "Home Comfort",
         gapDollars: -6_000,
         lostAt: "Aug 16 10:05",
-      },
-    ],
-  },
-  {
-    issueKey: "sponsoredSov",
-    skuCount: 5,
-    gapDollars: -68_000,
-    severity: "mid",
-    aiSignal:
-      "Sponsored Share of Voice dropped below 40% on 5 priority keywords. Competitors increased bids while our campaigns were paused.",
-    skus: [
-      {
-        // Same product as lostBuyBox s1 — multi-issue demo
-        id: "s1",
-        name: "CleanPro Robot Vac R900",
-        asin: "B08XYZ1234",
-        seller: "VacuMart_US",
-        brand: "CleanPro",
-        category: "Floor Care Robotics",
-        gapDollars: -20_000,
-        lostAt: "Aug 21 09:00",
-      },
-      {
-        // Same product as lostBuyBox s2 — multi-issue demo
-        id: "s2",
-        name: "CleanPro Pro Upright",
-        asin: "B09ABC5678",
-        seller: "Amazon.com",
-        brand: "CleanPro",
-        category: "Floor Care",
-        gapDollars: -16_000,
-        lostAt: "Aug 21 09:00",
-      },
-      {
-        id: "sov3",
-        name: "PlayMax Enhanced Wired Controller",
-        asin: "B0SOV003",
-        seller: "GameGear_Pro",
-        brand: "PlayMax",
-        category: "Controllers",
-        gapDollars: -14_000,
-        lostAt: "Aug 20 17:25",
-      },
-      {
-        id: "sov4",
-        name: "KitchenPro MultiCooker",
-        asin: "B0SOV004",
-        seller: "KitchenDeals_US",
-        brand: "KitchenPro",
-        category: "Kitchen Appliances",
-        gapDollars: -10_000,
-        lostAt: "Aug 20 12:40",
-      },
-      {
-        // Same product as lostBuyBox s3 — multi-issue demo
-        id: "s3",
-        name: "CleanPro StylePro S440",
-        asin: "B07DEF9012",
-        seller: "BeautyDealz",
-        brand: "CleanPro",
-        category: "Hair Care",
-        gapDollars: -8_000,
-        lostAt: "Aug 16 08:15",
       },
     ],
   },

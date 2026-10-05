@@ -129,12 +129,7 @@ export const RCA_ISSUE_GROUP_ORDER: {
   {
     id: "search-traffic",
     label: "Search & Traffic",
-    issueKeys: [
-      "sponsoredSov",
-      "keywordRank",
-      "conversionDrop",
-      "mediaSpend",
-    ],
+    issueKeys: ["keywordRank", "conversionDrop", "mediaSpend"],
   },
 ];
 
