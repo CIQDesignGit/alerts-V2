@@ -501,116 +501,121 @@ function getRatingReviewsTrend(_sku: IssueSku): LastWeekTrendData {
   };
 }
 
-/** Stock Availability — OOS / inventory / revenue lost */
+/** Sep 27–Oct 3 day headers — single-line uppercase (Stock Availability design) */
+const SEP_27_OCT_3_DAYS = [
+  { id: "d0", dateLabel: "SEP 27", dayLabel: "" },
+  { id: "d1", dateLabel: "SEP 28", dayLabel: "" },
+  { id: "d2", dateLabel: "SEP 29", dayLabel: "" },
+  { id: "d3", dateLabel: "SEP 30", dayLabel: "" },
+  { id: "d4", dateLabel: "OCT 1", dayLabel: "" },
+  { id: "d5", dateLabel: "OCT 2", dayLabel: "" },
+  { id: "d6", dateLabel: "OCT 3", dayLabel: "" },
+] as const;
+
+/** Shared daily crawl fractions for Unavailable crawls + breakdown rows */
+const UNAVAILABLE_CRAWL_CELLS = textCells([
+  "0/12",
+  "0/11",
+  "0/12",
+  "0/7",
+  "0/4",
+  "0/5",
+  "0/4",
+]);
+
+/** Stock Availability — days unavailable / crawl unavailability / on-hand inventory */
 function getStockAvailabilityTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "stockAvailability",
-    title: "Last Week Trend (Aug 9–15)",
+    title: "Last Week Trend (Sep 27–Oct 3)",
     vsPrevWeekTooltip:
       "Compares this week’s Stock Availability metrics to the prior 7 days.",
-    summaryColumns: 2,
+    showVsPrevWeek: false,
+    summaryColumns: 3,
     summaryMetrics: [
       {
-        id: "days-oos",
-        // First in the 7d snapshot — label above, large value (same layout as other KPIs)
-        label: "DAYS OOS",
-        value: "7",
-      },
-      {
-        id: "oos",
-        label: "REP OOS %",
-        value: "100%",
-        delta: "+82pp",
-        deltaTone: "negative",
-      },
-      {
-        id: "rev",
-        label: "REVENUE LOST (7D)",
-        value: "$24.3K",
-        delta: "-24%",
-        deltaTone: "positive",
+        id: "days-unavailable",
+        label: "DAYS UNAVAILABLE",
+        value: "0",
       },
       {
         id: "unavail",
         label: "UNAVAILABILITY",
-        value: "100%",
-        delta: "+88pp",
-        deltaTone: "negative",
-        sublabel: "20/24 crawls",
+        value: "0/55",
+        valueInfoTooltip:
+          "Unavailable crawls over total crawls in the last 7 days.",
       },
       {
         id: "oh",
-        label: "ON-HAND INVENTORY",
-        value: "0 units",
-        delta: "-100%",
+        label: "ON HAND INVENTORY",
+        value: "808",
+        delta: "↓ vs 2,410",
         deltaTone: "negative",
+        valueInfoTooltip:
+          "Ending on-hand units versus inventory at the start of the prior week.",
       },
     ],
-    days: JUN_1_7_DAYS,
+    days: [...SEP_27_OCT_3_DAYS],
     rows: [
       {
-        id: "oos",
-        label: "Rep OOS %",
-        cells: textCells(
-          ["0%", "18%", "42%", "68%", "100%", "100%", "100%"],
-          [
-            "neutral",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-          ],
-        ),
+        id: "unavailable-crawls",
+        label: "Unavailable crawls",
+        cells: UNAVAILABLE_CRAWL_CELLS,
       },
       {
-        id: "unavail",
-        label: "Unavailability %",
-        cells: textCells(
-          ["0%", "33%", "50%", "67%", "100%", "100%", "100%"],
-          [
-            "neutral",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-          ],
-        ),
+        id: "oos-crawls",
+        label: "OOS crawls",
+        nested: true,
+        cells: UNAVAILABLE_CRAWL_CELLS,
+      },
+      {
+        id: "1p-unavailable-crawls",
+        label: "1P Unavailable crawls",
+        nested: true,
+        cells: UNAVAILABLE_CRAWL_CELLS,
+      },
+      {
+        id: "suppressed-crawls",
+        label: "Suppressed crawls",
+        nested: true,
+        cells: UNAVAILABLE_CRAWL_CELLS,
+      },
+      {
+        id: "unavailable-other-crawls",
+        label: "Unavailable - Other Reasons crawls",
+        nested: true,
+        cells: UNAVAILABLE_CRAWL_CELLS,
       },
       {
         id: "inventory",
-        label: "On-Hand Inventory",
-        cells: textCells(
-          ["312", "140", "60", "22", "0", "0", "0"],
-          [
-            "neutral",
-            "neutral",
-            "neutral",
-            "neutral",
-            "negative",
-            "negative",
-            "negative",
-          ],
-        ),
+        label: "On hand inventory",
+        cells: textCells([
+          "2,126",
+          "1,857",
+          "1,606",
+          "1,381",
+          "1,183",
+          "986",
+          "808",
+        ]),
       },
       {
-        id: "revenue",
-        label: "Revenue Lost",
-        cells: textCells(
-          ["$0", "$1.2K", "$2.8K", "$4.1K", "$5.6K", "$5.4K", "$5.2K"],
-          [
-            "neutral",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-          ],
-        ),
+        id: "open-po",
+        label: "Open PO units",
+        cells: textCells(["0", "0", "0", "0", "0", "0", "0"]),
+      },
+      {
+        id: "woc",
+        label: "Weeks of Cover (CIQ)",
+        cells: textCells([
+          "2.64",
+          "2.31",
+          "1.99",
+          "1.72",
+          "1.47",
+          "1.20",
+          "0.00",
+        ]),
       },
     ],
   };

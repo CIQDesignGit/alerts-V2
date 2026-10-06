@@ -20,6 +20,8 @@ export type TrendSummaryMetric = {
   deltaTone?: TrendTone;
   /** Optional (i) tooltip on the label */
   infoTooltip?: string;
+  /** Optional (i) tooltip after the value / delta (e.g. Stock Availability) */
+  valueInfoTooltip?: string;
   /** Small line under the value, e.g. "20/24 crawls" */
   sublabel?: string;
 };
@@ -51,6 +53,8 @@ export type TrendTableRow = {
   typeBadge?: TrendTypeBadge;
   /** When false, leave the label cell blank (paired organic/paid rows) */
   showLabel?: boolean;
+  /** Nested under a parent metric — indented, muted label */
+  nested?: boolean;
 };
 
 export type LastWeekTrendData = {

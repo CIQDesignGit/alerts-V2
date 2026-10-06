@@ -225,6 +225,12 @@ export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {
                     {metric.delta}
                   </span>
                 ) : null}
+                {metric.valueInfoTooltip ? (
+                  <InfoHint
+                    label={`About ${metric.label}`}
+                    text={metric.valueInfoTooltip}
+                  />
+                ) : null}
               </div>
               {metric.sublabel ? (
                 <p className="mt-0.5 text-2xs text-muted-foreground">
@@ -258,7 +264,9 @@ export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {
                 >
                   <span className={DAY_COL_SHELL}>
                     <span className="block">{day.dateLabel}</span>
-                    <span className="block font-normal">{day.dayLabel}</span>
+                    {day.dayLabel ? (
+                      <span className="block font-normal">{day.dayLabel}</span>
+                    ) : null}
                   </span>
                 </th>
               ))}
@@ -279,7 +287,10 @@ export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {
                   <th
                     scope="row"
                     className={cn(
-                      "sticky left-0 z-10 px-2 py-1 text-left text-xs font-medium text-foreground",
+                      "sticky left-0 z-10 px-2 py-1 text-left text-xs",
+                      row.nested
+                        ? "pl-6 font-normal text-muted-foreground"
+                        : "font-medium text-foreground",
                       row.isFooter
                         ? "bg-neutral-50 font-semibold"
                         : row.rowHighlight
