@@ -109,14 +109,31 @@ export type DealPageReviewedLink = {
   href: string;
 };
 
+export type DealPageTopProduct = {
+  rank: number;
+  name: string;
+  brand: string;
+};
+
 export type DealPageSkuDetail = {
-  /** Lead copy above the status card */
+  /** Lead copy above the deal window */
   leadText: string;
   /** Deal category pages shown when hovering “deals page” */
   reviewedPages: DealPageReviewedLink[];
-  statusHeadline: string;
-  /** Short supporting lines under the headline (mock skeleton text) */
-  supportLines: [string, string];
+  /** Promotion name shown on the deal card */
+  dealType: string;
+  /** August day numbers for the deal window (prototype crawl month). */
+  startDay: number;
+  endDay: number;
+  nowDay: number;
+  lastSeenDay: number;
+  /** Clock time only, e.g. "8:12 AM" */
+  lastSeenTime: string;
+  /** e.g. "1 day ago" */
+  lastSeenRelative: string;
+  /** Deals page the top-10 list was read from */
+  dealsPageLabel: string;
+  topProducts: DealPageTopProduct[];
 };
 
 export type BestSellerRankSkuDetail = {
@@ -531,8 +548,75 @@ export function getPromoBadgeSkuDetail(sku: IssueSku): PromoBadgeSkuDetail {
   };
 }
 
-/** Deal Page Visibility — missing-status card (issue aggregation SKU view). */
+/** Prototype “today” matches the Aug 21 crawl window used by other issues. */
+const DEAL_NOW_DAY = 21;
+const DEAL_START_DAY = 14;
+const DEAL_END_DAY = 26;
+
+const FLOOR_CARE_TOP_PRODUCTS: Array<Omit<DealPageTopProduct, "rank">> = [
+  { name: "VacuMax Cordless Pro", brand: "VacuMax" },
+  { name: "ShineHome Robot S2", brand: "ShineHome" },
+  { name: "FloorLite Stick Vac", brand: "FloorLite" },
+  { name: "DustAway Auto-Empty", brand: "DustAway" },
+  { name: "PureSweep Upright", brand: "PureSweep" },
+  { name: "NovaVac Mini", brand: "NovaVac" },
+  { name: "BrightPath Carpet Cleaner", brand: "BrightPath" },
+  { name: "HomeGlide Robot", brand: "HomeGlide" },
+  { name: "SwiftBrush Cordless", brand: "SwiftBrush" },
+  { name: "AirLift Canister", brand: "AirLift" },
+];
+
+const KITCHEN_TOP_PRODUCTS: Array<Omit<DealPageTopProduct, "rank">> = [
+  { name: "ChefPan Nonstick 10pc", brand: "ChefPan" },
+  { name: "HeatWell MultiCooker", brand: "HeatWell" },
+  { name: "CrispBox Dual Air Fryer", brand: "CrispBox" },
+  { name: "BakeRight Dutch Oven", brand: "BakeRight" },
+  { name: "SlicePro Knife Set", brand: "SlicePro" },
+  { name: "SteamKettle Glass", brand: "SteamKettle" },
+  { name: "MixWell Stand Mixer", brand: "MixWell" },
+  { name: "GrillPlate Indoor", brand: "GrillPlate" },
+  { name: "FreshKeep Container Set", brand: "FreshKeep" },
+  { name: "PourEase Oil Dispenser", brand: "PourEase" },
+];
+
+function formatLastSeen(lostAt: string | undefined): {
+  day: number;
+  time: string;
+} {
+  const match = lostAt?.match(/Aug\s+(\d+)\s+(\d{1,2}):(\d{2})/);
+  if (!match) return { day: 20, time: "11:05 AM" };
+
+  const day = Number(match[1]);
+  let hour = Number(match[2]);
+  const minutes = match[3];
+  const suffix = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+  return { day, time: `${hour}:${minutes} ${suffix}` };
+}
+
+function lastSeenRelative(day: number): string {
+  const diff = DEAL_NOW_DAY - day;
+  if (diff <= 0) return "Today";
+  if (diff === 1) return "1 day ago";
+  return `${diff} days ago`;
+}
+
+function rankedProducts(
+  products: Array<Omit<DealPageTopProduct, "rank">>,
+): DealPageTopProduct[] {
+  return products.map((product, index) => ({ ...product, rank: index + 1 }));
+}
+
+/** Deal Page Visibility — deal window + who else is on the page. */
 export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
+  const lastSeen = formatLastSeen(sku.lostAt);
+  const seenDay = Math.min(
+    Math.max(lastSeen.day, DEAL_START_DAY),
+    DEAL_NOW_DAY,
+  );
+  const kitchen = sku.category.toLowerCase().includes("kitchen");
+  const dealsPageLabel = kitchen ? "Kitchen & Dining" : "Vacuums & Floor Care";
+
   return {
     leadText:
       "Despite ongoing offer on this product, it is not showing up on the deals page",
@@ -557,8 +641,17 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
       },
       { id: "kitchen-dining", label: "Kitchen & Dining", href: "#" },
     ],
-    statusHeadline: "Your SKU is missing",
-    supportLines: [sku.name, sku.asin],
+    dealType: "Black Friday Deal",
+    startDay: DEAL_START_DAY,
+    endDay: DEAL_END_DAY,
+    nowDay: DEAL_NOW_DAY,
+    lastSeenDay: seenDay,
+    lastSeenTime: lastSeen.time,
+    lastSeenRelative: lastSeenRelative(seenDay),
+    dealsPageLabel,
+    topProducts: rankedProducts(
+      kitchen ? KITCHEN_TOP_PRODUCTS : FLOOR_CARE_TOP_PRODUCTS,
+    ),
   };
 }
 

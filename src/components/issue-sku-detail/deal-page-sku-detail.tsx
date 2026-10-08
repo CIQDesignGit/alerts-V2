@@ -3,6 +3,8 @@
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { DealPageTopProducts } from "@/components/issue-sku-detail/deal-page-top-products";
+import { DealPageWindow } from "@/components/issue-sku-detail/deal-page-window";
 import type { DealPageReviewedLink } from "@/lib/mock-issue-sku-detail";
 import { getDealPageSkuDetail } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
@@ -11,11 +13,10 @@ type DealPageSkuDetailProps = {
   sku: IssueSku;
 };
 
-/** Deal Page Visibility — missing-status card (issue aggregation SKU view). */
+/** Deal Page Visibility — deal window plus who else is on the page. */
 export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
   const detail = useMemo(() => getDealPageSkuDetail(sku), [sku]);
 
-  // Split lead so “deals page” can carry the underline + hover menu
   const dealsPhrase = "deals page";
   const dealsIndex = detail.leadText.lastIndexOf(dealsPhrase);
   const leadBefore =
@@ -26,40 +27,20 @@ export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
       : "";
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="flex flex-wrap items-center gap-1.5 text-sm text-foreground">
-        <span>
-          {leadBefore}
-          {dealsIndex >= 0 && (
-            <DealsPageHoverMenu pages={detail.reviewedPages} />
-          )}
-          {leadAfter}
-        </span>
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-foreground">
+        {leadBefore}
+        {dealsIndex >= 0 && (
+          <DealsPageHoverMenu pages={detail.reviewedPages} />
+        )}
+        {leadAfter}
       </p>
 
-      {/* Status card — pink hero + missing message */}
-      <div className="w-full max-w-xs overflow-hidden rounded-xl border border-border bg-background shadow-md">
-        <div className="relative flex h-36 items-center justify-center bg-error-50">
-          <div className="relative flex size-14 items-center justify-center rounded-full border-2 border-error-500 bg-background shadow-sm">
-            <span className="text-2xl font-bold text-error-600" aria-hidden>
-              ?
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2.5 px-5 py-5">
-          {/* Skeleton bars flank the headline — matches design placeholders */}
-          <div className="h-2.5 w-3/4 rounded-full bg-error-100" aria-hidden />
-          <p className="text-base font-semibold text-error-600">
-            {detail.statusHeadline}
-          </p>
-          <div className="h-2.5 w-full rounded-full bg-error-100" aria-hidden />
-          <div className="h-2.5 w-2/3 rounded-full bg-error-100" aria-hidden />
-          <span className="sr-only">
-            {detail.supportLines[0]} · {detail.supportLines[1]}
-          </span>
-        </div>
-      </div>
+      <DealPageWindow detail={detail} />
+      <DealPageTopProducts
+        pageLabel={detail.dealsPageLabel}
+        products={detail.topProducts}
+      />
     </div>
   );
 }
