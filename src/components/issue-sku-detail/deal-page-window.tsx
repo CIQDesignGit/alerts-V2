@@ -1,6 +1,6 @@
 "use client";
 
-import { IssueDetailTableHeader, issueDetailTable } from "@/components/issue-sku-detail/issue-detail-table";
+import { issueDetailTable } from "@/components/issue-sku-detail/issue-detail-table";
 import type { DealPageSkuDetail } from "@/lib/mock-issue-sku-detail";
 import { cn } from "@/lib/utils";
 
@@ -12,24 +12,24 @@ function augustDate(day: number) {
   return `${day} Aug`;
 }
 
-/** Deal type plus three labeled points: started, last seen, ends. */
+/** Deal name and the three dates in one card. */
 export function DealPageWindow({ detail }: DealPageWindowProps) {
   return (
     <div className={issueDetailTable.frame}>
-      <IssueDetailTableHeader
-        title="Deal"
-        meta={
+      <header className={issueDetailTable.header}>
+        <div className="flex min-w-0 items-center gap-2">
+          <h3 className={issueDetailTable.headerTitle}>Deal</h3>
           <span
             title="Deal name"
             className="inline-flex items-center rounded-md bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700"
           >
             {detail.dealType}
           </span>
-        }
-      />
+        </div>
+      </header>
 
       <div
-        className="px-5 py-5"
+        className="px-5 py-3"
         role="group"
         aria-label={`Deal started ${augustDate(detail.startDay)}. Last seen on the deals page ${augustDate(detail.lastSeenDay)} at ${detail.lastSeenTime}. Deal ends ${augustDate(detail.endDay)}.`}
       >
@@ -52,7 +52,7 @@ export function DealPageWindow({ detail }: DealPageWindowProps) {
             align="end"
           />
 
-          <div className="col-span-3 mt-3 grid grid-cols-3" aria-hidden>
+          <div className="col-span-3 mt-2 grid grid-cols-3" aria-hidden>
             <TrackSegment edge="start" tone="seen" />
             <TrackSegment edge="middle" tone="break" />
             <TrackSegment edge="end" tone="missing" />

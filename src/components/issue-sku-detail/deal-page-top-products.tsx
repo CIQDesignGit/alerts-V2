@@ -1,46 +1,66 @@
 "use client";
 
 import { SkuThumbnail } from "@/components/alerts-insights/sku-thumbnail";
+import { DealPageSelect } from "@/components/issue-sku-detail/deal-page-select";
 import {
   IssueDetailTableHeader,
   issueDetailTable,
   issueTd,
   issueTh,
 } from "@/components/issue-sku-detail/issue-detail-table";
-import type { DealPageTopProduct } from "@/lib/mock-issue-sku-detail";
+import type {
+  DealPageOption,
+  DealPageTopProduct,
+} from "@/lib/mock-issue-sku-detail";
+import { cn } from "@/lib/utils";
 
 type DealPageTopProductsProps = {
-  pageLabel: string;
+  pages: DealPageOption[];
+  pageId: string;
+  onPageChange: (pageId: string) => void;
   products: DealPageTopProduct[];
 };
 
-/** Other products occupying the first fold of the deals page. */
+/** Other products occupying the first fold of the selected deals page. */
 export function DealPageTopProducts({
-  pageLabel,
+  pages,
+  pageId,
+  onPageChange,
   products,
 }: DealPageTopProductsProps) {
   return (
-    <div className={issueDetailTable.frame}>
+    <div className={cn(issueDetailTable.frame, "overflow-visible")}>
       <IssueDetailTableHeader
         title="Top 10 on this deals page"
         meta={
-          <span className="text-sm font-semibold text-foreground">
-            {pageLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <span>Deals page</span>
+            <DealPageSelect
+              pages={pages}
+              value={pageId}
+              onChange={onPageChange}
+            />
+          </div>
         }
       />
-      <div className={issueDetailTable.scroll}>
+      <div className="overflow-x-auto">
         <table className={issueDetailTable.table}>
-          <thead>
+          <thead className="bg-neutral-50">
             <tr className={issueDetailTable.headRow}>
-              <th className={issueTh("right", "w-12")}>
-                <span className={issueDetailTable.thCellRight}>#</span>
+              <th className={issueTh("right", "w-12 align-middle py-0")}>
+                <span className="flex h-8 items-center justify-end leading-none">
+                  #
+                </span>
               </th>
-              <th className={issueTh()}>
-                <span className={issueDetailTable.thCell}>Product</span>
+              <th className={issueTh("left", "align-middle py-0")}>
+                <span className="flex h-8 items-center leading-none">
+                  Product
+                </span>
               </th>
-              <th className={issueTh()}>
-                <span className={issueDetailTable.thCell}>Brand</span>
+              <th className={issueTh("left", "align-middle py-0")}>
+                <span className="flex h-8 items-center leading-none">
+                  Brand
+                </span>
               </th>
             </tr>
           </thead>

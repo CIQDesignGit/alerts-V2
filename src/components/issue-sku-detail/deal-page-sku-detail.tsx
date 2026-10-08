@@ -1,22 +1,29 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { DealPageTopProducts } from "@/components/issue-sku-detail/deal-page-top-products";
 import { DealPageWindow } from "@/components/issue-sku-detail/deal-page-window";
-import type { DealPageReviewedLink } from "@/lib/mock-issue-sku-detail";
 import { getDealPageSkuDetail } from "@/lib/mock-issue-sku-detail";
+import type { DealPageReviewedLink } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 
 type DealPageSkuDetailProps = {
   sku: IssueSku;
 };
 
-/** Deal Page Visibility — deal window plus who else is on the page. */
+/** Deal Page Visibility — one deal, switched across the pages that were checked. */
 export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
   const detail = useMemo(() => getDealPageSkuDetail(sku), [sku]);
+  const [pageId, setPageId] = useState(detail.defaultPageId);
 
+  useEffect(() => {
+    setPageId(detail.defaultPageId);
+  }, [detail.defaultPageId, sku.id]);
+
+  const page =
+    detail.pages.find((item) => item.id === pageId) ?? detail.pages[0];
   const dealsPhrase = "deals page";
   const dealsIndex = detail.leadText.lastIndexOf(dealsPhrase);
   const leadBefore =
@@ -30,22 +37,37 @@ export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
     <div className="flex flex-col gap-4">
       <p className="text-sm text-foreground">
         {leadBefore}
-        {dealsIndex >= 0 && (
+        {dealsIndex >= 0 ? (
           <DealsPageHoverMenu pages={detail.reviewedPages} />
-        )}
+        ) : null}
         {leadAfter}
       </p>
 
-      <DealPageWindow detail={detail} />
-      <DealPageTopProducts
-        pageLabel={detail.dealsPageLabel}
-        products={detail.topProducts}
-      />
+      {page ? (
+        <>
+          <DealPageWindow
+            detail={{
+              ...detail,
+              dealsPageLabel: page.label,
+              lastSeenDay: page.lastSeenDay,
+              lastSeenTime: page.lastSeenTime,
+              lastSeenRelative: page.lastSeenRelative,
+              topProducts: page.topProducts,
+            }}
+          />
+          <DealPageTopProducts
+            pages={detail.pages}
+            pageId={page.id}
+            onPageChange={setPageId}
+            products={page.topProducts}
+          />
+        </>
+      ) : null}
     </div>
   );
 }
 
-/** White hover panel listing the 7 deals pages that were reviewed */
+/** Dotted “deals page” link listing the first-fold pages that were reviewed. */
 function DealsPageHoverMenu({ pages }: { pages: DealPageReviewedLink[] }) {
   const [open, setOpen] = useState(false);
 

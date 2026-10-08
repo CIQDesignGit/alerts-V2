@@ -109,6 +109,15 @@ export type DealPageReviewedLink = {
   href: string;
 };
 
+export type DealPageOption = {
+  id: string;
+  label: string;
+  lastSeenDay: number;
+  lastSeenTime: string;
+  lastSeenRelative: string;
+  topProducts: DealPageTopProduct[];
+};
+
 export type DealPageTopProduct = {
   rank: number;
   name: string;
@@ -118,8 +127,12 @@ export type DealPageTopProduct = {
 export type DealPageSkuDetail = {
   /** Lead copy above the deal window */
   leadText: string;
-  /** Deal category pages shown when hovering “deals page” */
+  /** First-fold pages listed from the “deals page” link in the lead */
   reviewedPages: DealPageReviewedLink[];
+  /** Deals pages checked for this SKU. Dates and top 10 follow the selected page. */
+  pages: DealPageOption[];
+  /** Page shown before the user picks another one */
+  defaultPageId: string;
   /** Promotion name shown on the deal card */
   dealType: string;
   /** August day numbers for the deal window (prototype crawl month). */
@@ -579,6 +592,38 @@ const KITCHEN_TOP_PRODUCTS: Array<Omit<DealPageTopProduct, "rank">> = [
   { name: "PourEase Oil Dispenser", brand: "PourEase" },
 ];
 
+/** Shared catalog so each deals page can show a different top 10. */
+const DEAL_PAGE_CATALOG: Array<Omit<DealPageTopProduct, "rank">> = [
+  ...FLOOR_CARE_TOP_PRODUCTS,
+  ...KITCHEN_TOP_PRODUCTS,
+];
+
+const DEAL_PAGE_DEFS: Array<{ id: string; label: string }> = [
+  { id: "small-appliances", label: "Small Appliances" },
+  { id: "hair-care", label: "Hair Care" },
+  { id: "toys-games", label: "Toys & Games" },
+  { id: "heating-cooling", label: "Heating, Cooling & Air Quality" },
+  { id: "vacuums-floor", label: "Vacuums & Floor Care" },
+  {
+    id: "carpet-upholstery",
+    label: "Carpet & Upholstery Cleaners & Accessories",
+  },
+  { id: "kitchen-dining", label: "Kitchen & Dining" },
+];
+
+const REVIEWED_DEAL_PAGES: DealPageReviewedLink[] = DEAL_PAGE_DEFS.map(
+  (page) => ({ ...page, href: "#" }),
+);
+
+function productsForPage(start: number): DealPageTopProduct[] {
+  return rankedProducts(
+    Array.from({ length: 10 }, (_, index) => {
+      const item = DEAL_PAGE_CATALOG[(start + index) % DEAL_PAGE_CATALOG.length];
+      return item ?? DEAL_PAGE_CATALOG[0]!;
+    }),
+  );
+}
+
 function formatLastSeen(lostAt: string | undefined): {
   day: number;
   time: string;
@@ -615,32 +660,28 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
     DEAL_NOW_DAY,
   );
   const kitchen = sku.category.toLowerCase().includes("kitchen");
-  const dealsPageLabel = kitchen ? "Kitchen & Dining" : "Vacuums & Floor Care";
+  const defaultPageId = kitchen ? "kitchen-dining" : "vacuums-floor";
+  const pages: DealPageOption[] = DEAL_PAGE_DEFS.map((page, index) => {
+    const day = Math.min(
+      DEAL_NOW_DAY,
+      Math.max(DEAL_START_DAY, seenDay - index),
+    );
+    const isDefault = page.id === defaultPageId;
+    return {
+      ...page,
+      lastSeenDay: isDefault ? seenDay : day,
+      lastSeenTime: isDefault ? lastSeen.time : index % 2 === 0 ? "9:40 AM" : "4:15 PM",
+      lastSeenRelative: lastSeenRelative(isDefault ? seenDay : day),
+      topProducts: productsForPage(index * 3),
+    };
+  });
 
   return {
     leadText:
       "Despite ongoing offer on this product, it is not showing up on the deals page",
-    reviewedPages: [
-      { id: "small-appliances", label: "Small Appliances", href: "#" },
-      { id: "hair-care", label: "Hair Care", href: "#" },
-      { id: "toys-games", label: "Toys & Games", href: "#" },
-      {
-        id: "heating-cooling",
-        label: "Heating, Cooling & Air Quality",
-        href: "#",
-      },
-      {
-        id: "vacuums-floor",
-        label: "Vacuums & Floor Care",
-        href: "#",
-      },
-      {
-        id: "carpet-upholstery",
-        label: "Carpet & Upholstery Cleaners & Accessories",
-        href: "#",
-      },
-      { id: "kitchen-dining", label: "Kitchen & Dining", href: "#" },
-    ],
+    reviewedPages: REVIEWED_DEAL_PAGES,
+    pages,
+    defaultPageId,
     dealType: "Black Friday Deal",
     startDay: DEAL_START_DAY,
     endDay: DEAL_END_DAY,
@@ -648,10 +689,11 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
     lastSeenDay: seenDay,
     lastSeenTime: lastSeen.time,
     lastSeenRelative: lastSeenRelative(seenDay),
-    dealsPageLabel,
-    topProducts: rankedProducts(
-      kitchen ? KITCHEN_TOP_PRODUCTS : FLOOR_CARE_TOP_PRODUCTS,
-    ),
+    dealsPageLabel:
+      pages.find((page) => page.id === defaultPageId)?.label ??
+      "Vacuums & Floor Care",
+    topProducts:
+      pages.find((page) => page.id === defaultPageId)?.topProducts ?? [],
   };
 }
 
