@@ -236,20 +236,44 @@ export type SponsoredSovSkuDetail = {
   }[];
 };
 
-export type KeywordRankCard = {
+export type KeywordRankMetricTone = "drop" | "stable";
+
+export type KeywordRankMetric = {
+  id: string;
+  label: string;
+  from: string;
+  to: string;
+  /** Signed change only — no comparison window or IQR note */
+  delta: string;
+  tone: KeywordRankMetricTone;
+};
+
+export type KeywordRankPlacement = {
+  channel: "Organic" | "SP";
+  /** Null when the SKU has no placement on this channel */
+  from: number | null;
+  to: number | null;
+  emptyLabel?: string;
+  /** Full competing SKU name — shown ahead of the ASIN */
+  competitorName?: string;
+  competitorAsin?: string;
+  competitorFrom?: number;
+  competitorTo?: number;
+};
+
+export type KeywordRankLostKeyword = {
   id: string;
   keyword: string;
-  thresholdBreached: boolean;
-  rankFrom: number;
-  rankTo: number;
-  /** Highlight destination rank in red when threshold breached */
-  emphasizeDrop: boolean;
+  placements: KeywordRankPlacement[];
 };
 
 export type KeywordRankSkuDetail = {
+  /** One line above the metrics — same role as other issue summaries */
   summary: string;
-  thresholdNote: string;
-  cards: KeywordRankCard[];
+  metrics: KeywordRankMetric[];
+  keywordsTitle: string;
+  keywordsMeta: string;
+  keywords: KeywordRankLostKeyword[];
 };
 
 export type MediaSpendKeywordRow = {
@@ -907,38 +931,117 @@ export function getSponsoredSovSkuDetail(sku: IssueSku): SponsoredSovSkuDetail {
   };
 }
 
-/** Keyword Rank — drop cards with threshold callout. */
+/** Keyword Rank — organic drop diagnosis, demand metrics, competitor gains. */
 export function getKeywordRankSkuDetail(sku: IssueSku): KeywordRankSkuDetail {
   void sku;
   return {
     summary:
-      "Your rank for some paid keywords has changed.",
-    thresholdNote:
-      "Threshold Breached: Organic keyword rank crossed the defined threshold of 5 ranks.",
-    cards: [
+      "Organic search rank degraded across the keyword universe. SP rank held steady.",
+    metrics: [
       {
-        id: "kw1",
-        keyword: "food processor 8 cup",
-        thresholdBreached: true,
-        rankFrom: 3,
-        rankTo: 9,
-        emphasizeDrop: true,
+        id: "organic-rank",
+        label: "Organic Search Rank",
+        from: "8.4",
+        to: "31.7",
+        delta: "+23.3",
+        tone: "drop",
       },
       {
-        id: "kw2",
-        keyword: "digital food processor",
-        thresholdBreached: false,
-        rankFrom: 8,
-        rankTo: 12,
-        emphasizeDrop: false,
+        id: "sp-rank",
+        label: "SP Search Rank",
+        from: "6.1",
+        to: "6.8",
+        delta: "+0.7",
+        tone: "stable",
       },
       {
-        id: "kw3",
-        keyword: "food chopper electric",
-        thresholdBreached: false,
-        rankFrom: 12,
-        rankTo: 15,
-        emphasizeDrop: false,
+        id: "glance-views",
+        label: "Glance Views",
+        from: "9,240",
+        to: "6,180",
+        delta: "−33.1%",
+        tone: "drop",
+      },
+      {
+        id: "conversion",
+        label: "Unit Conversion Rate",
+        from: "4.9%",
+        to: "4.8%",
+        delta: "−0.1pp",
+        tone: "stable",
+      },
+    ],
+    keywordsTitle: "Top 3 keywords lost",
+    keywordsMeta: "Competitor SKU that gained most",
+    keywords: [
+      {
+        id: "air-fryer",
+        keyword: "air fryer",
+        placements: [
+          {
+            channel: "Organic",
+            from: 3,
+            to: 61,
+            competitorName: "Ninja Foodi DualZone Air Fryer",
+            competitorAsin: "B0C33CHG99",
+            competitorFrom: 14,
+            competitorTo: 4,
+          },
+          {
+            channel: "SP",
+            from: 5,
+            to: 22,
+            competitorName: "COSORI Pro II Air Fryer Oven",
+            competitorAsin: "B0CSZ7WBYW",
+            competitorFrom: 9,
+            competitorTo: 3,
+          },
+        ],
+      },
+      {
+        id: "ninja-air-fryer",
+        keyword: "ninja air fryer",
+        placements: [
+          {
+            channel: "Organic",
+            from: 6,
+            to: 61,
+            competitorName: "Ninja AF101 Air Fryer",
+            competitorAsin: "B09B7SB46",
+            competitorFrom: 21,
+            competitorTo: 7,
+          },
+          {
+            channel: "SP",
+            from: null,
+            to: null,
+            emptyLabel: "No SP placement",
+          },
+        ],
+      },
+      {
+        id: "air-fryer-6qt",
+        keyword: "air fryer 6 qt",
+        placements: [
+          {
+            channel: "Organic",
+            from: 14,
+            to: 38,
+            competitorName: "Instant Vortex Plus 6-Quart Air Fryer",
+            competitorAsin: "B0B9TQWJKK",
+            competitorFrom: 19,
+            competitorTo: 11,
+          },
+          {
+            channel: "SP",
+            from: 8,
+            to: 10,
+            competitorName: "Chefman TurboFry 6-Quart Air Fryer",
+            competitorAsin: "B0CS3V8M9H",
+            competitorFrom: 12,
+            competitorTo: 6,
+          },
+        ],
       },
     ],
   };
