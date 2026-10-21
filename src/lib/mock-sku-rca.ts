@@ -12,6 +12,7 @@ import {
 import {
   buildScaledPerformanceKpiCards,
   getScaledLastWeekPerformance,
+  type ScaledPerformanceKpiCard,
 } from "@/lib/mock-calendar";
 import { skuOpsDollars } from "@/lib/ops";
 
@@ -43,14 +44,7 @@ export type RcaIssueGroup = {
   issues: RcaIssueRow[];
 };
 
-export type RcaKpiCard = {
-  id: string;
-  title: string;
-  value: string;
-  /** red = negative gap, green = positive, default = neutral */
-  tone: "negative" | "positive" | "neutral";
-  subtitle: string;
-};
+export type RcaKpiCard = ScaledPerformanceKpiCard;
 
 export type RcaAnalysisBlock = {
   heading: string;

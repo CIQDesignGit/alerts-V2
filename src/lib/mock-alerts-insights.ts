@@ -17,6 +17,7 @@ import {
   buildScaledPerformanceKpiCards,
   getScaledLastWeekPerformance,
   PORTFOLIO_WTD_RANGE,
+  type ScaledPerformanceKpiCard,
 } from "@/lib/mock-calendar";
 import {
   paintIssueAlertsOps,
@@ -578,13 +579,7 @@ export type TaxonomyRcaTopIssue = {
 };
 
 /** Level-scoped RCA view when grouping Alerts by taxonomy */
-export type TaxonomyPerformanceKpi = {
-  id: string;
-  title: string;
-  value: string;
-  tone: "negative" | "positive" | "neutral";
-  subtitle: string;
-};
+export type TaxonomyPerformanceKpi = ScaledPerformanceKpiCard;
 
 export type TaxonomyRcaView = {
   levelLabel: string;

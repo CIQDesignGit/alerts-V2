@@ -119,13 +119,37 @@ export function getScaledLastWeekPerformance(
   };
 }
 
+/** One data stream feeding a KPI value — consolidated tables vs live feed */
+export type KpiSourceSegment = {
+  rangeLabel: string;
+  days: number;
+  value: string;
+};
+
+export type KpiSourceSplit = {
+  final: KpiSourceSegment;
+  realtime: KpiSourceSegment;
+};
+
 export type ScaledPerformanceKpiCard = {
   id: string;
   title: string;
   value: string;
   tone: "negative" | "positive" | "neutral";
   subtitle: string;
+  /** Set when the value blends final + real-time data for the period */
+  sourceSplit?: KpiSourceSplit;
 };
+
+/**
+ * Last week is not fully consolidated yet: Aug 9–13 is final,
+ * Aug 14–15 still comes from the real-time feed.
+ */
+export const LAST_WEEK_SOURCE_SPLIT = {
+  final: { rangeLabel: "Aug 9–13", days: 5 },
+  realtime: { rangeLabel: "Aug 14–15", days: 2 },
+  realtimeShareOfActual: 0.26,
+} as const;
 
 function formatKpiMoney(value: number): string {
   const abs = Math.abs(value);
@@ -139,6 +163,15 @@ function formatKpiSignedMoney(value: number): string {
   if (value > 0) return `+${body}`;
   if (value < 0) return `−${body}`;
   return body;
+}
+
+function buildLastWeekSourceSplit(actualDollars: number): KpiSourceSplit {
+  const { final, realtime, realtimeShareOfActual } = LAST_WEEK_SOURCE_SPLIT;
+  const realtimeDollars = Math.round(actualDollars * realtimeShareOfActual);
+  return {
+    final: { ...final, value: formatKpiMoney(actualDollars - realtimeDollars) },
+    realtime: { ...realtime, value: formatKpiMoney(realtimeDollars) },
+  };
 }
 
 /** KPI tile rows — shared by taxonomy Overall/Brand/Category and SKU RCA. */
@@ -165,6 +198,7 @@ export function buildScaledPerformanceKpiCards(
       value: formatKpiSignedMoney(perf.gapDollars),
       tone: gapTone,
       subtitle: `${formatKpiMoney(perf.actualDollars)} of ${formatKpiMoney(perf.planDollars)} plan · ${perf.attainmentPct.toFixed(1)}% attainment`,
+      sourceSplit: buildLastWeekSourceSplit(perf.actualDollars),
     },
     {
       id: "wtd",

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, TriangleAlert } from "lucide-react";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type CSSProperties, type ReactNode } from "react";
 
 import {
   getShippingSpeedSkuDetail,
@@ -95,7 +95,7 @@ function AlertMetricTile({
 }
 
 /** Market card size and stagger — cards alternate between two rows so neighbours never collide. */
-const CARD_WIDTH_REM = 10.5;
+const CARD_MIN_WIDTH_REM = 9;
 const CARD_HEIGHT_REM = 3.5;
 const ROW_GAP_REM = 0.5;
 const CONNECTOR_REM = 1;
@@ -156,6 +156,14 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
                 const center = columnCenterPct(index, marketsByPosition.length);
                 const isTopRow = index % 2 === 0;
                 const cardTopRem = isTopRow ? 0 : CARD_HEIGHT_REM + ROW_GAP_REM;
+                const isFirst = index === 0;
+                const isLast = index === marketsByPosition.length - 1;
+                // Cards size to their content, so edge cards pin to the track edge instead of centring
+                const horizontal: CSSProperties = isFirst
+                  ? { left: 0 }
+                  : isLast
+                    ? { right: 0 }
+                    : { left: `${center}%`, transform: "translateX(-50%)" };
 
                 return (
                   <div key={market.id}>
@@ -172,10 +180,10 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
                       className="absolute z-10"
                       style={{
                         top: `${cardTopRem}rem`,
-                        width: `${CARD_WIDTH_REM}rem`,
+                        width: "max-content",
+                        minWidth: `${CARD_MIN_WIDTH_REM}rem`,
                         height: `${CARD_HEIGHT_REM}rem`,
-                        // Centre on the tick, but keep edge cards inside the track
-                        left: `clamp(0rem, calc(${center}% - ${CARD_WIDTH_REM / 2}rem), calc(100% - ${CARD_WIDTH_REM}rem))`,
+                        ...horizontal,
                       }}
                     >
                       <PillBubble market={market} />
@@ -236,12 +244,7 @@ function PillBubble({ market }: { market: ShippingMarketPoint }) {
       )}
     >
       <p className="flex min-w-0 items-baseline gap-1 whitespace-nowrap text-xs leading-4 tracking-tight">
-        <span
-          className="min-w-0 truncate font-semibold text-foreground"
-          title={market.city}
-        >
-          {market.city}
-        </span>
+        <span className="font-semibold text-foreground">{market.city}</span>
         <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
           {market.days} Days
         </span>
