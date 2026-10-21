@@ -293,7 +293,7 @@ export function liveIssueChipLabel(issue: RcaIssueRow): string {
   if (issue.issueKey === "conversionDrop") return "Conversion Dropped";
   if (issue.issueKey === "sponsoredSov") return "SOV Dropped";
   if (issue.issueKey === "bestSellerRank") return "BSR Dropped";
-  if (issue.issueKey === "keywordRank") return "Keyword Rank Dropped";
+  if (issue.issueKey === "keywordRank") return "Search Rank Dropped";
 
   if (unhealthy && unhealthy.length <= 10) {
     return `${names.chip} ${unhealthy}`;

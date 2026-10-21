@@ -115,7 +115,7 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "What's the Top Competitor SOV %",
   ],
   keywordRank: [
-    "See trends for last week for Keyword Rank Drop",
+    "See trends for last week for Search Rank Drop",
     "Which keywords dropped rank for this SKU?",
     "Is the drop in organic or sponsored rank?",
   ],

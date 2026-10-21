@@ -3226,7 +3226,7 @@ export const hierarchyTree: HierarchyNode = {
         aspDelta: -1.1,
         issueChips: [
           { chip: "Conversion", count: 6 },
-          { chip: "Keyword Rank", count: 4 },
+          { chip: "Search Rank", count: 4 },
         ],
       },
       children: [
@@ -3242,7 +3242,7 @@ export const hierarchyTree: HierarchyNode = {
             unitsDelta: -18_200,
             aspDelta: -2.0,
             issueChips: [
-              { chip: "Keyword Rank", count: 4 },
+              { chip: "Search Rank", count: 4 },
               { chip: "Conversion", count: 3 },
             ],
           },

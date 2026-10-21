@@ -69,9 +69,9 @@ export const ISSUE_NAMES = {
     group: "Marketing" as IssueGroup,
   },
   keywordRank: {
-    filter: "Keyword Rank Drop",
-    chip: "Keyword Rank",
-    pane: "Keyword Rank",
+    filter: "Search Rank Drop",
+    chip: "Search Rank",
+    pane: "Search Rank",
     group: "Marketing" as IssueGroup,
   },
   mediaSpend: {

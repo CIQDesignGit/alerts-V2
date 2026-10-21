@@ -5,8 +5,6 @@ import {
   JUN_1_7_DAYS,
   textCells,
   type LastWeekTrendData,
-  type TrendTableCell,
-  type TrendTableRow,
 } from "@/lib/mock-last-week-trend-shared";
 
 /** Lost Buy Box — matches the Aug 9–15 design screenshot */
@@ -720,118 +718,110 @@ function getConversionDropTrend(_sku: IssueSku): LastWeekTrendData {
   };
 }
 
-/** Build one organic + paid pair for Keyword Rank */
-function keywordRankPair(
-  id: string,
-  keyword: string,
-  organic: TrendTableCell[],
-  paid: TrendTableCell[],
-): TrendTableRow[] {
-  return [
-    {
-      id: `${id}-org`,
-      label: keyword,
-      showLabel: true,
-      typeBadge: "organic",
-      cells: organic,
-    },
-    {
-      id: `${id}-paid`,
-      label: keyword,
-      showLabel: false,
-      typeBadge: "paid",
-      cells: paid,
-    },
-  ];
-}
+const SEP_15_21_DAYS = [
+  { id: "d0", dateLabel: "Sep 15", dayLabel: "Mon" },
+  { id: "d1", dateLabel: "Sep 16", dayLabel: "Tue" },
+  { id: "d2", dateLabel: "Sep 17", dayLabel: "Wed" },
+  { id: "d3", dateLabel: "Sep 18", dayLabel: "Thu" },
+  { id: "d4", dateLabel: "Sep 19", dayLabel: "Fri" },
+  { id: "d5", dateLabel: "Sep 20", dayLabel: "Sat" },
+  { id: "d6", dateLabel: "Sep 21", dayLabel: "Sun" },
+];
 
-function rankCell(
-  value: string | null,
-  tone: "positive" | "negative" | "neutral" = "neutral",
-): TrendTableCell {
-  if (value === null) return { kind: "na" };
-  return { kind: "text", value, tone };
-}
-
-/** Keyword Rank — organic / paid median by keyword */
+/** Search Rank Drop — SKU-level rank, traffic, and conversion (Sep 15–21 design) */
 function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
   return {
     issueKey: "keywordRank",
-    title: "Last Week Trend (Aug 9–15)",
-    showVsPrevWeek: false,
+    title: "Last Week Trend (Sep 15–21)",
     vsPrevWeekTooltip:
-      "Compares this week’s Keyword Rank metrics to the prior 7 days.",
-    summaryMetrics: [],
-    rowHeaderLabel: "KEYWORD (MEDIAN RANK)",
-    showTypeColumn: true,
-    days: JUN_1_7_DAYS,
+      "Compares this week’s Search Rank metrics to the prior 7 days.",
+    summaryColumns: 2,
+    summaryMetrics: [
+      {
+        id: "organic-rank",
+        label: "ORGANIC SEARCH RANK",
+        value: "31.7 avg",
+        delta: "+18.4",
+        deltaTone: "negative",
+      },
+      {
+        id: "glance-views",
+        label: "GLANCE VIEWS",
+        value: "−33.1%",
+      },
+      {
+        id: "sp-rank",
+        label: "SP SEARCH RANK",
+        value: "6.8 avg",
+        delta: "+0.7",
+        deltaTone: "neutral",
+      },
+      {
+        id: "unit-cvr",
+        label: "UNIT CVR",
+        value: "4.8%",
+        delta: "flat",
+        deltaTone: "neutral",
+      },
+    ],
+    days: SEP_15_21_DAYS,
     rows: [
-      ...keywordRankPair(
-        "kw1",
-        "vacuum cleaners for home",
-        [
-          rankCell("#8"),
-          rankCell("#10"),
-          rankCell("#12"),
-          rankCell("#19", "negative"),
-          rankCell("#16"),
-          rankCell("#14", "positive"),
-          rankCell("#21", "negative"),
-        ],
-        [
-          rankCell("#2"),
-          rankCell("#3"),
-          rankCell("#2"),
-          rankCell("#4"),
-          rankCell("#5"),
-          rankCell("#3"),
-          rankCell("#8", "negative"),
-        ],
-      ),
-      ...keywordRankPair(
-        "kw2",
-        "cleanpro cordless vacuum",
-        [
-          rankCell("#6"),
-          rankCell("#8"),
-          rankCell("#11"),
-          rankCell("#15", "negative"),
-          rankCell("#13"),
-          rankCell("#10", "positive"),
-          rankCell("#19", "negative"),
-        ],
-        [
-          rankCell("#1"),
-          rankCell("#1"),
-          rankCell("#2"),
-          rankCell("#3"),
-          rankCell("#2"),
-          rankCell("#2"),
-          rankCell("#4"),
-        ],
-      ),
-      ...keywordRankPair(
-        "kw3",
-        "cordless stick vacuum",
-        [
-          rankCell("#12"),
-          rankCell("#13"),
-          rankCell("#15"),
-          rankCell("#18", "negative"),
-          rankCell("#16"),
-          rankCell("#14", "positive"),
-          rankCell("#17"),
-        ],
-        [
-          rankCell("#3"),
-          rankCell("#4"),
-          rankCell(null),
-          rankCell(null),
-          rankCell(null),
-          rankCell("#5"),
-          rankCell("#4"),
-        ],
-      ),
+      {
+        id: "organic-rank",
+        label: "Organic Search Rank",
+        cells: textCells(
+          ["8.1", "8.6", "9.0", "19.4", "26.2", "29.8", "31.7"],
+          [
+            "neutral",
+            "neutral",
+            "neutral",
+            "negative",
+            "negative",
+            "negative",
+            "negative",
+          ],
+        ),
+      },
+      {
+        id: "sp-rank",
+        label: "SP Search Rank",
+        cells: textCells(
+          ["6.0", "6.2", "5.9", "6.4", "6.1", "6.6", "6.8"],
+          "neutral",
+        ),
+      },
+      {
+        id: "glance-views",
+        label: "Glance Views",
+        cells: textCells(
+          [
+            "9,310",
+            "9,180",
+            "9,240",
+            "8,020",
+            "7,140",
+            "6,520",
+            "6,180",
+          ],
+          [
+            "neutral",
+            "neutral",
+            "neutral",
+            "negative",
+            "negative",
+            "negative",
+            "negative",
+          ],
+        ),
+      },
+      {
+        id: "unit-cvr",
+        label: "Unit CVR %",
+        cells: textCells(
+          ["4.9", "4.9", "5.0", "4.8", "4.9", "4.8", "4.8"],
+          "neutral",
+        ),
+      },
     ],
   };
 }

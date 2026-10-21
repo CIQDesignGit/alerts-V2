@@ -147,7 +147,7 @@ const mockAlertsUnsorted: AlertItem[] = [
   {
     id: "a3",
     sku: "B0KW-RANK-12",
-    title: "Keyword rank drop on 12 high-volume terms",
+    title: "Search rank drop on 12 high-volume terms",
     category: "Marketing",
     issueKey: "keywordRank",
     gapDollars: -280_000,

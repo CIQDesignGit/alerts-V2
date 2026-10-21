@@ -213,7 +213,7 @@ Every canonical issue **belongs to exactly one group**. Use as a **tag** on aler
 |---|---|
 | **Sales** | Lost Buy Box, Best Seller Rank Change, Rating Dropped, Conversion |
 | **Operations** | OOS, Shipping Speed |
-| **Marketing** | Missing Promo Badge, Deal Page Visibility, Active Coupon, Share of Voice Drop, Keyword Rank Drop, Media Spend, Credit Offer |
+| **Marketing** | Missing Promo Badge, Deal Page Visibility, Active Coupon, Share of Voice Drop, Search Rank Drop, Media Spend, Credit Offer |
 
 Canonical mapping lives with names in `src/components/alerts/issue-names.ts` (`group` field).
 
@@ -233,7 +233,7 @@ Each RCA issue type has **three display names** depending on where it appears. C
 | OOS | Stock | Stock Availability |
 | Shipping Speed | Shipping | Shipping Speed |
 | Share of Voice Drop | SOV | Sponsored Share of Voice |
-| Keyword Rank Drop | Keyword Rank | Keyword Rank |
+| Search Rank Drop | Search Rank | Search Rank |
 | Media Spend | Media Spend | Media Spend |
 | Conversion | Conversion | Conversion |
 
