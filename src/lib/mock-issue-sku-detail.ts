@@ -194,24 +194,20 @@ export type StockAvailabilitySkuDetail = {
   crawls: StockCrawlRow[];
 };
 
+/** One crawled market — 30-day median norm → latest promise, per delivery type */
 export type ShippingMarketPoint = {
   id: string;
   city: string;
-  /** Current standard promise (days) — positions the bubble on the timeline bar */
-  days: number;
-  /** 0–1 anchor on the timeline bar (layout; evenly spaced, not always `days / barMax`) */
-  position: number;
-  tier: "prime" | "standard";
-  /** Stagger height above the bar */
-  level: 1 | 2 | 3;
   standardFrom: number;
   standardTo: number;
   /** Days slower than norm; 0 = no standard alert for this market */
   standardDelta: number;
+  /** Null when Prime is not offered in this market */
   primeFrom: number | null;
   primeTo: number | null;
-  /** False when crawls lost the Prime badge in this market */
-  primeBadge: boolean;
+  primeDelta: number;
+  /** Crawls (of `crawlsPerDay`) where the market breached the norm; 0 = not affected */
+  breachingCrawls: number;
 };
 
 export type ShippingSpeedAlertInfo = {
@@ -226,20 +222,17 @@ export type ShippingSpeedAlertInfo = {
   /** e.g. "Chicago, IL & 2 others" */
   otherMarketsAffectedLabel: string;
   primePromiseLabel: string;
-  /** e.g. "1 market" — shown in the Prime Badge Lost tile */
+  /** Prime badge tile value — e.g. "No Anomalies Detected" */
   primeBadgeLostLabel: string;
 };
 
 export type ShippingSpeedSkuDetail = {
   summary: string;
   alert: ShippingSpeedAlertInfo;
-  avgDays: number;
-  marketCount: number;
-  daysAbovePrime: number;
-  barMinDays: number;
-  barMaxDays: number;
-  /** Where the bar turns from ok → late (0–1) */
-  dangerAt: number;
+  /** e.g. "30-day median" */
+  normLabel: string;
+  /** Crawls in the latest 24h window */
+  crawlsPerDay: number;
   markets: ShippingMarketPoint[];
 };
 
@@ -839,95 +832,59 @@ export function getStockAvailabilitySkuDetail(
   };
 }
 
-/** Shipping Speed — avg delivery + market timeline. */
+/** Shipping Speed — alert strip + latest status per crawled market. */
 export function getShippingSpeedSkuDetail(
   sku: IssueSku,
 ): ShippingSpeedSkuDetail {
-  const seed = skuSeed(sku);
-  const avgDays = Number((3.8 + (seed % 8) / 10).toFixed(1));
-  const daysAbovePrime = Number((avgDays - 2).toFixed(1));
-  const marketCount = 4;
-
+  void sku;
   return {
     summary:
       "Prime avg 1.1 days, Standard avg 5.0 days across 8 ZIP(s). Prime is 3.9 days faster.",
     alert: {
       headline:
-        "Standard delivery slowed by 6 days in 3 markets vs its 30-day norm.",
+        "Standard delivery slowed by up to 6 days in 4 markets vs its 30-day norm.",
       standardPromiseFrom: 3,
       standardPromiseTo: 9,
       standardPromiseDelta: 6,
       primaryMarket: "Austin, TX",
       affectedSinceDays: 6,
-      otherMarketsAffectedLabel: "New York, NY, Atlanta, GA & 1 other",
+      otherMarketsAffectedLabel: "Chicago, IL, Tahoe, CA & 1 other",
       primePromiseLabel: "Within norm",
-      primeBadgeLostLabel: "1 market",
+      primeBadgeLostLabel: "No Anomalies Detected",
     },
-    avgDays,
-    marketCount,
-    daysAbovePrime,
-    barMinDays: 0,
-    barMaxDays: 10,
-    // Blue→red split sits at 2 days on the 0–10 day bar
-    dangerAt: 2 / 10,
+    normLabel: "30-day median",
+    crawlsPerDay: 4,
+    // Affected first (largest delta), then in-norm markets
     markets: [
-      {
-        id: "ny",
-        city: "New York, NY",
-        days: 2,
-        position: 0.1,
-        tier: "prime",
-        level: 3,
-        standardFrom: 2,
-        standardTo: 2,
-        standardDelta: 0,
-        primeFrom: 1,
-        primeTo: 1,
-        primeBadge: true,
-      },
-      {
-        id: "chi",
-        city: "Chicago, IL",
-        days: 5,
-        position: 0.34,
-        tier: "prime",
-        level: 1,
-        standardFrom: 4,
-        standardTo: 8,
-        standardDelta: 4,
-        primeFrom: 1,
-        primeTo: 1,
-        primeBadge: true,
-      },
-      {
-        id: "aus",
-        city: "Austin, TX",
-        days: 7,
-        position: 0.56,
-        tier: "prime",
-        level: 2,
-        standardFrom: 3,
-        standardTo: 9,
-        standardDelta: 6,
-        primeFrom: 1,
-        primeTo: 1,
-        primeBadge: true,
-      },
-      {
-        id: "tah",
-        city: "Tahoe, CA",
-        days: 8,
-        position: 0.8,
-        tier: "standard",
-        level: 1,
-        standardFrom: 5,
-        standardTo: 9,
-        standardDelta: 4,
-        primeFrom: null,
-        primeTo: null,
-        primeBadge: false,
-      },
+      market("aus", "Austin, TX", [3, 9], [1, 1], 4),
+      market("chi", "Chicago, IL", [4, 9], [1, 3], 4),
+      market("tah", "Tahoe, CA", [5, 10], null, 3),
+      market("ash", "Ashburn, VA", [3, 8], [1, 1], 3),
+      market("ny", "New York, NY", [2, 2], [1, 1], 0),
+      market("sat", "San Antonio, TX", [4, 4], [1, 1], 0),
+      market("nsh", "Nashville, TN", [2, 2], [1, 1], 0),
+      market("la", "Los Angeles, CA", [5, 5], [1, 1], 0),
     ],
+  };
+}
+
+function market(
+  id: string,
+  city: string,
+  [standardFrom, standardTo]: [number, number],
+  prime: [number, number] | null,
+  breachingCrawls: number,
+): ShippingMarketPoint {
+  return {
+    id,
+    city,
+    standardFrom,
+    standardTo,
+    standardDelta: standardTo - standardFrom,
+    primeFrom: prime?.[0] ?? null,
+    primeTo: prime?.[1] ?? null,
+    primeDelta: prime ? prime[1] - prime[0] : 0,
+    breachingCrawls,
   };
 }
 
