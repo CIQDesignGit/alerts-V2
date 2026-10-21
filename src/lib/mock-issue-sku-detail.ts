@@ -219,14 +219,15 @@ export type ShippingSpeedAlertInfo = {
   standardPromiseFrom: number;
   standardPromiseTo: number;
   standardPromiseDelta: number;
-  worstMarket: string;
+  /** Primary market called out in the Standard promise tile */
+  primaryMarket: string;
+  /** Days between the two standard-promise observations */
+  affectedSinceDays: number;
+  /** e.g. "Chicago, IL & 2 others" */
+  otherMarketsAffectedLabel: string;
   primePromiseLabel: string;
-  primePromiseDetail: string;
-  marketsAffected: number;
-  marketsCrawled: number;
-  marketsAffectedDetail: string;
-  /** e.g. "Open since Oct 2 (6 days) · 3rd alert on this SKU in the last 30 days" */
-  statusLine: string;
+  /** e.g. "1 market" — shown in the Prime Badge Lost tile */
+  primeBadgeLostLabel: string;
 };
 
 export type ShippingSpeedSkuDetail = {
@@ -856,14 +857,11 @@ export function getShippingSpeedSkuDetail(
       standardPromiseFrom: 3,
       standardPromiseTo: 9,
       standardPromiseDelta: 6,
-      worstMarket: "Austin, TX",
+      primaryMarket: "Austin, TX",
+      affectedSinceDays: 6,
+      otherMarketsAffectedLabel: "New York, NY, Atlanta, GA & 1 other",
       primePromiseLabel: "Within norm",
-      primePromiseDetail: "No rule fired for this promise",
-      marketsAffected: 3,
-      marketsCrawled: 8,
-      marketsAffectedDetail: "Any 1 market is enough to alert",
-      statusLine:
-        "Open since Oct 2 (6 days) · 3rd alert on this SKU in the last 30 days",
+      primeBadgeLostLabel: "1 market",
     },
     avgDays,
     marketCount,

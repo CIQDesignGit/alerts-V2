@@ -25,8 +25,7 @@ function ShippingSpeedAlertBlock({ alert }: { alert: ShippingSpeedAlertInfo }) {
       <div className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-background">
         <AlertMetricTile
           label="Standard promise (days)"
-          tone="alert"
-          footer={`Worst market: ${alert.worstMarket}`}
+          footer={<StandardPromiseAlertFooter alert={alert} />}
         >
           <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 tabular-nums">
             <span className="text-lg font-bold text-foreground">
@@ -40,26 +39,43 @@ function ShippingSpeedAlertBlock({ alert }: { alert: ShippingSpeedAlertInfo }) {
           </p>
         </AlertMetricTile>
 
-        <AlertMetricTile
-          label="Prime promise (days)"
-          footer={alert.primePromiseDetail}
-        >
+        <AlertMetricTile label="Prime promise (days)">
           <p className="text-base font-bold text-success-700">
             {alert.primePromiseLabel}
           </p>
         </AlertMetricTile>
 
-        <AlertMetricTile
-          label="Markets affected"
-          footer={alert.marketsAffectedDetail}
-        >
-          <p className="text-lg font-bold tabular-nums text-foreground">
-            {alert.marketsAffected} of {alert.marketsCrawled} crawled
+        <AlertMetricTile label="Prime Badge Lost">
+          <p className="text-lg font-bold text-foreground">
+            {alert.primeBadgeLostLabel}
           </p>
         </AlertMetricTile>
       </div>
+    </div>
+  );
+}
 
-      <p className="text-xs text-muted-foreground">{alert.statusLine}</p>
+function StandardPromiseAlertFooter({
+  alert,
+}: {
+  alert: ShippingSpeedAlertInfo;
+}) {
+  return (
+    <div className="mt-2 flex flex-col gap-0.5 text-xs leading-snug text-muted-foreground">
+      <p>
+        <span className="font-medium text-foreground">Market:</span>{" "}
+        {alert.primaryMarket}
+      </p>
+      <p>
+        <span className="font-medium text-foreground">Affected since:</span> Last{" "}
+        {alert.affectedSinceDays} days
+      </p>
+      <p>
+        <span className="font-medium text-foreground">
+          Other markets affected:
+        </span>{" "}
+        {alert.otherMarketsAffectedLabel}
+      </p>
     </div>
   );
 }
@@ -67,36 +83,25 @@ function ShippingSpeedAlertBlock({ alert }: { alert: ShippingSpeedAlertInfo }) {
 /** Metric strip cell — label / value / footer (matches issue SKU metric tiles). */
 function AlertMetricTile({
   label,
-  tone = "neutral",
   footer,
   children,
 }: {
   label: string;
-  tone?: "alert" | "neutral";
-  footer?: string;
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <div
-      className={cn(
-        "flex min-h-[5.5rem] min-w-0 flex-col px-4 py-3",
-        tone === "alert" && "bg-error-25",
-      )}
-    >
+    <div className="flex min-h-[5.5rem] min-w-0 flex-col px-4 py-3">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <div className="mt-2 min-h-0 flex-1">{children}</div>
-      {footer ? (
-        <p className="mt-2 text-2xs leading-snug text-muted-foreground">
-          {footer}
-        </p>
-      ) : null}
+      {footer ? <div className="mt-auto">{footer}</div> : null}
     </div>
   );
 }
 
 /** Market card size and stagger — cards alternate between two rows so neighbours never collide. */
-const CARD_MIN_WIDTH_REM = 9;
-const CARD_HEIGHT_REM = 3.5;
+const CARD_MIN_WIDTH_REM = 10;
+const CARD_HEIGHT_REM = 4.75;
 const ROW_GAP_REM = 0.5;
 const CONNECTOR_REM = 1;
 const MARKETS_AREA_HEIGHT_REM =
@@ -121,33 +126,7 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
       <ShippingSpeedAlertBlock alert={detail.alert} />
 
       <div className="rounded-xl border border-border bg-background px-5 py-5">
-        <div className="grid grid-cols-1 items-end gap-6 lg:grid-cols-[minmax(0,9.5rem)_minmax(22rem,1fr)]">
-          {/* Left stats */}
-          <div className="flex flex-col pb-6">
-            <p className="text-[2rem] leading-none font-bold tracking-tight text-neutral-800">
-              {detail.avgDays} Days
-            </p>
-            <p className="mt-2 text-sm font-semibold text-neutral-800">
-              Avg delivery time
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              across {detail.marketCount} markets
-            </p>
-
-            <div className="mt-5 border-t border-neutral-200 pt-4">
-              <p className="text-xs leading-snug">
-                <span className="font-semibold text-error-600">
-                  +{detail.daysAbovePrime} days
-                </span>{" "}
-                <span className="text-muted-foreground">
-                  more than standard Prime delivery
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {/* Timeline — cards alternate top/bottom rows above evenly spaced ticks */}
-          <div className="min-w-0">
+        <div className="min-w-0">
             <div
               className="relative"
               style={{ height: `${MARKETS_AREA_HEIGHT_REM}rem` }}
@@ -223,7 +202,6 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
               </span>
               <span>{detail.barMaxDays} days</span>
             </div>
-          </div>
         </div>
       </div>
     </div>
@@ -231,64 +209,72 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
 }
 
 function PillBubble({ market }: { market: ShippingMarketPoint }) {
-  const isPrime = market.tier === "prime";
   const standardWorsened = market.standardDelta > 0;
+  const hasPrime =
+    market.primeBadge && market.primeFrom != null && market.primeTo != null;
+  const primeDelta = hasPrime ? market.primeTo! - market.primeFrom! : 0;
 
   return (
     <div
       className={cn(
-        "flex size-full min-w-0 flex-col justify-center gap-1 rounded-lg border border-border bg-background py-2 pr-2 text-left shadow-xs",
-        standardWorsened
-          ? "border-l-[3px] border-l-error-500 pl-1.5"
-          : "pl-2",
+        "flex size-full min-w-0 flex-col gap-1.5 rounded-lg border border-border bg-background py-2 pr-2.5 text-left shadow-xs",
+        standardWorsened ? "border-l-[3px] border-l-error-500 pl-2" : "pl-2.5",
       )}
     >
-      <p className="flex min-w-0 items-baseline gap-1 whitespace-nowrap text-xs leading-4 tracking-tight">
-        <span className="font-semibold text-foreground">{market.city}</span>
-        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
-          {market.days} Days
-        </span>
-        {isPrime ? (
-          <span className="inline-flex shrink-0 items-center gap-px self-center text-2xs font-semibold text-info-600">
-            <Check
-              className="size-2.5 stroke-[3] text-warning-500"
-              aria-hidden
-            />
-            prime
-          </span>
-        ) : (
-          <span className="shrink-0 text-2xs text-neutral-400">Standard</span>
-        )}
+      <p className="truncate text-xs leading-4 font-semibold text-foreground">
+        {market.city}
       </p>
-      <p className="flex min-w-0 items-center gap-1 whitespace-nowrap text-2xs leading-4 tabular-nums">
-        <span className="text-neutral-600">
-          {market.standardFrom}
-          <span className="text-neutral-400"> → </span>
-          {market.standardTo}
-        </span>
-        {standardWorsened ? (
-          <span className="inline-flex items-center gap-0.5 font-semibold text-error-600">
-            <TriangleAlert className="size-2.5 shrink-0" aria-hidden />
-            +{market.standardDelta}
-          </span>
-        ) : null}
-        <span className="text-neutral-300" aria-hidden>
-          ·
-        </span>
-        {market.primeBadge &&
-        market.primeFrom != null &&
-        market.primeTo != null ? (
-          <span className="text-neutral-600">
-            Prime {market.primeFrom}
-            <span className="text-neutral-400"> → </span>
-            {market.primeTo}
-          </span>
+
+      {/* Label · from → to · delta — columns align across both rows */}
+      <dl className="grid grid-cols-[auto_auto_1fr] items-center gap-x-2 gap-y-1 whitespace-nowrap text-2xs leading-4 tabular-nums">
+        <dt className="text-muted-foreground">Standard</dt>
+        <dd>
+          <PromiseRange from={market.standardFrom} to={market.standardTo} />
+        </dd>
+        <dd>
+          {standardWorsened ? (
+            <DeltaFlag days={market.standardDelta} />
+          ) : null}
+        </dd>
+
+        <dt className="inline-flex items-center gap-0.5 text-muted-foreground">
+          <Check className="size-2.5 stroke-3 text-warning-500" aria-hidden />
+          Prime
+        </dt>
+        {hasPrime ? (
+          <>
+            <dd>
+              <PromiseRange from={market.primeFrom!} to={market.primeTo!} />
+            </dd>
+            <dd>{primeDelta > 0 ? <DeltaFlag days={primeDelta} /> : null}</dd>
+          </>
         ) : (
-          <span className="rounded-full bg-neutral-100 px-1.5 font-medium text-neutral-600">
-            no Prime
-          </span>
+          <dd className="col-span-2">
+            <span className="rounded-full bg-neutral-100 px-1.5 py-px font-medium text-neutral-600">
+              Badge lost
+            </span>
+          </dd>
         )}
-      </p>
+      </dl>
     </div>
+  );
+}
+
+function PromiseRange({ from, to }: { from: number; to: number }) {
+  return (
+    <span className="text-neutral-700">
+      {from}
+      <span className="text-neutral-400"> → </span>
+      <span className="font-semibold text-foreground">{to}</span>
+      <span className="text-muted-foreground"> {to === 1 ? "day" : "days"}</span>
+    </span>
+  );
+}
+
+function DeltaFlag({ days }: { days: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5 font-semibold text-error-600">
+      <TriangleAlert className="size-2.5 shrink-0" aria-hidden />+{days}
+    </span>
   );
 }
