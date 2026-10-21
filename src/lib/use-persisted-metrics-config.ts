@@ -15,9 +15,14 @@ import {
 } from "@/lib/insights-metrics-config";
 
 /** Load / persist which Snapshot metrics show — globally or per hierarchy level. */
+const DEFAULT_METRICS_CONFIG: SnapshotMetricsConfig = {
+  allLevels: [...DEFAULT_SNAPSHOT_METRIC_IDS],
+  byLevel: {},
+};
+
 export function usePersistedMetricsConfig(level: HierarchyLevel) {
-  const [config, setConfig] = useState<SnapshotMetricsConfig>(() =>
-    loadSnapshotMetricsConfig(),
+  const [config, setConfig] = useState<SnapshotMetricsConfig>(
+    () => DEFAULT_METRICS_CONFIG,
   );
 
   // Re-read once on mount (SSR-safe default → browser storage)

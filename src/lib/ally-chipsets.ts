@@ -61,7 +61,6 @@ type ChipTrio = readonly [string, string, string];
 /**
  * Issue Type · SKU chips from the product sheet.
  * Trends chip uses “last week” (calendar week Aug 9–15 in mocks).
- * Shipping Speed has three custom chips — no “See trends” entry.
  */
 const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
   lostBuyBox: [
@@ -105,9 +104,9 @@ const ISSUE_SKU_CHIPS: Record<IssueKey, ChipTrio> = {
     "What's the Unavailability % and Rep OOS % for this SKU?",
   ],
   shippingSpeed: [
+    "See trends for last week for Shipping Speed",
     "What's the Prime vs. Standard delivery gap for this SKU?",
     "Which markets show the slowest delivery speeds for this SKU?",
-    "Which Zipcodes have delivery data for this SKU today?",
   ],
   sponsoredSov: [
     "See trends for last week for Share of Voice Drop",
@@ -138,7 +137,7 @@ function isSeeTrendsLastWeekLabel(label: string): boolean {
 
 /**
  * Issue Type · SKU chips: “See trends for last week” (when available) +
- * scrape history. Shipping Speed has no trends chip — scrape history only.
+ * scrape history.
  */
 export function getIssueSkuChips(issueKey: IssueKey): AllyAiPrompt[] {
   const [chip1] = ISSUE_SKU_CHIPS[issueKey];

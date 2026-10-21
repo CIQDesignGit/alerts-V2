@@ -15,7 +15,7 @@ import {
 /** Load / persist Historical dashboard widgets per hierarchy entity. */
 export function usePersistedWidgets(entityId: string) {
   const [widgets, setWidgets] = useState<InsightWidget[]>(() =>
-    loadWidgets(entityId),
+    DEFAULT_HISTORICAL_WIDGETS.map((w) => ({ ...w })),
   );
 
   useEffect(() => {

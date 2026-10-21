@@ -28,6 +28,7 @@ const SUPPORTED_TREND_ISSUES = new Set<IssueKey>([
   "keywordRank",
   "conversionDrop",
   "mediaSpend",
+  "shippingSpeed",
 ]);
 
 export function hasLastWeekTrendCard(issueKey: IssueKey): boolean {
@@ -72,7 +73,7 @@ export function resolveTrendIssueFromPrompt(
 
 /**
  * Return the designed last-week trend card for a supported issue.
- * Unsupported issues (e.g. Shipping Speed) return null.
+ * Unsupported issues return null.
  */
 export function getLastWeekTrend(
   issueKey: IssueKey,

@@ -197,16 +197,41 @@ export type StockAvailabilitySkuDetail = {
 export type ShippingMarketPoint = {
   id: string;
   city: string;
+  /** Current standard promise (days) — positions the bubble on the timeline bar */
   days: number;
-  /** 0–1 position along the 1–8 day bar */
+  /** 0–1 anchor on the timeline bar (layout; evenly spaced, not always `days / barMax`) */
   position: number;
   tier: "prime" | "standard";
   /** Stagger height above the bar */
   level: 1 | 2 | 3;
+  standardFrom: number;
+  standardTo: number;
+  /** Days slower than norm; 0 = no standard alert for this market */
+  standardDelta: number;
+  primeFrom: number | null;
+  primeTo: number | null;
+  /** False when crawls lost the Prime badge in this market */
+  primeBadge: boolean;
+};
+
+export type ShippingSpeedAlertInfo = {
+  headline: string;
+  standardPromiseFrom: number;
+  standardPromiseTo: number;
+  standardPromiseDelta: number;
+  worstMarket: string;
+  primePromiseLabel: string;
+  primePromiseDetail: string;
+  marketsAffected: number;
+  marketsCrawled: number;
+  marketsAffectedDetail: string;
+  /** e.g. "Open since Oct 2 (6 days) · 3rd alert on this SKU in the last 30 days" */
+  statusLine: string;
 };
 
 export type ShippingSpeedSkuDetail = {
   summary: string;
+  alert: ShippingSpeedAlertInfo;
   avgDays: number;
   marketCount: number;
   daysAbovePrime: number;
@@ -820,58 +845,89 @@ export function getShippingSpeedSkuDetail(
   const seed = skuSeed(sku);
   const avgDays = Number((3.8 + (seed % 8) / 10).toFixed(1));
   const daysAbovePrime = Number((avgDays - 2).toFixed(1));
-  const marketCount = 5;
+  const marketCount = 4;
 
   return {
     summary:
       "Prime avg 1.1 days, Standard avg 5.0 days across 8 ZIP(s). Prime is 3.9 days faster.",
+    alert: {
+      headline:
+        "Standard delivery slowed by 6 days in 3 markets vs its 30-day norm.",
+      standardPromiseFrom: 3,
+      standardPromiseTo: 9,
+      standardPromiseDelta: 6,
+      worstMarket: "Austin, TX",
+      primePromiseLabel: "Within norm",
+      primePromiseDetail: "No rule fired for this promise",
+      marketsAffected: 3,
+      marketsCrawled: 8,
+      marketsAffectedDetail: "Any 1 market is enough to alert",
+      statusLine:
+        "Open since Oct 2 (6 days) · 3rd alert on this SKU in the last 30 days",
+    },
     avgDays,
     marketCount,
     daysAbovePrime,
     barMinDays: 0,
-    barMaxDays: 8,
-    // Blue→red split sits at 2 days on the 0–8 day bar
-    dangerAt: 2 / 8,
+    barMaxDays: 10,
+    // Blue→red split sits at 2 days on the 0–10 day bar
+    dangerAt: 2 / 10,
     markets: [
       {
         id: "ny",
         city: "New York, NY",
         days: 2,
-        position: (2 - 1) / 7,
+        position: 0.1,
         tier: "prime",
         level: 3,
+        standardFrom: 2,
+        standardTo: 2,
+        standardDelta: 0,
+        primeFrom: 1,
+        primeTo: 1,
+        primeBadge: true,
       },
       {
         id: "chi",
         city: "Chicago, IL",
-        days: 3,
-        position: (3 - 1) / 7,
+        days: 5,
+        position: 0.34,
         tier: "prime",
         level: 1,
+        standardFrom: 4,
+        standardTo: 8,
+        standardDelta: 4,
+        primeFrom: 1,
+        primeTo: 1,
+        primeBadge: true,
       },
       {
         id: "aus",
         city: "Austin, TX",
-        days: 4,
-        position: (4 - 1) / 7,
+        days: 7,
+        position: 0.56,
         tier: "prime",
         level: 2,
-      },
-      {
-        id: "sa",
-        city: "San Antonio, TX",
-        days: 7,
-        position: (6.6 - 1) / 7,
-        tier: "standard",
-        level: 3,
+        standardFrom: 3,
+        standardTo: 9,
+        standardDelta: 6,
+        primeFrom: 1,
+        primeTo: 1,
+        primeBadge: true,
       },
       {
         id: "tah",
         city: "Tahoe, CA",
-        days: 7,
-        position: (7.35 - 1) / 7,
+        days: 8,
+        position: 0.8,
         tier: "standard",
         level: 1,
+        standardFrom: 5,
+        standardTo: 9,
+        standardDelta: 4,
+        primeFrom: null,
+        primeTo: null,
+        primeBadge: false,
       },
     ],
   };

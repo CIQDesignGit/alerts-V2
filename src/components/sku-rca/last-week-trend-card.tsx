@@ -242,7 +242,8 @@ export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {
         </section>
       ) : null}
 
-      {/* Daily breakdown — day columns right-aligned (all issue types) */}
+      {/* Daily breakdown — omitted when snapshot-only (e.g. Shipping Speed) */}
+      {trend.rows.length === 0 ? null : (
       <div className="overflow-x-auto px-3 py-3">
         <table className="w-full min-w-xl border-collapse text-left">
           <thead>
@@ -335,6 +336,7 @@ export function LastWeekTrendCard({ trend }: LastWeekTrendCardProps) {
           </tbody>
         </table>
       </div>
+      )}
     </article>
   );
 }

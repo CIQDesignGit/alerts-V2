@@ -1,4 +1,5 @@
 import type { IssueKey } from "@/components/alerts/issue-names";
+import { LAST_WEEK_RANGE_LABEL } from "@/lib/mock-calendar";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
 import {
   checkCells,
@@ -913,10 +914,46 @@ function getMediaSpendTrend(_sku: IssueSku): LastWeekTrendData {
   };
 }
 
-const BUILDERS: Record<
-  Exclude<IssueKey, "shippingSpeed">,
-  (sku: IssueSku) => LastWeekTrendData
-> = {
+/** Shipping Speed — snapshot KPIs only (no daily trend table) */
+function getShippingSpeedTrend(_sku: IssueSku): LastWeekTrendData {
+  return {
+    issueKey: "shippingSpeed",
+    title: `Last week snapshot (${LAST_WEEK_RANGE_LABEL})`,
+    vsPrevWeekTooltip:
+      "Compares last week’s shipping-speed breach and traffic metrics to the prior calendar week.",
+    summaryColumns: 2,
+    summaryMetrics: [
+      {
+        id: "days-breached",
+        label: "Days breached",
+        value: "6/7",
+      },
+      {
+        id: "markets-breaching",
+        label: "Markets breaching",
+        value: "3",
+        sublabel: "(prev wk 0)",
+      },
+      {
+        id: "glance-views",
+        label: "Glance views",
+        value: "-9%",
+        deltaTone: "negative",
+      },
+      {
+        id: "unit-cvr",
+        label: "Unit CVR",
+        value: "4.1%",
+        delta: "-0.6pp",
+        deltaTone: "negative",
+      },
+    ],
+    days: [],
+    rows: [],
+  };
+}
+
+const BUILDERS: Record<IssueKey, (sku: IssueSku) => LastWeekTrendData> = {
   lostBuyBox: getLostBuyBoxTrend,
   promoBadge: getPromoBadgeTrend,
   dealPageVisibility: getDealPageVisibilityTrend,
@@ -929,6 +966,7 @@ const BUILDERS: Record<
   keywordRank: getKeywordRankTrend,
   conversionDrop: getConversionDropTrend,
   mediaSpend: getMediaSpendTrend,
+  shippingSpeed: getShippingSpeedTrend,
 };
 
 /** Dispatch to the issue-specific mock builder */
@@ -936,6 +974,5 @@ export function getLastWeekTrendForIssue(
   issueKey: IssueKey,
   sku: IssueSku,
 ): LastWeekTrendData | null {
-  if (issueKey === "shippingSpeed") return null;
   return BUILDERS[issueKey](sku);
 }
