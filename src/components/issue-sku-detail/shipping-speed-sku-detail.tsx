@@ -94,12 +94,17 @@ function AlertMetricTile({
   );
 }
 
-/** Stem length down to the bar — light stagger within each column */
-const STEM_CLASS: Record<ShippingMarketPoint["level"], string> = {
-  1: "h-3",
-  2: "h-6",
-  3: "h-10",
-};
+/** Market card size and stagger — cards alternate between two rows so neighbours never collide. */
+const CARD_WIDTH_REM = 10.5;
+const CARD_HEIGHT_REM = 3.5;
+const ROW_GAP_REM = 0.5;
+const CONNECTOR_REM = 1;
+const MARKETS_AREA_HEIGHT_REM =
+  CARD_HEIGHT_REM * 2 + ROW_GAP_REM + CONNECTOR_REM;
+
+function columnCenterPct(index: number, count: number): number {
+  return ((index + 0.5) / count) * 100;
+}
 
 /** Shipping Speed — avg delivery + market timeline bar. */
 export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
@@ -116,7 +121,7 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
       <ShippingSpeedAlertBlock alert={detail.alert} />
 
       <div className="rounded-xl border border-border bg-background px-5 py-5">
-        <div className="grid grid-cols-1 items-end gap-8 lg:grid-cols-[minmax(0,11.875rem)_minmax(18rem,1fr)]">
+        <div className="grid grid-cols-1 items-end gap-6 lg:grid-cols-[minmax(0,9.5rem)_minmax(22rem,1fr)]">
           {/* Left stats */}
           <div className="flex flex-col pb-6">
             <p className="text-[2rem] leading-none font-bold tracking-tight text-neutral-800">
@@ -141,32 +146,46 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
             </div>
           </div>
 
-          {/* Timeline — equal columns; pills wrap inside cells (no horizontal bleed) */}
-          <div className="min-w-0 px-1">
+          {/* Timeline — cards alternate top/bottom rows above evenly spaced ticks */}
+          <div className="min-w-0">
             <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: `repeat(${marketsByPosition.length}, minmax(0, 1fr))`,
-              }}
+              className="relative"
+              style={{ height: `${MARKETS_AREA_HEIGHT_REM}rem` }}
             >
-              {marketsByPosition.map((market) => (
-                <div
-                  key={market.id}
-                  className="flex min-w-0 flex-col items-center justify-end"
-                >
-                  <PillBubble market={market} />
-                  <div
-                    className={cn(
-                      "mt-1 w-px shrink-0 bg-neutral-300",
-                      STEM_CLASS[market.level],
-                    )}
-                    aria-hidden
-                  />
-                </div>
-              ))}
+              {marketsByPosition.map((market, index) => {
+                const center = columnCenterPct(index, marketsByPosition.length);
+                const isTopRow = index % 2 === 0;
+                const cardTopRem = isTopRow ? 0 : CARD_HEIGHT_REM + ROW_GAP_REM;
+
+                return (
+                  <div key={market.id}>
+                    <div
+                      className="absolute w-px -translate-x-1/2 bg-neutral-300"
+                      style={{
+                        left: `${center}%`,
+                        top: `${cardTopRem + CARD_HEIGHT_REM}rem`,
+                        bottom: 0,
+                      }}
+                      aria-hidden
+                    />
+                    <div
+                      className="absolute z-10"
+                      style={{
+                        top: `${cardTopRem}rem`,
+                        width: `${CARD_WIDTH_REM}rem`,
+                        height: `${CARD_HEIGHT_REM}rem`,
+                        // Centre on the tick, but keep edge cards inside the track
+                        left: `clamp(0rem, calc(${center}% - ${CARD_WIDTH_REM / 2}rem), calc(100% - ${CARD_WIDTH_REM}rem))`,
+                      }}
+                    >
+                      <PillBubble market={market} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="relative mx-1 mt-0 h-2.5 overflow-hidden rounded-full">
+            <div className="relative h-2.5 overflow-visible rounded-full">
               <div
                 className="absolute inset-y-0 left-0 rounded-l-full bg-info-100"
                 style={{ width: `${okPct}%` }}
@@ -175,22 +194,21 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
                 className="absolute inset-y-0 right-0 rounded-r-full bg-error-100"
                 style={{ width: `${dangerPct}%` }}
               />
-              {marketsByPosition.map((market, index) => {
-                const columnCenterPct =
-                  ((index + 0.5) / marketsByPosition.length) * 100;
-
-                return (
-                  <div
-                    key={market.id}
-                    className="absolute top-1/2 z-10 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-500"
-                    style={{ left: `${columnCenterPct}%` }}
-                    aria-hidden
-                  />
-                );
-              })}
+              {marketsByPosition.map((market, index) => (
+                <div
+                  key={market.id}
+                  className="absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    left: `${columnCenterPct(index, marketsByPosition.length)}%`,
+                  }}
+                  aria-hidden
+                >
+                  <div className="h-3 w-0.5 rounded-full bg-neutral-500" />
+                </div>
+              ))}
             </div>
 
-            <div className="mx-1 mt-1.5 flex justify-between text-2xs text-neutral-400">
+            <div className="mt-1.5 flex justify-between text-2xs text-neutral-400">
               <span>
                 {detail.barMinDays}{" "}
                 {detail.barMinDays === 1 ? "day" : "days"}
@@ -211,58 +229,63 @@ function PillBubble({ market }: { market: ShippingMarketPoint }) {
   return (
     <div
       className={cn(
-        "box-border w-full max-w-full min-w-0 overflow-hidden rounded-xl border bg-background px-1.5 py-1.5 text-center shadow-xs",
-        isPrime ? "border-info-100" : "border-neutral-200",
-        standardWorsened && "border-l-2 border-l-error-500",
+        "flex size-full min-w-0 flex-col justify-center gap-1 rounded-lg border border-border bg-background py-2 pr-2 text-left shadow-xs",
+        standardWorsened
+          ? "border-l-[3px] border-l-error-500 pl-1.5"
+          : "pl-2",
       )}
     >
-      <p className="text-2xs leading-snug font-semibold text-neutral-800">
-        {market.city}
-      </p>
-      <p className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 gap-y-0 text-2xs leading-snug">
-        <span className="text-neutral-500">{market.days} Days</span>
+      <p className="flex min-w-0 items-baseline gap-1 whitespace-nowrap text-xs leading-4 tracking-tight">
+        <span
+          className="min-w-0 truncate font-semibold text-foreground"
+          title={market.city}
+        >
+          {market.city}
+        </span>
+        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
+          {market.days} Days
+        </span>
         {isPrime ? (
-          <span className="inline-flex items-center gap-0.5 font-medium text-info-600">
+          <span className="inline-flex shrink-0 items-center gap-px self-center text-2xs font-semibold text-info-600">
             <Check
-              className="size-3 stroke-[2.5] text-warning-500"
+              className="size-2.5 stroke-[3] text-warning-500"
               aria-hidden
             />
             prime
           </span>
         ) : (
-          <span className="text-neutral-400">(Standard)</span>
+          <span className="shrink-0 text-2xs text-neutral-400">Standard</span>
         )}
       </p>
-      <div className="mt-1 flex flex-col items-center gap-0.5 text-2xs leading-snug tabular-nums">
-        <p className="flex flex-wrap items-center justify-center gap-x-1">
-          <span className="text-neutral-600">
-            {market.standardFrom}
-            <span className="text-neutral-400"> → </span>
-            {market.standardTo}
+      <p className="flex min-w-0 items-center gap-1 whitespace-nowrap text-2xs leading-4 tabular-nums">
+        <span className="text-neutral-600">
+          {market.standardFrom}
+          <span className="text-neutral-400"> → </span>
+          {market.standardTo}
+        </span>
+        {standardWorsened ? (
+          <span className="inline-flex items-center gap-0.5 font-semibold text-error-600">
+            <TriangleAlert className="size-2.5 shrink-0" aria-hidden />
+            +{market.standardDelta}
           </span>
-          {standardWorsened ? (
-            <span className="inline-flex items-center gap-0.5 font-semibold text-error-600">
-              <TriangleAlert className="size-2.5 shrink-0" aria-hidden />
-              +{market.standardDelta}
-            </span>
-          ) : null}
-        </p>
+        ) : null}
+        <span className="text-neutral-300" aria-hidden>
+          ·
+        </span>
         {market.primeBadge &&
         market.primeFrom != null &&
         market.primeTo != null ? (
-          <p className="text-neutral-600">
+          <span className="text-neutral-600">
             Prime {market.primeFrom}
             <span className="text-neutral-400"> → </span>
             {market.primeTo}
-          </p>
+          </span>
         ) : (
-          <span
-            className="rounded-full bg-neutral-100 px-1.5 py-px text-2xs font-medium text-neutral-600"
-          >
+          <span className="rounded-full bg-neutral-100 px-1.5 font-medium text-neutral-600">
             no Prime
           </span>
         )}
-      </div>
+      </p>
     </div>
   );
 }
