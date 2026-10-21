@@ -26,6 +26,12 @@ export type TrendSummaryMetric = {
   sublabel?: string;
 };
 
+/** vs prior-week (or prior-period) change shown under the main value in a day cell */
+export type TrendTableCellPvp = {
+  value: string;
+  tone?: TrendTone;
+};
+
 /** One cell in the daily breakdown table */
 export type TrendTableCell =
   | {
@@ -33,6 +39,8 @@ export type TrendTableCell =
       value: string;
       /** Drives text color + soft wash everywhere (same rule on every issue) */
       tone: TrendTone;
+      /** Smaller line under the value — e.g. Glance Views / Unit CVR % daily cells */
+      pvp?: TrendTableCellPvp;
     }
   | { kind: "empty" }
   | { kind: "check"; ok: boolean }
@@ -95,6 +103,22 @@ export function textCells(
     kind: "text" as const,
     value,
     tone: Array.isArray(tone) ? tone[index]! : tone,
+  }));
+}
+
+export function textCellsWithPvp(
+  entries: {
+    value: string;
+    tone: TrendTone;
+    pvp: string;
+    pvpTone?: TrendTone;
+  }[],
+): TrendTableCell[] {
+  return entries.map(({ value, tone, pvp, pvpTone }) => ({
+    kind: "text" as const,
+    value,
+    tone,
+    pvp: { value: pvp, tone: pvpTone ?? tone },
   }));
 }
 

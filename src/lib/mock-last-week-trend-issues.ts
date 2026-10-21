@@ -5,6 +5,7 @@ import {
   checkCells,
   JUN_1_7_DAYS,
   textCells,
+  textCellsWithPvp,
   type LastWeekTrendData,
 } from "@/lib/mock-last-week-trend-shared";
 
@@ -748,7 +749,9 @@ function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
       {
         id: "glance-views",
         label: "GLANCE VIEWS",
-        value: "−33.1%",
+        value: "6,180",
+        delta: "−33.1%",
+        deltaTone: "negative",
       },
       {
         id: "sp-rank",
@@ -761,8 +764,8 @@ function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
         id: "unit-cvr",
         label: "UNIT CVR",
         value: "4.8%",
-        delta: "flat",
-        deltaTone: "neutral",
+        delta: "−0.1pp",
+        deltaTone: "negative",
       },
     ],
     days: SEP_15_21_DAYS,
@@ -794,34 +797,63 @@ function getKeywordRankTrend(_sku: IssueSku): LastWeekTrendData {
       {
         id: "glance-views",
         label: "Glance Views",
-        cells: textCells(
-          [
-            "9,310",
-            "9,180",
-            "9,240",
-            "8,020",
-            "7,140",
-            "6,520",
-            "6,180",
-          ],
-          [
-            "neutral",
-            "neutral",
-            "neutral",
-            "negative",
-            "negative",
-            "negative",
-            "negative",
-          ],
-        ),
+        cells: textCellsWithPvp([
+          {
+            value: "9,310",
+            tone: "neutral",
+            pvp: "−2.1%",
+            pvpTone: "negative",
+          },
+          {
+            value: "9,180",
+            tone: "neutral",
+            pvp: "−3.4%",
+            pvpTone: "negative",
+          },
+          {
+            value: "9,240",
+            tone: "neutral",
+            pvp: "−1.8%",
+            pvpTone: "negative",
+          },
+          {
+            value: "8,020",
+            tone: "negative",
+            pvp: "−12.4%",
+            pvpTone: "negative",
+          },
+          {
+            value: "7,140",
+            tone: "negative",
+            pvp: "−18.2%",
+            pvpTone: "negative",
+          },
+          {
+            value: "6,520",
+            tone: "negative",
+            pvp: "−22.6%",
+            pvpTone: "negative",
+          },
+          {
+            value: "6,180",
+            tone: "negative",
+            pvp: "−33.1%",
+            pvpTone: "negative",
+          },
+        ]),
       },
       {
         id: "unit-cvr",
         label: "Unit CVR %",
-        cells: textCells(
-          ["4.9", "4.9", "5.0", "4.8", "4.9", "4.8", "4.8"],
-          "neutral",
-        ),
+        cells: textCellsWithPvp([
+          { value: "4.9%", tone: "neutral", pvp: "−0.1pp", pvpTone: "negative" },
+          { value: "4.9%", tone: "neutral", pvp: "flat", pvpTone: "neutral" },
+          { value: "5.0%", tone: "neutral", pvp: "+0.2pp", pvpTone: "positive" },
+          { value: "4.8%", tone: "neutral", pvp: "−0.2pp", pvpTone: "negative" },
+          { value: "4.9%", tone: "neutral", pvp: "−0.1pp", pvpTone: "negative" },
+          { value: "4.8%", tone: "neutral", pvp: "−0.2pp", pvpTone: "negative" },
+          { value: "4.8%", tone: "neutral", pvp: "−0.1pp", pvpTone: "negative" },
+        ]),
       },
     ],
   };

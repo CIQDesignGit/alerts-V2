@@ -140,17 +140,37 @@ function TrendCell({
     );
   }
 
+  const hasPvp = Boolean(cell.pvp);
+  const pvpTone = cell.pvp?.tone ?? cell.tone;
+
   return (
     <span
       className={cn(
         DAY_COL_SHELL,
         "text-xs tabular-nums",
+        hasPvp && "min-h-11 gap-0.5",
         emphasize ? "font-semibold" : "font-medium",
-        cellToneClass(cell.tone),
-        cellWashClass(cell.tone),
+        hasPvp
+          ? cn(
+              "text-foreground",
+              pvpTone === "negative" && cellWashClass("negative"),
+            )
+          : cn(cellToneClass(cell.tone), cellWashClass(cell.tone)),
       )}
     >
-      {cell.value}
+      <span className={hasPvp ? "font-medium text-foreground" : undefined}>
+        {cell.value}
+      </span>
+      {cell.pvp ? (
+        <span
+          className={cn(
+            "text-2xs font-medium leading-none",
+            deltaClass(pvpTone),
+          )}
+        >
+          {cell.pvp.value}
+        </span>
+      ) : null}
     </span>
   );
 }
