@@ -1,8 +1,14 @@
 "use client";
 
+import { Info } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 
 import { ShippingSpeedMarketGrid } from "@/components/issue-sku-detail/shipping-speed-market-grid";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   getShippingSpeedSkuDetail,
   type ShippingSpeedAlertInfo,
@@ -13,16 +19,36 @@ type ShippingSpeedSkuDetailProps = {
   sku: IssueSku;
 };
 
+const STANDARD_PROMISE_TOOLTIP =
+  "30-day median → latest promise from the last 24 hours of crawls. Delta is days slower (+) or faster (−). For the market below.";
+
+function ShippingSpeedAlertHeadline({ alert }: { alert: ShippingSpeedAlertInfo }) {
+  return (
+    <p className="text-sm text-foreground">
+      Standard delivery slowed by up to{" "}
+      <span className="font-semibold tabular-nums text-foreground">
+        {alert.standardPromiseDelta} days
+      </span>{" "}
+      in{" "}
+      <span className="font-semibold tabular-nums text-foreground">
+        {alert.marketsBreachingCount} markets
+      </span>{" "}
+      vs its <span className="font-semibold text-foreground">30-day norm</span>.
+    </p>
+  );
+}
+
 function ShippingSpeedAlertBlock({ alert }: { alert: ShippingSpeedAlertInfo }) {
   const standardDelta = `+${alert.standardPromiseDelta} days`;
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-foreground">{alert.headline}</p>
+      <ShippingSpeedAlertHeadline alert={alert} />
 
       <div className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-background">
         <AlertMetricTile
           label="Standard promise (days)"
+          labelInfoTooltip={STANDARD_PROMISE_TOOLTIP}
           footer={<StandardPromiseAlertFooter alert={alert} />}
         >
           <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 tabular-nums">
@@ -38,13 +64,13 @@ function ShippingSpeedAlertBlock({ alert }: { alert: ShippingSpeedAlertInfo }) {
         </AlertMetricTile>
 
         <AlertMetricTile label="Prime promise (days)">
-          <p className="text-base font-bold text-success-700">
+          <p className="text-sm font-semibold text-success-700">
             {alert.primePromiseLabel}
           </p>
         </AlertMetricTile>
 
         <AlertMetricTile label="Prime badge">
-          <p className="text-lg font-bold text-foreground">
+          <p className="text-sm font-semibold text-foreground">
             {alert.primeBadgeLostLabel}
           </p>
         </AlertMetricTile>
@@ -65,15 +91,9 @@ function StandardPromiseAlertFooter({
         <span className="font-medium text-foreground">{alert.primaryMarket}</span>
       </p>
       <p>
-        <span className="text-neutral-400">Affected since:</span>{" "}
+        <span className="text-neutral-400">First Seen:</span>{" "}
         <span className="font-medium text-foreground">
-          Last {alert.affectedSinceDays} days
-        </span>
-      </p>
-      <p>
-        <span className="text-neutral-400">Other markets affected:</span>{" "}
-        <span className="font-medium text-foreground">
-          {alert.otherMarketsAffectedLabel}
+          {alert.affectedSinceDays} days ago
         </span>
       </p>
     </div>
@@ -83,16 +103,33 @@ function StandardPromiseAlertFooter({
 /** Metric strip cell — label / value / footer (matches issue SKU metric tiles). */
 function AlertMetricTile({
   label,
+  labelInfoTooltip,
   footer,
   children,
 }: {
   label: string;
+  labelInfoTooltip?: string;
   footer?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="flex min-h-22 min-w-0 flex-col px-4 py-3">
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-1">
+        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+        {labelInfoTooltip ? (
+          <Tooltip>
+            <TooltipTrigger
+              className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:text-neutral-600"
+              aria-label="How standard promise is calculated"
+            >
+              <Info className="size-3" aria-hidden />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-left leading-snug">
+              {labelInfoTooltip}
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
+      </div>
       <div className="mt-2 min-h-0 flex-1">{children}</div>
       {footer ? <div className="mt-auto">{footer}</div> : null}
     </div>
@@ -106,11 +143,7 @@ export function ShippingSpeedSkuDetail({ sku }: ShippingSpeedSkuDetailProps) {
   return (
     <div className="flex flex-col gap-6">
       <ShippingSpeedAlertBlock alert={detail.alert} />
-      <ShippingSpeedMarketGrid
-        markets={detail.markets}
-        normLabel={detail.normLabel}
-        crawlsPerDay={detail.crawlsPerDay}
-      />
+      <ShippingSpeedMarketGrid markets={detail.markets} />
     </div>
   );
 }

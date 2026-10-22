@@ -208,13 +208,16 @@ export type ShippingMarketPoint = {
   primeDelta: number;
   /** Crawls (of `crawlsPerDay`) where the market breached the norm; 0 = not affected */
   breachingCrawls: number;
+  /** Crawls (of `crawlsPerDay`) where Prime badge was missing; 0 = badge present */
+  primeBadgeLostCrawls: number;
 };
 
 export type ShippingSpeedAlertInfo = {
-  headline: string;
   standardPromiseFrom: number;
   standardPromiseTo: number;
   standardPromiseDelta: number;
+  /** Markets where standard promise breached the norm (headline + rollup) */
+  marketsBreachingCount: number;
   /** Primary market called out in the Standard promise tile */
   primaryMarket: string;
   /** Days between the two standard-promise observations */
@@ -841,29 +844,28 @@ export function getShippingSpeedSkuDetail(
     summary:
       "Prime avg 1.1 days, Standard avg 5.0 days across 8 ZIP(s). Prime is 3.9 days faster.",
     alert: {
-      headline:
-        "Standard delivery slowed by up to 6 days in 4 markets vs its 30-day norm.",
       standardPromiseFrom: 3,
       standardPromiseTo: 9,
       standardPromiseDelta: 6,
+      marketsBreachingCount: 4,
       primaryMarket: "Austin, TX",
       affectedSinceDays: 6,
       otherMarketsAffectedLabel: "Chicago, IL, Tahoe, CA & 1 other",
-      primePromiseLabel: "Within norm",
-      primeBadgeLostLabel: "No Anomalies Detected",
+      primePromiseLabel: "No anomalies detected",
+      primeBadgeLostLabel: "Lost in 2 markets",
     },
     normLabel: "30-day median",
     crawlsPerDay: 4,
     // Affected first (largest delta), then in-norm markets
     markets: [
-      market("aus", "Austin, TX", [3, 9], [1, 1], 4),
-      market("chi", "Chicago, IL", [4, 9], [1, 3], 4),
-      market("tah", "Tahoe, CA", [5, 10], null, 3),
-      market("ash", "Ashburn, VA", [3, 8], [1, 1], 3),
-      market("ny", "New York, NY", [2, 2], [1, 1], 0),
-      market("sat", "San Antonio, TX", [4, 4], [1, 1], 0),
-      market("nsh", "Nashville, TN", [2, 2], [1, 1], 0),
-      market("la", "Los Angeles, CA", [5, 5], [1, 1], 0),
+      market("aus", "Austin, TX", [3, 9], [1, 1], 4, 0),
+      market("chi", "Chicago, IL", [4, 9], [1, 3], 4, 4),
+      market("tah", "Tahoe, CA", [5, 10], null, 3, 3),
+      market("ash", "Ashburn, VA", [3, 8], [1, 1], 3, 0),
+      market("ny", "New York, NY", [2, 2], [1, 1], 0, 0),
+      market("sat", "San Antonio, TX", [4, 4], [1, 1], 0, 0),
+      market("nsh", "Nashville, TN", [2, 2], [1, 1], 0, 0),
+      market("la", "Los Angeles, CA", [5, 3], [2, 1], 0, 0),
     ],
   };
 }
@@ -874,6 +876,7 @@ function market(
   [standardFrom, standardTo]: [number, number],
   prime: [number, number] | null,
   breachingCrawls: number,
+  primeBadgeLostCrawls: number,
 ): ShippingMarketPoint {
   return {
     id,
@@ -885,6 +888,7 @@ function market(
     primeTo: prime?.[1] ?? null,
     primeDelta: prime ? prime[1] - prime[0] : 0,
     breachingCrawls,
+    primeBadgeLostCrawls,
   };
 }
 

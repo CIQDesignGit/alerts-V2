@@ -972,8 +972,9 @@ function getShippingSpeedTrend(_sku: IssueSku): LastWeekTrendData {
       {
         id: "glance-views",
         label: "Glance views",
-        value: "-9%",
-        sublabel: "vs previous week",
+        value: "11.4K",
+        delta: "−9%",
+        deltaTone: "negative",
       },
       {
         id: "unit-cvr",
