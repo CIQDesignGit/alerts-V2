@@ -20,7 +20,7 @@ type ShippingSpeedSkuDetailProps = {
 };
 
 const STANDARD_PROMISE_TOOLTIP =
-  "30-day median → latest promise from the last 24 hours of crawls. Delta is days slower (+) or faster (−). For the market below.";
+  "30-day median → latest promise from the last 24 hours of crawls.";
 
 function ShippingSpeedAlertHeadline({ alert }: { alert: ShippingSpeedAlertInfo }) {
   return (
