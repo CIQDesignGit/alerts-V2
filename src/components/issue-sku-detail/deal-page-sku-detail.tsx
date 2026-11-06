@@ -24,13 +24,16 @@ export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
 
   const page =
     detail.pages.find((item) => item.id === pageId) ?? detail.pages[0];
+  const leadText = page?.neverObserved
+    ? "Despite ongoing offer on this product, it was never observed on the deals page during this promo"
+    : detail.leadText;
   const dealsPhrase = "deals page";
-  const dealsIndex = detail.leadText.lastIndexOf(dealsPhrase);
+  const dealsIndex = leadText.lastIndexOf(dealsPhrase);
   const leadBefore =
-    dealsIndex >= 0 ? detail.leadText.slice(0, dealsIndex) : detail.leadText;
+    dealsIndex >= 0 ? leadText.slice(0, dealsIndex) : leadText;
   const leadAfter =
     dealsIndex >= 0
-      ? detail.leadText.slice(dealsIndex + dealsPhrase.length)
+      ? leadText.slice(dealsIndex + dealsPhrase.length)
       : "";
 
   return (
@@ -49,6 +52,7 @@ export function DealPageSkuDetail({ sku }: DealPageSkuDetailProps) {
             detail={{
               ...detail,
               dealsPageLabel: page.label,
+              neverObserved: page.neverObserved,
               lastSeenDay: page.lastSeenDay,
               lastSeenTime: page.lastSeenTime,
               lastSeenRelative: page.lastSeenRelative,

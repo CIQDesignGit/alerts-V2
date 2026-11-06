@@ -112,9 +112,14 @@ export type DealPageReviewedLink = {
 export type DealPageOption = {
   id: string;
   label: string;
-  lastSeenDay: number;
-  lastSeenTime: string;
-  lastSeenRelative: string;
+  /**
+   * True when crawls never found this SKU on the page for the whole promo window.
+   * When true, lastSeen* fields are null — do not invent a last-seen date.
+   */
+  neverObserved: boolean;
+  lastSeenDay: number | null;
+  lastSeenTime: string | null;
+  lastSeenRelative: string | null;
   topProducts: DealPageTopProduct[];
 };
 
@@ -139,11 +144,13 @@ export type DealPageSkuDetail = {
   startDay: number;
   endDay: number;
   nowDay: number;
-  lastSeenDay: number;
-  /** Clock time only, e.g. "8:12 AM" */
-  lastSeenTime: string;
-  /** e.g. "1 day ago" */
-  lastSeenRelative: string;
+  /** Mirrors the default/selected page observation state for the deal window */
+  neverObserved: boolean;
+  lastSeenDay: number | null;
+  /** Clock time only, e.g. "8:12 AM" — null when neverObserved */
+  lastSeenTime: string | null;
+  /** e.g. "1 day ago" — null when neverObserved */
+  lastSeenRelative: string | null;
   /** Deals page the top-10 list was read from */
   dealsPageLabel: string;
   topProducts: DealPageTopProduct[];
@@ -710,24 +717,52 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
   );
   const kitchen = sku.category.toLowerCase().includes("kitchen");
   const defaultPageId = kitchen ? "kitchen-dining" : "vacuums-floor";
+  // ~1/3 of SKUs: never observed on the default page for the whole promo.
+  const neverOnDefault = skuSeed(sku) % 3 === 0;
+
   const pages: DealPageOption[] = DEAL_PAGE_DEFS.map((page, index) => {
     const day = Math.min(
       DEAL_NOW_DAY,
       Math.max(DEAL_START_DAY, seenDay - index),
     );
     const isDefault = page.id === defaultPageId;
+    // Toys & Games is always the switchable demo of the never-observed edge case.
+    const neverObserved =
+      page.id === "toys-games" || (isDefault && neverOnDefault);
+
+    if (neverObserved) {
+      return {
+        ...page,
+        neverObserved: true,
+        lastSeenDay: null,
+        lastSeenTime: null,
+        lastSeenRelative: null,
+        topProducts: productsForPage(index * 3),
+      };
+    }
+
     return {
       ...page,
+      neverObserved: false,
       lastSeenDay: isDefault ? seenDay : day,
-      lastSeenTime: isDefault ? lastSeen.time : index % 2 === 0 ? "9:40 AM" : "4:15 PM",
+      lastSeenTime: isDefault
+        ? lastSeen.time
+        : index % 2 === 0
+          ? "9:40 AM"
+          : "4:15 PM",
       lastSeenRelative: lastSeenRelative(isDefault ? seenDay : day),
       topProducts: productsForPage(index * 3),
     };
   });
 
+  const defaultPage =
+    pages.find((page) => page.id === defaultPageId) ?? pages[0]!;
+  const neverObserved = defaultPage.neverObserved;
+
   return {
-    leadText:
-      "Despite ongoing offer on this product, it is not showing up on the deals page",
+    leadText: neverObserved
+      ? "Despite ongoing offer on this product, it was never observed on the deals page during this promo"
+      : "Despite ongoing offer on this product, it is not showing up on the deals page",
     reviewedPages: REVIEWED_DEAL_PAGES,
     pages,
     defaultPageId,
@@ -735,14 +770,12 @@ export function getDealPageSkuDetail(sku: IssueSku): DealPageSkuDetail {
     startDay: DEAL_START_DAY,
     endDay: DEAL_END_DAY,
     nowDay: DEAL_NOW_DAY,
-    lastSeenDay: seenDay,
-    lastSeenTime: lastSeen.time,
-    lastSeenRelative: lastSeenRelative(seenDay),
-    dealsPageLabel:
-      pages.find((page) => page.id === defaultPageId)?.label ??
-      "Vacuums & Floor Care",
-    topProducts:
-      pages.find((page) => page.id === defaultPageId)?.topProducts ?? [],
+    neverObserved,
+    lastSeenDay: defaultPage.lastSeenDay,
+    lastSeenTime: defaultPage.lastSeenTime,
+    lastSeenRelative: defaultPage.lastSeenRelative,
+    dealsPageLabel: defaultPage.label,
+    topProducts: defaultPage.topProducts,
   };
 }
 
