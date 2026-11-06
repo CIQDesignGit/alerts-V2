@@ -224,9 +224,12 @@ export type ShippingSpeedAlertInfo = {
   affectedSinceDays: number;
   /** e.g. "Chicago, IL & 2 others" */
   otherMarketsAffectedLabel: string;
+  /** Prime promise tile — healthy when no market has primeDelta > 0 */
   primePromiseLabel: string;
-  /** Prime badge tile value — e.g. "No Anomalies Detected" */
+  primePromiseHealthy: boolean;
+  /** Prime badge tile — e.g. "Lost in 2 markets" / "No losses detected" */
   primeBadgeLostLabel: string;
+  primeBadgeHealthy: boolean;
 };
 
 export type ShippingSpeedSkuDetail = {
@@ -835,11 +838,35 @@ export function getStockAvailabilitySkuDetail(
   };
 }
 
+function marketCountLabel(count: number, singular: string, plural: string) {
+  return count === 1 ? singular : plural.replace("{n}", String(count));
+}
+
 /** Shipping Speed — alert strip + latest status per crawled market. */
 export function getShippingSpeedSkuDetail(
   sku: IssueSku,
 ): ShippingSpeedSkuDetail {
   void sku;
+  // Affected first (largest delta), then in-norm markets
+  const markets = [
+    market("aus", "Austin, TX", [3, 9], [1, 1], 4, 0),
+    market("chi", "Chicago, IL", [4, 9], [1, 3], 4, 4),
+    market("tah", "Tahoe, CA", [5, 10], null, 3, 3),
+    market("ash", "Ashburn, VA", [3, 8], [1, 1], 3, 0),
+    market("ny", "New York, NY", [2, 2], [1, 1], 0, 0),
+    market("sat", "San Antonio, TX", [4, 4], [1, 1], 0, 0),
+    market("nsh", "Nashville, TN", [2, 2], [1, 1], 0, 0),
+    market("la", "Los Angeles, CA", [5, 3], [2, 1], 0, 0),
+  ];
+
+  // Keep tile copy in sync with the crawled-markets grid (no hardcoded contradictions).
+  const primeSlowCount = markets.filter(
+    (m) => m.primeFrom != null && m.primeDelta > 0,
+  ).length;
+  const primeBadgeLostCount = markets.filter(
+    (m) => m.primeBadgeLostCrawls > 0,
+  ).length;
+
   return {
     summary:
       "Prime avg 1.1 days, Standard avg 5.0 days across 8 ZIP(s). Prime is 3.9 days faster.",
@@ -851,22 +878,28 @@ export function getShippingSpeedSkuDetail(
       primaryMarket: "Austin, TX",
       affectedSinceDays: 6,
       otherMarketsAffectedLabel: "Chicago, IL, Tahoe, CA & 1 other",
-      primePromiseLabel: "No anomalies detected",
-      primeBadgeLostLabel: "Lost in 2 markets",
+      primePromiseHealthy: primeSlowCount === 0,
+      primePromiseLabel:
+        primeSlowCount === 0
+          ? "No anomalies detected"
+          : marketCountLabel(
+              primeSlowCount,
+              "Slowed in 1 market",
+              "Slowed in {n} markets",
+            ),
+      primeBadgeHealthy: primeBadgeLostCount === 0,
+      primeBadgeLostLabel:
+        primeBadgeLostCount === 0
+          ? "No losses detected"
+          : marketCountLabel(
+              primeBadgeLostCount,
+              "Lost in 1 market",
+              "Lost in {n} markets",
+            ),
     },
     normLabel: "30-day median",
     crawlsPerDay: 4,
-    // Affected first (largest delta), then in-norm markets
-    markets: [
-      market("aus", "Austin, TX", [3, 9], [1, 1], 4, 0),
-      market("chi", "Chicago, IL", [4, 9], [1, 3], 4, 4),
-      market("tah", "Tahoe, CA", [5, 10], null, 3, 3),
-      market("ash", "Ashburn, VA", [3, 8], [1, 1], 3, 0),
-      market("ny", "New York, NY", [2, 2], [1, 1], 0, 0),
-      market("sat", "San Antonio, TX", [4, 4], [1, 1], 0, 0),
-      market("nsh", "Nashville, TN", [2, 2], [1, 1], 0, 0),
-      market("la", "Los Angeles, CA", [5, 3], [2, 1], 0, 0),
-    ],
+    markets,
   };
 }
 

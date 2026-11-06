@@ -14,6 +14,7 @@ import {
   type ShippingSpeedAlertInfo,
 } from "@/lib/mock-issue-sku-detail";
 import type { IssueSku } from "@/lib/mock-alerts-insights";
+import { cn } from "@/lib/utils";
 
 type ShippingSpeedSkuDetailProps = {
   sku: IssueSku;
@@ -64,13 +65,23 @@ function ShippingSpeedAlertBlock({ alert }: { alert: ShippingSpeedAlertInfo }) {
         </AlertMetricTile>
 
         <AlertMetricTile label="Prime promise (days)">
-          <p className="text-sm font-semibold text-success-700">
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              alert.primePromiseHealthy ? "text-success-700" : "text-error-700",
+            )}
+          >
             {alert.primePromiseLabel}
           </p>
         </AlertMetricTile>
 
         <AlertMetricTile label="Prime badge">
-          <p className="text-sm font-semibold text-foreground">
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              alert.primeBadgeHealthy ? "text-success-700" : "text-error-700",
+            )}
+          >
             {alert.primeBadgeLostLabel}
           </p>
         </AlertMetricTile>
